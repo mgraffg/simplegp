@@ -24,7 +24,8 @@ def test_gpmae():
     gp = GPMAE(generations=30,
                max_length=1000).train(x, y)
     gp.run()
-    assert gp.fitness(gp.get_best()) >= -0.0689764253988
+    fit = gp.fitness(gp.get_best())
+    assert fit >= -0.077002533312
 
 
 

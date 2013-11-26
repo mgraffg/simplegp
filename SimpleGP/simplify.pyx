@@ -98,6 +98,19 @@ cdef class Simplify:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cdef int equal_node(self, INT a, INT b):
+        if self.isconstant(a) and self.isconstant(b):
+            if self.constant_value(a) == self.constant_value(b):
+                return 1
+            else:
+                return 0
+        elif a == b:
+            return 1
+        return 0
+
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cdef INT equal(self, int a, int b):
         cdef INT *ind = self._ind
         cdef INT *nop = self._nop
@@ -111,7 +124,7 @@ cdef class Simplify:
             if ind[b] == -1:
                 b += 1
                 continue
-            if ind[a] != ind[b]:
+            if self.equal_node(ind[a], ind[b]) == 0:
                 return 0
             ele = ind[a]
             a += 1

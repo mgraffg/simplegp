@@ -24,7 +24,7 @@ def test_gppde():
     gp = GPPDE(generations=30,
                max_length=1000).train(x, y)
     gp.run()
-    assert gp.fitness(gp.get_best()) >= -6.24303635529e-08
+    assert gp.fitness(gp.get_best()) >= -3.272897322e-05
 
 
 def test_gppde_mae():
