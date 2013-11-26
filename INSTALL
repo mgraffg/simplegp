@@ -1,0 +1,7 @@
+In the case you want to install this package to yourself
+
+$ python setup.py install --user
+
+for all the users in the system
+
+$ sudo python setup.py install
