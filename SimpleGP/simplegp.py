@@ -638,7 +638,8 @@ class GP(SimpleGA):
             c = ind[pos] - self._func.shape[0] - self._x.shape[1]
             return str(constants[c]), pos + 1
 
-    def graphviz(self, ind=None, constants=None, fname=None):
+    def graphviz(self, ind=None, constants=None, fname=None,
+                 var_names=None):
         import StringIO
         if ind is None or isinstance(ind, types.IntType):
             k = self.get_best() if ind is None else ind
@@ -648,6 +649,10 @@ class GP(SimpleGA):
         if constants is None:
             constants = self._constants
         self._g_pos = 0
+        if var_names is None:
+            self._var_names = map(lambda x: "X%s" % x, range(self._x.shape[1]))
+        else:
+            self._var_names = var_names
         if isinstance(fname, types.FileType):
             s = fname
         elif isinstance(fname, StringIO.StringIO):
@@ -676,9 +681,8 @@ class GP(SimpleGA):
                 fpt.write("""n%s -> n%s;\n""" % (pos, posd))
             return pos
         elif ind[pos] < self._func.shape[0] + self._x.shape[1]:
-            fpt.write("""n%s [label="X%s"];\n""" % (pos,
-                                                    ind[pos] -
-                                                    self._func.shape[0]))
+            vn = self._var_names[ind[pos] - self._func.shape[0]]
+            fpt.write("""n%s [label="%s"];\n""" % (pos, vn))
             return pos
         else:
             c = ind[pos] - self._func.shape[0] - self._x.shape[1]
