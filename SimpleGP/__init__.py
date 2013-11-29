@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 
 from .simplega import SimpleGA
 from .simplegp import GP, GPRPropU, GPPDE, GPwRestart, GPMAE
 from .forest import GPForest, SubTreeXO
-from .classification import Classification
+from .classification import Classification, ClassificationPDE
 from .time_series import TimeSeries, RTimeSeries
 from .recursiveGP import RecursiveGP, RGP
 from .eval import Eval
@@ -27,7 +27,7 @@ from utils import Pool, VerifyOutput
 __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            GPRPropU, GPForest, SubTreeXO, Classification,
            RecursiveGP, RGP, RTimeSeries, GPwRestart, GPMAE,
-           Eval, RPROP, VerifyOutput,
+           Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool]
 
 

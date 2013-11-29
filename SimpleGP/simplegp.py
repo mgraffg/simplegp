@@ -45,6 +45,7 @@ class GP(SimpleGA):
         self.format_params(verbose, verbose_nind)
         self.eval_params(max_n_worst_epochs)
         self.min_max_length_params()
+        self.tree_params()
 
     def individuals_params(self, do_simplify, min_depth,
                            max_depth, max_length, min_length,
@@ -95,6 +96,7 @@ class GP(SimpleGA):
         """This function set from all the functions available which ones
         form the function set"""
         self._output = 0
+        self._output_pos = 15
         func = ['+', '-', '*', '/', 'abs', 'exp', 'sqrt',
                 'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
                 'ln', 'sq', 'output', 'argmax']
@@ -149,6 +151,8 @@ class GP(SimpleGA):
             self._min_length = minimum
         if maximum is not None:
             self._max_length = maximum
+
+    def tree_params(self):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -353,21 +357,10 @@ class GP(SimpleGA):
         point = np.random.randint(points.shape[0])
         return points[point]
 
-    def subtree_selection_fathers(self, father1, father2):
-        p1 = self.subtree_selection(father1)
-        m = self.crossover_mask(father1, father2, p1)
-        p2 = self.subtree_selection(father2[m])
-        p2 = np.where(m)[0][p2]
-        return p1, p2
-
     def length(self, ind):
         # l_p2 = np.zeros_like(ind)
         p = self._tree.length(ind)
         return self._tree_length[:p]
-
-    def crossover_mask(self, father1, father2, p1):
-        self._tree.crossover_mask(father1, father2, p1)
-        return self._tree_mask[:father2.shape[0]].astype(np.bool)
 
     def crossover(self, father1, father2):
         ncons = self._p_constants[self._xo_father1].shape[0]
@@ -805,11 +798,7 @@ class GPPDE(GP):
         self._p_st = np.empty(self._popsize, dtype=np.object)
         self._p_error_st = np.empty(self._popsize, dtype=np.object)
 
-    def min_max_length_params(self, minimum=None, maximum=None):
-        if minimum is not None:
-            self._min_length = minimum
-        if maximum is not None:
-            self._max_length = maximum
+    def tree_params(self):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -934,11 +923,12 @@ class GPPDE(GP):
         ind = self._computing_fitness
         l = self._p[ind].shape[0]
         if self._p_error_st[ind] is None:
-            self._p_error_st[ind] = np.empty((l,
-                                              self._x.shape[0]),
-                                             dtype=np.int8, order='C')
+            self._p_error_st[ind] = np.ones((l,
+                                             self._x.shape[0]),
+                                            dtype=np.int8, order='C')
         if self._p_error_st[ind].shape[0] < l:
             self._p_error_st[ind].resize(l, self._x.shape[0])
+            self._p_error_st[ind].fill(1)
         return self._p_error_st[ind]
 
     def get_rprop(self, update_constants=0):

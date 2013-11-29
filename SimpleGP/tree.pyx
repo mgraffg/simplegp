@@ -39,16 +39,18 @@ cdef class Tree:
     cdef int _max_length
     cdef int __length_p1
     cdef int __f1_end
+    cdef int _select_root
     def __cinit__(self, npc.ndarray[INT, ndim=1, mode="c"] nop,
                   npc.ndarray[INT, ndim=1, mode="c"] _length,
                   npc.ndarray[INT, ndim=1, mode="c"] _mask,
-                  int min_length, int max_length):
+                  int min_length, int max_length, int select_root=1):
         self._nop = <INT *>nop.data
         self._length = <INT *>_length.data
         self._m = <INT *> _mask.data
         self._nfunc = nop.shape[0]
         self._min_length = min_length
         self._max_length = max_length
+        self._select_root = select_root
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -112,6 +114,8 @@ cdef class Tree:
                 c += 1
             else:
                 m[i] = 0
+        if self._select_root == 0:
+            m[0] = 0
         return c 
 
     @cython.boundscheck(False)
@@ -145,7 +149,10 @@ cdef class Tree:
         f1 = <INT *> father1.data
         f2 = <INT *> father2.data
         if p1 < 0:
-            p1 = np.random.randint(father1.shape[0])
+            if self._select_root:
+                p1 = np.random.randint(father1.shape[0])
+            else:
+                p1 = np.random.randint(father1.shape[0]-1) + 1
         if p2 < 0:
             p2 = self.father2_crossing_point(father1, father2, p1)
             l_p1 = self.__length_p1
@@ -213,6 +220,70 @@ cdef class Tree:
                 l += self.compute_length()
         self._length[opos] = l
         return l
+
+cdef class SubTree(Tree):
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int get_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] father1,
+                          int p1):
+        cdef INT *fC = <INT *>father1.data, ele
+        cdef INT *_nop = self._nop
+        cdef int s = 0, i
+        cdef int nargs = 1
+        for i in range(1, p1+1):
+            ele = fC[i]
+            if self.isfunc(ele):
+                nargs -= 1
+                nargs += _nop[ele]
+            else:
+                nargs -= 1
+            if nargs == 0 and i < p1:
+                s += 1
+                nargs = 1
+        return s
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int crossover_mask(self,
+                             npc.ndarray[INT, ndim=1, mode="c"] father1,
+                             npc.ndarray[INT, ndim=1, mode="c"] father2,
+                             int p1):
+        cdef int f2_end, i, f1_end, l_p1, r, minl, maxl, c=0, subtree=0, nargs=1
+        cdef int sub2=0
+        cdef INT *l, *m, *fC = <INT *> father2.data, ele
+        cdef INT *_nop = self._nop
+        subtree = self.get_subtree(father1, p1)
+        f1_end = self.traverse(father1, pos=p1)
+        f2_end = self.length(father2)
+        l_p1 = father1.shape[0] - (f1_end - p1)
+        self.__length_p1 = l_p1
+        self.__f1_end = f1_end
+        l = self._length
+        m = self._m
+        minl = self._min_length
+        maxl = self._max_length
+        m[0] = 0
+        for i in range(1, f2_end):
+            if subtree != sub2:
+                m[i] = 0
+            else:
+                r = l_p1 + l[i]
+                if r >= minl and r <= maxl:
+                    m[i] = 1
+                    c += 1
+                else:
+                    m[i] = 0
+            ele = fC[i]
+            if self.isfunc(ele):
+                nargs -= 1
+                nargs += _nop[ele]
+            else:
+                nargs -= 1
+            if nargs == 0:
+                sub2 += 1
+                nargs = 1
+        return c 
+    
 
 
 cdef class PDEXO(Tree):

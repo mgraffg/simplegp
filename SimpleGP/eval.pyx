@@ -508,17 +508,24 @@ cdef class Eval:
         cdef INT *output = self._output
         cdef INT i, j
         cdef INT l = self._l_st
+        cdef INT nargs = self._n_output
         cdef FLOAT argmax
         cdef FLOAT max
         cdef FLOAT *st = self._st
+        cdef INT po_i = 0
         for i in range(l):
             max = st[output[0] * l + i]
             argmax = 0
-            for j in range(1, self._n_output):
+            for j in range(1, nargs):
                 if st[output[j] * l + i] > max:
                     argmax = j
                     max = st[output[j] * l + i]
             st[i] = argmax
+        if self._p_der:
+            for j in range(nargs):
+                po_i = j * l
+                for i in range(l):
+                    self._p_der_st[po_i + i] = 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

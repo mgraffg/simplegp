@@ -95,16 +95,21 @@ n0 -> n5;
             gp._p[i] = gp.create_random_ind_full(7)
             gp._p_constants[i] = gp._ind_generated_c
         gp.min_max_length_params(1, 255)
-        m = gp.crossover_mask(gp._p[0], gp._p[1], 0)
+        gp.tree_params()
+        gp._tree.crossover_mask(gp._p[0], gp._p[1], 0)
+        m = gp._tree_mask[:gp._p[1].shape[0]]
         assert m.sum() == 255
         p = np.where(np.array(map(lambda x: gp.isvar(x),
                                   gp._p[0])))[0][0]
-        m = gp.crossover_mask(gp._p[0], gp._p[1], p)
+        gp._tree.crossover_mask(gp._p[0], gp._p[1], p)
+        m = gp._tree_mask[:gp._p[1].shape[0]]
         r = np.array(map(lambda x: (gp.isvar(x) or gp.isconstant(x)),
                          gp._p[0]))
         assert m.sum() == r.sum()
         gp.min_max_length_params(255, 255)
-        m = gp.crossover_mask(gp._p[0], gp._p[1], 0)
+        gp.tree_params()
+        gp._tree.crossover_mask(gp._p[0], gp._p[1], 0)
+        m = gp._tree_mask[:gp._p[1].shape[0]]
         assert m.sum() == 1
 
     def test_crossover(self):

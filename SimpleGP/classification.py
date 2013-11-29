@@ -13,6 +13,8 @@
 # limitations under the License.
 import numpy as np
 from .forest import GPForest
+from .tree import PDEXO
+from .simplegp import GPPDE
 
 
 class Classification(GPForest):
@@ -21,3 +23,25 @@ class Classification(GPForest):
                      dtype=self._dtype)
         y[np.arange(y.shape[0]), f] = 1
         super(Classification, self).train(x, y)
+        return self
+
+
+class ClassificationPDE(Classification, GPPDE):
+    def train(self, x, f):
+        super(ClassificationPDE, self).train(x, f)
+        for i in range(self._popsize):
+            self._p_st[i] = None
+            self._p_error_st[i] = None
+        return self
+
+    def tree_params(self):
+        self._tree_length = np.empty(self._max_length,
+                                     dtype=np.int)
+        self._tree_mask = np.empty(self._max_length,
+                                   dtype=np.int)
+        self._tree = PDEXO(self._nop,
+                           self._tree_length,
+                           self._tree_mask,
+                           self._min_length,
+                           self._max_length,
+                           select_root=0)

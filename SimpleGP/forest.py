@@ -13,6 +13,7 @@
 # limitations under the License.
 import numpy as np
 from .simplegp import GP
+from .tree import Tree, SubTree
 
 
 class GPForest(GP):
@@ -32,42 +33,27 @@ class GPForest(GP):
             self._ntrees = self._output.shape[0]
         self._eval.set_output_function(self._output)
         self._nop[self._output_pos] = self._ntrees
+        return self
 
-    def function_set(self, func, *args):
-        if len(filter(lambda x: x == 'output', func)) == 0:
-            func.append('output')
-        super(GPForest, self).function_set(func, *args)
-        self._output_pos = 15
+    def min_max_length_params(self, minimum=None, maximum=None):
+        if minimum is not None:
+            self._min_length = minimum
+        if self._min_length == 0:
+            self._min_length = 1
+        if maximum is not None:
+            self._max_length = maximum
 
-    def subtrees_points(self, ind):
-        points = np.zeros(self._ntrees+1, dtype=np.int)
-        pos = 1
-        points[0] = 1
-        for i in range(1, self._ntrees+1):
-            tmp = self.traverse(ind, pos=pos)
-            points[i] = tmp
-            pos = tmp
-        return points
-
-    def subtrees_length(self, ind):
-        lengths = np.zeros(self._ntrees, dtype=np.int)
-        pos = 1
-        for i in range(self._ntrees):
-            tmp = self.traverse(ind, pos=pos)
-            lengths[i] = tmp - pos
-            pos = tmp
-        return lengths
-
-    def subtree_selection(self, father):
-        point = super(GPForest, self).subtree_selection(father)
-        if father.shape[0] == 0:
-            raise Exception("Inds of lenght 1 are forbidden")
-        if point == 0:
-            return 1
-        return point
-
-    def select_subtree(self):
-        return np.random.randint(self._ntrees)
+    def tree_params(self):
+        self._tree_length = np.empty(self._max_length,
+                                     dtype=np.int)
+        self._tree_mask = np.empty(self._max_length,
+                                   dtype=np.int)
+        self._tree = Tree(self._nop,
+                          self._tree_length,
+                          self._tree_mask,
+                          self._min_length,
+                          self._max_length,
+                          select_root=0)
 
     def random_func(self, first_call=False):
         if first_call:
@@ -76,14 +62,27 @@ class GPForest(GP):
 
 
 class SubTreeXO(GPForest):
-    def subtree_selection_fathers(self, father1, father2):
-        ntree = self.select_subtree()
-        pointsP1 = self.subtrees_points(father1)
-        pointsP2 = self.subtrees_points(father2)
-        f1 = father1[pointsP1[ntree]:pointsP1[ntree+1]]
-        p1 = GP.subtree_selection(self,
-                                  f1) + pointsP1[ntree]
-        f2 = father2[pointsP2[ntree]:pointsP2[ntree+1]]
-        p2 = GP.subtree_selection(self,
-                                  f2) + pointsP2[ntree]
-        return p1, p2
+    def tree_params(self):
+        self._tree_length = np.empty(self._max_length,
+                                     dtype=np.int)
+        self._tree_mask = np.empty(self._max_length,
+                                   dtype=np.int)
+        self._tree = SubTree(self._nop,
+                             self._tree_length,
+                             self._tree_mask,
+                             self._min_length,
+                             self._max_length,
+                             select_root=0)
+
+
+
+
+
+
+
+
+
+
+
+
+
