@@ -1,13 +1,14 @@
 Version 0.2.5
-	+ New files in the nosetests. These include test_classification.py and 
+	+ New files in the nosetests. These include test_classification.py and
 	test_forest.
 	+ Bugs fixed on classification and forest
-	+ New class tree.SubTree to select the crossover points based on the sub-tree. 
+	+ New class tree.SubTree to select the crossover points based on the sub-tree.
 	This class made a significant change in forest.py
 	+ New parameter in tree.Tree (select_root) it is to decide whether the root
 	is admissible as crossover point
-	+ New class ClassificationPDE. This class selects the crossover point based on 
+	+ New class ClassificationPDE. This class selects the crossover point based on
 	the partial derivative error
 	+ New method SimpleGP.tree_params used to instantiate the tree module
-	
+	+ New example, it shows how can be used SimpleGP to create prototypes for
+	classification. It addresses the iris dataset.
 
