@@ -21,7 +21,7 @@ class Classification(GPForest):
     def train(self, x, f):
         y = np.zeros((f.shape[0], np.unique(f).shape[0]),
                      dtype=self._dtype)
-        y[np.arange(y.shape[0]), f] = 1
+        y[np.arange(y.shape[0]), f.astype(np.int)] = 1
         super(Classification, self).train(x, y)
         return self
 

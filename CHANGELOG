@@ -11,4 +11,5 @@ Version 0.2.5
 	+ New method SimpleGP.tree_params used to instantiate the tree module
 	+ New example, it shows how can be used SimpleGP to create prototypes for
 	classification. It addresses the iris dataset.
-
+Version 0.2.6
+	+ Minor bug in the classification. The dependent variable is now an integer
