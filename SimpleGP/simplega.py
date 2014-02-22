@@ -33,6 +33,7 @@ class SimpleGA(object):
         self._chromosome_length = chromosome_length
         self.gens_ind = popsize
         self._dtype = dtype
+        self._timeout = False
         self._stats = stats
         if stats:
             self.fit_per_gen = np.zeros(self._gens)
@@ -57,6 +58,7 @@ class SimpleGA(object):
 
     def walltime(self, *args, **kwargs):
         self.on_exit(*args, **kwargs)
+        self._timeout = True
 
     def on_exit(self, *args, **kwargs):
         self.save()
@@ -182,7 +184,8 @@ class SimpleGA(object):
 
     def run(self):
         self.create_population()
-        while self.gens_ind < self._gens*self._popsize and self._run:
+        while (not self._timeout and
+               self.gens_ind < self._gens*self._popsize and self._run):
             try:
                 son = self.genetic_operators()
                 kill = self.tournament(neg=True)

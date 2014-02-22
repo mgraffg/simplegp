@@ -13,3 +13,5 @@ Version 0.2.5
 	classification. It addresses the iris dataset.
 Version 0.2.6
 	+ Minor bug in the classification. The dependent variable is now an integer
+	+ Setting a flag to indicate the timeout and then exit the evolution
+	+ GPwRestart goes an infinite cycle parameter ntimes is equal or less than 0

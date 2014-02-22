@@ -748,7 +748,9 @@ class GPwRestart(GP):
         self._fitness.fill(-np.inf)
 
     def run(self, ntimes=2):
-        for nt in range(ntimes):
+        cnt_ntimes = 0
+        while not self._timeout and (cnt_ntimes < ntimes or ntimes <= 0):
+            cnt_ntimes += 1
             self.init()
             flag = super(GPwRestart, self).run()
             if not flag:
