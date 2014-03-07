@@ -43,10 +43,11 @@ gp = GPPDE(popsize=1000, generations=50, verbose=True,
 
 gp.train(X, cl)
 gp.run()
-gp.eval(gp.get_best())
+clh = np.round(gp.eval(gp.get_best()))
 print gp.print_infix()
 print gp.fitness(gp.get_best())
-print (np.round(gp._st[0]) == cl).sum() / float(cl.shape[0])
+print (clh == cl).sum() / float(cl.shape[0])
+
 
 
 

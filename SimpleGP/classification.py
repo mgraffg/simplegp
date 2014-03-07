@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-from .forest import GPForest
+from .forest import SubTreeXO
 from .tree import PDEXO
 from .simplegp import GPPDE
 
 
-class Classification(GPForest):
+class Classification(SubTreeXO):
     def train(self, x, f):
         y = np.zeros((f.shape[0], np.unique(f).shape[0]),
                      dtype=self._dtype)
