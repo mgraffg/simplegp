@@ -185,7 +185,8 @@ def test_classification():
                         pxo=0.9, pgrow=0.5, walltime=None).train(X, cl)
     gp.run()
     gp.eval(gp.get_best())
-    assert gp.fitness(gp.get_best()) >= -0.0348402439
+    print gp.fitness(gp.get_best())
+    assert gp.fitness(gp.get_best()) >= -0.03683
     assert (gp._st[0] == cl).sum() / float(cl.shape[0]) >= 0.95
 
 

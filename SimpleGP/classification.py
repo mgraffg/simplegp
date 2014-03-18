@@ -25,6 +25,18 @@ class Classification(SubTreeXO):
         super(Classification, self).train(x, y)
         return self
 
+    def predict(self, X):
+        cnt = np.unique(self._f).shape[0]
+        X = np.vstack((self._x[:cnt], np.atleast_2d(X)))
+        x = self._x
+        f = self._f
+        dummy = np.zeros(X.shape[0])
+        dummy[:cnt] = np.arange(cnt)
+        self.train(X, dummy)
+        pr = self.eval(self.get_best())[cnt:]
+        self.train(x, f.argmax(axis=1))
+        return pr.argmax(axis=1)
+
 
 class ClassificationPDE(Classification, GPPDE):
     def train(self, x, f):

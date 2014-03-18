@@ -17,3 +17,4 @@ Version 0.2.6
 	+ GPwRestart goes an infinite cycle parameter ntimes is equal or less than 0
 	+ Minor bug in cl_argmax
 	+ The Classification class should be subclass of SubTreeXO to keep the output function in the root.
+	+ Setting to Classification class the predict method.
