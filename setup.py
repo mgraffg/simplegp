@@ -47,7 +47,7 @@ setup(
     name="SimpleGP",
     description="""A GP systems for symbolic regression and
     auto-recursive regression""",
-    version="0.2.6",
+    version="0.2.7",
     url='http://dep.fie.umich.mx/~mgraffg',
     author="Mario Graff",
     author_email="mgraffg@dep.fie.umich.mx",

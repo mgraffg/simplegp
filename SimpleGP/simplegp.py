@@ -205,11 +205,13 @@ class GP(SimpleGA):
         self._tree.set_nvar(self._x.shape[1])
         return self
 
-    def predict(self, X):
+    def predict(self, X, ind=None):
+        if ind is None:
+            ind = self.get_best()
         x = self._x
         f = self._f
         self.train(X, np.zeros(X.shape[0]))
-        pr = self.eval(self.get_best())
+        pr = self.eval(ind)
         self.train(x, f)
         return pr
 
