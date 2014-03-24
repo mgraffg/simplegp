@@ -417,7 +417,9 @@ class GP(SimpleGA):
     def set_extras_to_ind(self, k, *args, **kwargs):
         pass
 
-    def eval(self, ind, **kwargs):
+    def eval(self, ind=None, **kwargs):
+        if ind is None:
+            ind = self.get_best()
         self._computing_fitness = None
         if isinstance(ind, types.IntType):
             self._computing_fitness = ind
@@ -719,6 +721,24 @@ class GP(SimpleGA):
             pass
         return False
 
+    @classmethod
+    def init_cl(cls, popsize=1000, generations=50, verbose=False,
+                verbose_nind=1000,
+                argmax_nargs=2,
+                func=["+", "-", "*", "/", 'abs', 'exp', 'sqrt',
+                      'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
+                      'ln', 'sq', 'argmax'],
+                fname_best=None,
+                seed=0, nrandom=0,
+                pxo=0.9, pgrow=0.5, walltime=None, **kwargs):
+        ins = cls(popsize=popsize, generations=generations,
+                  argmax_nargs=argmax_nargs,
+                  verbose=verbose, verbose_nind=verbose_nind,
+                  func=func, fname_best=fname_best, seed=seed,
+                  nrandom=0, pxo=pxo, pgrow=pgrow, walltime=walltime,
+                  **kwargs)
+        return ins
+
 
 class GPMAE(GP):
     """This class exemplifies the change of the distance function.
@@ -765,6 +785,10 @@ class GPwRestart(GP):
             self._p_constants[0] = cons
             self._fitness[0] = fit
         return True
+
+    def on_exit(self):
+        super(GPwRestart, self).on_exit()
+        self._run = True
 
 
 class GPRPropU(GP):

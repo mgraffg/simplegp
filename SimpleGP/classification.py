@@ -39,22 +39,6 @@ class Classification(SubTreeXO):
         self.train(x, f.argmax(axis=1))
         return pr.argmax(axis=1)
 
-    @classmethod
-    def init(cls, popsize=1000, generations=50, verbose=False,
-             verbose_nind=1000,
-             func=["+", "-", "*", "/", 'abs', 'exp', 'sqrt',
-                   'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
-                   'ln', 'sq'],
-             fname_best=None,
-             seed=0, nrandom=0,
-             pxo=0.9, pgrow=0.5, walltime=None, **kwargs):
-        ins = cls(popsize=popsize, generations=generations,
-                  verbose=verbose, verbose_nind=verbose_nind,
-                  func=func, fname_best=fname_best, seed=seed,
-                  nrandom=0, pxo=pxo, pgrow=pgrow, walltime=walltime,
-                  **kwargs)
-        return ins
-
 
 class ClassificationPDE(Classification, GPPDE):
     def train(self, x, f):

@@ -20,3 +20,5 @@ Version 0.2.6
 	+ Setting to Classification class the predict method.
 Version 0.2.7
 	+ SimpleGP.predict receives an optimal parameter that indicates which individual is used in the prediction
+	+ SimpleGP.init_cl to create a new instance of the class 
+	+ Bug in GPwRestart it requires to overwrite on_exit to set self._run to true
