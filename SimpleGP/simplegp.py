@@ -729,7 +729,7 @@ class GP(SimpleGA):
                       'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
                       'ln', 'sq', 'argmax'],
                 fname_best=None,
-                seed=0, nrandom=0,
+                seed=0,
                 pxo=0.9, pgrow=0.5, walltime=None, **kwargs):
         ins = cls(popsize=popsize, generations=generations,
                   argmax_nargs=argmax_nargs,
@@ -815,7 +815,7 @@ class GPRPropU(GP):
 
 class GPPDE(GP):
     def __init__(self, compute_derivatives=True,
-                 max_mem=1000.0,
+                 max_mem=300.0,
                  update_best_w_rprop=False,
                  **kwargs):
         assert compute_derivatives
@@ -1027,3 +1027,20 @@ class GPPDE(GP):
                 break
         constants[:] = best_cons[:]
         # print "terminando", k
+
+    @classmethod
+    def init_cl(cls, max_mem=300, verbose_nind=50, **kwargs):
+        ins = cls(max_mem=max_mem, verbose_nind=verbose_nind,
+                  **kwargs)
+        return ins
+
+
+
+
+
+
+
+
+
+
+

@@ -39,6 +39,11 @@ class Classification(SubTreeXO):
         self.train(x, f.argmax(axis=1))
         return pr.argmax(axis=1)
 
+    @classmethod
+    def init_cl(cls, nrandom=0, **kwargs):
+        ins = cls(nrandom=nrandom, **kwargs)
+        return ins
+
 
 class ClassificationPDE(Classification, GPPDE):
     def train(self, x, f):

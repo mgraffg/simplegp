@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-from .simplegp import GP
-from .tree import Tree, SubTree
+from .simplegp import GP, GPPDE
+from .tree import Tree, SubTree, PDEXO
 
 
 class GPForest(GP):
@@ -75,8 +75,25 @@ class SubTreeXO(GPForest):
                              select_root=0)
 
 
+class SubTreeXOPDE(GPForest, GPPDE):
+    def train(self, x, f):
+        super(SubTreeXOPDE, self).train(x, f)
+        for i in range(self._popsize):
+            self._p_st[i] = None
+            self._p_error_st[i] = None
+        return self
 
-
+    def tree_params(self):
+        self._tree_length = np.empty(self._max_length,
+                                     dtype=np.int)
+        self._tree_mask = np.empty(self._max_length,
+                                   dtype=np.int)
+        self._tree = PDEXO(self._nop,
+                           self._tree_length,
+                           self._tree_mask,
+                           self._min_length,
+                           self._max_length,
+                           select_root=0)
 
 
 
