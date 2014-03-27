@@ -575,7 +575,7 @@ class GP(SimpleGA):
     def stats(self):
         i = self.gens_ind
         if i - self._last_call_to_stats < self._verbose_nind:
-            return
+            return False
         self._last_call_to_stats = i
         if self._stats:
             self.fit_per_gen[i/self._popsize] = self._fitness[self.get_best()]
@@ -584,17 +584,18 @@ class GP(SimpleGA):
                                                         self._p)).mean()
         if self._verbose:
             print "Gen: " + str(i) + "/" + str(self._gens * self._popsize)\
-                + " " + "%0.4f" % self._fitness[self.get_best()]
+                + " " + "%0.4f" % self._best_fit
+        return True
 
     def kill_ind(self, kill, son):
         super(GP, self).kill_ind(kill, son)
         self._p_constants[kill] = self._ind_generated_c
         self.set_extras_to_ind(kill, son, delete=True)
 
-    def run(self):
+    def run(self, exit_call=True):
         self.length_per_gen = np.zeros(self._gens)
         self.nodes_evaluated = 0
-        return super(GP, self).run()
+        return super(GP, self).run(exit_call=exit_call)
 
     def print_infix(self, ind=None, pos=0, constants=None):
         if ind is None or isinstance(ind, types.IntType):
@@ -769,13 +770,32 @@ class GPwRestart(GP):
             super(GPwRestart, self).create_population()
         self._fitness.fill(-np.inf)
 
-    def run(self, ntimes=2):
-        cnt_ntimes = 0
-        while not self._timeout and (cnt_ntimes < ntimes or ntimes <= 0):
-            cnt_ntimes += 1
+    def stats(self):
+        verbose = self._verbose
+        self._verbose = False
+        flag = super(GPwRestart, self).stats()
+        self._verbose = verbose
+        if not flag:
+            return flag
+        if self._verbose:
+            i = self.gens_ind
+            print "Gen: (" + str(self._cnt_ntimes) + ") " + str(i) + "/" +\
+                str(self._gens * self._popsize)\
+                + " " + "%0.4f" % self._best_fit
+        return flag
+
+    def run(self, ntimes=2, exit_call=True):
+        self._cnt_ntimes = 0
+        while not self._timeout and (self._cnt_ntimes < ntimes or ntimes <= 0):
+            self._cnt_ntimes += 1
             self.init()
-            flag = super(GPwRestart, self).run()
+            nodes_evaluated = self.nodes_evaluated
+            flag = super(GPwRestart, self).run(exit_call=False)
+            nodes_evaluated += self.nodes_evaluated
             if not flag:
+                self.nodes_evaluated = nodes_evaluated
+                if exit_call:
+                    self.on_exit()
                 return False
             ind = self._p[self.get_best()].copy()
             cons = self._p_constants[self.get_best()].copy()
@@ -784,11 +804,10 @@ class GPwRestart(GP):
             self._p[0] = ind
             self._p_constants[0] = cons
             self._fitness[0] = fit
-        return True
-
-    def on_exit(self):
-        super(GPwRestart, self).on_exit()
-        self._run = True
+        if exit_call:
+            self.on_exit()
+        self.nodes_evaluated = nodes_evaluated
+        return flag
 
 
 class GPRPropU(GP):
@@ -879,10 +898,11 @@ class GPPDE(GP):
             self._fitness[i] = -np.inf
 
     def stats(self):
-        super(GPPDE, self).stats()
+        flag = super(GPPDE, self).stats()
         if self._last_call_to_stats == self.gens_ind:
             if self.mem() >= self._max_mem:
                 self.free_mem()
+        return flag
 
     def mutation(self, father1):
         kill = self.tournament(neg=True)

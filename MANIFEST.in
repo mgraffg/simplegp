@@ -1,3 +1,5 @@
 include examples/*.py
 include examples/data/*.npy
 include examples/data/*.txt
+include SimpleGP/*.pyx
+include SimpleGP/*.pxd

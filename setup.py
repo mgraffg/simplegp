@@ -22,6 +22,8 @@ import os
 
 lst = ['CFLAGS', 'CONFIG_ARGS', 'LIBTOOL', 'PY_CFLAGS']
 for k, v in zip(lst, sysconfig.get_config_vars(*lst)):
+    if v is None:
+        continue
     v = v.replace('-mno-fused-madd', '')
     os.environ[k] = v
 ext_modules = [Extension("SimpleGP.EA_aux_functions",

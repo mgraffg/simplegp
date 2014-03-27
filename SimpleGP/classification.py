@@ -37,7 +37,10 @@ class Classification(SubTreeXO):
         self.train(X, dummy)
         pr = self.eval(ind)[cnt:]
         self.train(x, f.argmax(axis=1))
-        return pr.argmax(axis=1)
+        r = pr.argmax(axis=1).astype(self._dtype)
+        m = np.any(np.isnan(pr), axis=1) | np.any(np.isinf(pr), axis=1)
+        r[m] = np.nan
+        return r
 
     @classmethod
     def init_cl(cls, nrandom=0, **kwargs):

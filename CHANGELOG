@@ -25,3 +25,6 @@ Version 0.2.7
 	+ A new class SubTreeXOPDE is added this class uses PDE
 	+ The init_cl method is added to Classification and GPPDE
 	+ Some tricks in setup.py in order to compile in OSX
+	+ The method Classification.predict did not take care of nan or inf, now it returns a nan when it finds a nan or inf
+	+ SimpleGA.stats returns False if it is not call at the end of the generation otherwise returns true
+	+ SimpleGA.runs returns True if the run ended when the maximum number of evaluations is reached otherwise returns False

@@ -172,17 +172,30 @@ class SimpleGA(object):
         self._fitness[kill] = -np.inf
 
     def stats(self):
+        """This function is call every time an offspring is created. The
+        original idea is to print only statistics of the evolutionary process;
+        however, at this stage is also used to verify the memory in GPPDE.
+        This function is executed at the end of each generation and it returns
+        False if this is not the case, otherwise returns True.
+        """
         i = self.gens_ind
         if i - self._last_call_to_stats < self._popsize:
-            return
+            return False
         self._last_call_to_stats = i
         if self._stats:
             self.fit_per_gen[i/self._popsize] = self._fitness[self.get_best()]
         if self._verbose:
             print "Gen: " + str(i) + "/" + str(self._gens * self._popsize) + \
                 " " + "%0.4f" % self._fitness[self.get_best()]
+        return True
 
-    def run(self):
+    def run(self, exit_call=True):
+        """
+        Steady state genetic algorithm. Returns True if the evolution
+        ended because the number of evaluations is reached. It returns False
+        if it receives a signal or finds a perfect solution.
+        The flag self._run is used to stop the evolution.
+        """
         self.create_population()
         while (not self._timeout and
                self.gens_ind < self._gens*self._popsize and self._run):
@@ -193,12 +206,14 @@ class SimpleGA(object):
                 self.stats()
                 self.gens_ind += 1
             except KeyboardInterrupt:
-                self.on_exit()
+                if exit_call:
+                    self.on_exit()
                 return False
         flag = True
         if not self._run:
             flag = False
-        self.on_exit()
+        if exit_call:
+            self.on_exit()
         return flag
 
     def save(self, fname=None):
