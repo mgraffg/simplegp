@@ -15,8 +15,15 @@ import numpy
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
+from distutils import sysconfig
+import os
 
+# -mno-fused-madd
 
+lst = ['CFLAGS', 'CONFIG_ARGS', 'LIBTOOL', 'PY_CFLAGS']
+for k, v in zip(lst, sysconfig.get_config_vars(*lst)):
+    v = v.replace('-mno-fused-madd', '')
+    os.environ[k] = v
 ext_modules = [Extension("SimpleGP.EA_aux_functions",
                          ["SimpleGP/aux_functions.pyx"],
                          libraries=["m"],

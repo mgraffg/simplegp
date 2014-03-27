@@ -24,3 +24,4 @@ Version 0.2.7
 	+ Bug in GPwRestart it requires to overwrite on_exit to set self._run to true
 	+ A new class SubTreeXOPDE is added this class uses PDE
 	+ The init_cl method is added to Classification and GPPDE
+	+ Some tricks in setup.py in order to compile in OSX
