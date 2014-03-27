@@ -175,6 +175,7 @@ X = np.array([[ 5.1,  3.5,  1.4,  0.2],
 
 
 def test_classification():
+    np.random.RandomState(0)
     gp = Classification.init_cl().train(X, cl)
     gp.run()
     gp.eval(gp.get_best())
@@ -182,8 +183,26 @@ def test_classification():
     assert (not np.any(np.isnan(pr))) or (not np.any(np.isinf(pr)))
 
 
+def test_classification_run_cl():
+    np.random.RandomState(0)
+    X1 = X + np.random.normal(loc=0.0, scale=0.01,
+                              size=X.shape)
+    gp = Classification.run_cl(X, cl, X1)
+    assert gp is not None
+
+
 def test_classification_gppde():
+    np.random.RandomState(0)
     gp = ClassificationPDE.init_cl().train(X, cl)
     gp.run()
     pr = gp.predict(X)
     assert (not np.any(np.isnan(pr))) or (not np.any(np.isinf(pr)))
+
+
+
+
+
+
+
+
+

@@ -28,3 +28,9 @@ Version 0.2.7
 	+ The method Classification.predict did not take care of nan or inf, now it returns a nan when it finds a nan or inf
 	+ SimpleGA.stats returns False if it is not call at the end of the generation otherwise returns true
 	+ SimpleGA.runs returns True if the run ended when the maximum number of evaluations is reached otherwise returns False
+Version 0.2.8
+	+ setup.py reads the VERSION file to set the version in itself and in the __init__.p
+	+ SimpleGA.init_cl is included
+	+ The method SimpleGA.run_cl creates a instance that does not output nan or inf neither in the training set nor a test set (in the case is given)
+	+ SimpleGA has a decent amount of documentation
+	+ GPwRestart has some minor modifications. The most important is that the argument ntimes in run now is pass at the constructor.

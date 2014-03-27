@@ -19,7 +19,7 @@ import signal
 
 class SimpleGA(object):
     def __init__(self, popsize=1000, ppm=0.1, chromosome_length=3,
-                 tournament_size=2, generations=50, seed=0, verbose=False,
+                 tournament_size=2, generations=50, seed=None, verbose=False,
                  pxo=0.9, pm=0.2, stats=False, fname_best=None,
                  walltime=None,
                  dtype=np.float):
@@ -48,48 +48,83 @@ class SimpleGA(object):
             signal.signal(signal.SIGALRM, self.walltime)
 
     def new_best(self, k):
+        """
+        This method is called when the best so far is beaten by k
+        """
         pass
 
     def init(self):
+        """
+        Setting some variables to the defaults values
+        """
         self.gens_ind = 0
         self._run = True
         self._last_call_to_stats = 0
         self._best_fit = None
 
     def walltime(self, *args, **kwargs):
+        """
+        This method is called when the maximum number of seconds is reached.
+        """
         self.on_exit(*args, **kwargs)
         self._timeout = True
 
     def on_exit(self, *args, **kwargs):
+        """
+        Method called at the end of the evolutionary process or when a
+        signal is received
+        """
         self.save()
         self._run = False
 
     def set_seed(self, seed):
-        np.random.seed(seed)
+        if seed is not None:
+            np.random.seed(seed)
 
     def train(self, x, f):
+        """
+        This is to set the training set.
+        x and f are copy only if their types are not dtype
+        """
         self._x = x.astype(self._dtype, copy=False, order='C')
         self._f = f.astype(self._dtype, copy=False, order='C')
         return self
 
     def crossover(self, father1, father2):
+        """
+        crossover performs an uniform crossover
+        """
         mask = np.random.binomial(1, 0.5, self._p.shape[1]).astype(np.bool)
         return father1 * mask + father2 * ~mask
 
     def random_ind(self, size=None):
+        """
+        Create a random individual
+        """
         size = size if size is not None else self._p.shape[1]
         return np.random.uniform(-1, 1, size)
 
     def mutation(self, father1):
+        """
+        Mutation performs an uniform mutation with point mutation probability
+        set by ppm
+        """
         father2 = self.random_ind()
         mask = np.random.binomial(1, self._ppm,
                                   self._p.shape[1]).astype(np.bool)
         return father1 * mask + father2 * ~mask
 
     def selection(self, *args, **kwargs):
+        """
+        Select a individual from the population.
+        """
         return self.tournament(*args)
 
     def tournament(self, neg=False):
+        """
+        Tournament selection, it also performs negative tournament selection if
+        neg=True
+        """
         if not neg:
             func_cmp = lambda x, y: x < y
         else:
@@ -104,6 +139,9 @@ class SimpleGA(object):
         return best
 
     def load_prev_run(self):
+        """
+        Method used to load a previous run. It returns False if fails
+        """
         try:
             fpt = open(self._fname_best)
             self._p = np.load(fpt)
@@ -118,6 +156,10 @@ class SimpleGA(object):
         return False
 
     def create_population(self):
+        """
+        Create the initial population. It first called load_prev_run if
+        this method returns False then it creates the population.
+        """
         if self._fname_best is not None \
            and os.path.isfile(self._fname_best) \
            and self.load_prev_run():
@@ -128,12 +170,33 @@ class SimpleGA(object):
         self._fitness[:] = -np.inf
 
     def eval(self, ind):
+        """
+        Evaluate a individual it receives the actual individual, i.e., the
+        chromosomes
+        """
         return (self._x * ind).sum(axis=1)
 
+    def predict(self, X, ind=None):
+        """
+        Outputs the evaluation of the (ind)-th individual when the
+        features are X
+        """
+        if ind is None:
+            ind = self.get_best()
+        return (X * self._p[ind]).sum(axis=1)
+
     def distance(self, y, hy):
+        """
+        Sum of squares errors
+        """
         return ((y - hy)**2).mean()
 
     def fitness(self, ind):
+        """
+        Computes the fitness of ind.  If ind is an integer, then it
+        computes the fitness of the (ind)-th individual only if it has
+        not been previously computed.
+        """
         k = ind
         if isinstance(ind, types.IntType):
             if self._fitness[k] > -np.inf:
@@ -151,9 +214,15 @@ class SimpleGA(object):
         return f
 
     def get_best(self):
+        """
+        Get the position of the best individual
+        """
         return int(self._fitness.argmax())
 
     def genetic_operators(self):
+        """
+        Perform the genetic operations.
+        """
         son = None
         if np.random.rand() < self._pxo:
             father1 = self.tournament()
@@ -168,6 +237,9 @@ class SimpleGA(object):
         return son
 
     def kill_ind(self, kill, son):
+        """
+        Replace the (kill)-th individual with son
+        """
         self._p[kill] = son
         self._fitness[kill] = -np.inf
 
@@ -217,6 +289,10 @@ class SimpleGA(object):
         return flag
 
     def save(self, fname=None):
+        """
+        Save the population to fname if fname is None the save in
+        self._fname_best. If both are None then it does nothing.
+        """
         fname = fname if fname is not None else self._fname_best
         if fname is None:
             return
@@ -227,6 +303,49 @@ class SimpleGA(object):
         if self._stats:
             np.save(fpt, self.fit_per_gen)
         fpt.close()
+
+    @classmethod
+    def init_cl(cls, generations=10000,
+                popsize=3, pm=0.1, pxo=0.9, seed=0,
+                **kwargs):
+        """
+        Create a new instance of the class.
+        """
+        ins = cls(generations=generations,
+                  popsize=popsize,
+                  seed=seed,
+                  pxo=pxo,
+                  **kwargs)
+        return ins
+
+    @classmethod
+    def run_cl(cls, x, f, test=None, ntries=10,
+               **kwargs):
+        """
+        Returns a trained system that does not output nan or inf neither
+        in the training set (i.e., x) or test set (i.e., test).
+        """
+        if 'seed' in kwargs:
+            seed = kwargs['seed']
+            if seed is not None:
+                seed = int(seed)
+        else:
+            seed = 0
+        test_f = lambda x: ((not np.any(np.isnan(x))) and
+                            (not np.any(np.isinf(x))))
+        kwargs['seed'] = seed
+        for i in range(ntries):
+            ins = cls.init_cl(**kwargs).train(x, f)
+            ins.run()
+            r = ins.predict(x)
+            if test_f(r):
+                if test is not None:
+                    if test_f(ins.predict(test)):
+                        return ins
+                else:
+                    return ins
+            kwargs['seed'] = None
+        return None
 
 
 if __name__ == '__main__':
@@ -241,3 +360,9 @@ if __name__ == '__main__':
     s.train(X, f)
     s.create_population()
     s.run()
+
+
+
+
+
+

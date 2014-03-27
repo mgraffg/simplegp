@@ -52,11 +52,21 @@ ext_modules = [Extension("SimpleGP.EA_aux_functions",
                          libraries=["m"],
                          include_dirs=[numpy.get_include()])]
 
+version = open("VERSION").readline().lstrip().rstrip()
+lst = open("SimpleGP/__init__.py").readlines()
+for k in range(len(lst)):
+    v = lst[k]
+    if v.count("__version__"):
+        lst[k] = "__version__ = '%s'\n" % version
+fpt = open("SimpleGP/__init__.py", "w")
+fpt.write("".join(lst))
+fpt.close()
+
 setup(
     name="SimpleGP",
     description="""A GP systems for symbolic regression and
     auto-recursive regression""",
-    version="0.2.7",
+    version=version,
     url='http://dep.fie.umich.mx/~mgraffg',
     author="Mario Graff",
     author_email="mgraffg@dep.fie.umich.mx",
@@ -65,3 +75,13 @@ setup(
     packages=['SimpleGP',
               'SimpleGP.tests']
 )
+
+
+
+
+
+
+
+
+
+

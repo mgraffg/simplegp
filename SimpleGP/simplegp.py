@@ -765,6 +765,10 @@ class GPMAE(GP):
 
 
 class GPwRestart(GP):
+    def __init__(self, ntimes=2, **kwargs):
+        super(GPwRestart, self).__init__(**kwargs)
+        self._ntimes = ntimes
+
     def create_population(self, flag=False):
         if flag or not hasattr(self, '_p'):
             super(GPwRestart, self).create_population()
@@ -784,11 +788,14 @@ class GPwRestart(GP):
                 + " " + "%0.4f" % self._best_fit
         return flag
 
-    def run(self, ntimes=2, exit_call=True):
+    def run(self, exit_call=True):
         self._cnt_ntimes = 0
+        ntimes = self._ntimes
         while not self._timeout and (self._cnt_ntimes < ntimes or ntimes <= 0):
             self._cnt_ntimes += 1
+            bf = self._best_fit
             self.init()
+            self._best_fit = bf
             nodes_evaluated = self.nodes_evaluated
             flag = super(GPwRestart, self).run(exit_call=False)
             nodes_evaluated += self.nodes_evaluated

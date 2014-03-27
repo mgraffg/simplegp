@@ -21,7 +21,7 @@ def test_gpmae():
     X = np.vstack((x**2, x, np.ones(x.shape[0])))
     y = (X.T * pol).sum(axis=1)
     x = x[:, np.newaxis]
-    gp = GPMAE(generations=30,
+    gp = GPMAE(generations=30, seed=0,
                max_length=1000).train(x, y)
     gp.run()
     fit = gp.fitness(gp.get_best())
