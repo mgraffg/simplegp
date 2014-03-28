@@ -18,6 +18,30 @@ import signal
 
 
 class SimpleGA(object):
+    """
+    SimpleGA is a steady state genetic algorithm with tournament selection,
+    uniform crossover and mutation.
+
+    >>> import numpy as np
+    >>> from SimpleGP import SimpleGA
+
+    First let us create a simple regression problem
+    >>> _ = np.random.RandomState(0)
+    >>> x = np.linspace(0, 1, 100)
+    >>> pol = np.array([0.2, -0.3, 0.2])
+    >>> X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    >>> f = (X * pol).sum(axis=1)
+
+    The objective is to find the coefficients 0.2, -0.3, and 0.2
+    >>> s = SimpleGA.init_cl().train(X, f)
+    >>> s.run()
+    True
+
+    The coefficients are:
+
+    >>> print s._p[s.get_best()]
+    [ 0.10430681 -0.18460194  0.17084382]
+    """
     def __init__(self, popsize=1000, ppm=0.1, chromosome_length=3,
                  tournament_size=2, generations=50, seed=None, verbose=False,
                  pxo=0.9, pm=0.2, stats=False, fname_best=None,
@@ -42,6 +66,7 @@ class SimpleGA(object):
         self._fname_best = fname_best
         self._run = True
         self._last_call_to_stats = 0
+        self._test_set = None
         signal.signal(signal.SIGTERM, self.on_exit)
         if walltime is not None:
             signal.alarm(walltime)
@@ -49,9 +74,18 @@ class SimpleGA(object):
 
     def new_best(self, k):
         """
-        This method is called when the best so far is beaten by k
+        This method is called when the best so far is beaten by k.
+        Here is verified that the best individual is capable of
+        predicting the test set, in the case it is given.
         """
-        pass
+        if self._test_set is not None:
+            x = self._test_set
+            test_f = lambda x: ((not np.any(np.isnan(x))) and
+                                (not np.any(np.isinf(x))))
+            r = self.predict(x, k)
+            if not test_f(r):
+                self._best_fit = None
+                self._fitness[k] = -np.inf
 
     def init(self):
         """
@@ -80,6 +114,13 @@ class SimpleGA(object):
     def set_seed(self, seed):
         if seed is not None:
             np.random.seed(seed)
+
+    def set_test(self, x):
+        """
+        x is the set test, this is used to test, during the evolution, that
+        the best individual does not produce nan or inf
+        """
+        self._test_set = x.astype(self._dtype, copy=False, order='C')
 
     def train(self, x, f):
         """
@@ -336,6 +377,8 @@ class SimpleGA(object):
         kwargs['seed'] = seed
         for i in range(ntries):
             ins = cls.init_cl(**kwargs).train(x, f)
+            if test is not None:
+                ins.set_test(test)
             ins.run()
             r = ins.predict(x)
             if test_f(r):
@@ -348,18 +391,12 @@ class SimpleGA(object):
         return None
 
 
-if __name__ == '__main__':
-    np.random.seed(1)
-    x = np.linspace(0, 1, 100)
-    pol = np.array([0.2, -0.3, 0.2])
-    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
-    f = (X * pol).sum(axis=1)
-    s = SimpleGA(generations=10000, popsize=3, pm=1.0, pxo=0.0,
-                 fname_best=None,
-                 verbose=True)
-    s.train(X, f)
-    s.create_population()
-    s.run()
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
+
+
+
 
 
 

@@ -93,8 +93,10 @@ class GP(SimpleGA):
                                             self._nrandom).astype(self._dtype)
 
     def function_set(self, _func, argmax_nargs=None):
-        """This function set from all the functions available which ones
-        form the function set"""
+        """
+        This function set from all the functions available which ones
+        form the function set
+        """
         self._output = 0
         self._output_pos = 15
         func = ['+', '-', '*', '/', 'abs', 'exp', 'sqrt',
@@ -193,6 +195,14 @@ class GP(SimpleGA):
             self._p_constants[k] = self._ind_generated_c
         return ind
 
+    def new_best(self, k):
+        names = ['_st', '_p_der_st',
+                 '_error_st']
+        values = map(lambda x: getattr(self, x), names)
+        super(GP, self).new_best(k)
+        for k, v in enumerate(values):
+            setattr(self, names[k], v)
+
     def train(self, x, f):
         super(GP, self).train(x, f)
         self._eval = Eval(0, self._x.shape[1],
@@ -214,9 +224,6 @@ class GP(SimpleGA):
         pr = self.eval(ind)
         self.train(x, f)
         return pr
-
-    def new_best(self, k):
-        pass
 
     def create_population(self):
         if self._fname_best is not None and\
@@ -742,9 +749,11 @@ class GP(SimpleGA):
 
 
 class GPMAE(GP):
-    """This class exemplifies the change of the distance function.
+    """
+    This class exemplifies the change of the distance function.
     In the example, the distance is MAE then the derivative of this
-    function is computed in the method compute_error_pr"""
+    function is computed in the method compute_error_pr
+    """
     def distance(self, y, yh):
         return np.fabs(y - yh).mean()
 
@@ -789,13 +798,16 @@ class GPwRestart(GP):
         return flag
 
     def run(self, exit_call=True):
+        """
+        This methods repeats the evolutionary process as many times as
+        indicated in ntimes, the best individual found is kept during
+        this process.
+        """
         self._cnt_ntimes = 0
         ntimes = self._ntimes
         while not self._timeout and (self._cnt_ntimes < ntimes or ntimes <= 0):
             self._cnt_ntimes += 1
-            bf = self._best_fit
             self.init()
-            self._best_fit = bf
             nodes_evaluated = self.nodes_evaluated
             flag = super(GPwRestart, self).run(exit_call=False)
             nodes_evaluated += self.nodes_evaluated
@@ -804,6 +816,7 @@ class GPwRestart(GP):
                 if exit_call:
                     self.on_exit()
                 return False
+            map(self.fitness, range(self._p.shape[0]))
             ind = self._p[self.get_best()].copy()
             cons = self._p_constants[self.get_best()].copy()
             fit = self.fitness(self.get_best())
@@ -863,6 +876,22 @@ class GPPDE(GP):
                            self._min_length,
                            self._max_length)
 
+    def new_best(self, k):
+        if self._update_best_w_rprop:
+            fit2 = self._fitness[k]
+            self.rprop(k)
+            fit = self._fitness[k]
+            if fit > fit2:
+                self._best_fit = fit2
+        p_st = map(lambda x: self._p_st[x],
+                   range(self._popsize))
+        p_error_st = map(lambda x: self._p_error_st[x],
+                         range(self._popsize))
+        super(GPPDE, self).new_best(k)
+        for i in range(self._popsize):
+            self._p_st[i] = p_st[i]
+            self._p_error_st[i] = p_error_st[i]
+
     def train(self, x, f):
         super(GPPDE, self).train(x, f)
         for i in range(self._popsize):
@@ -879,14 +908,6 @@ class GPPDE(GP):
                 self.fitness(i)
             self.gens_ind = gens_ind
         return r
-
-    def new_best(self, k):
-        if self._update_best_w_rprop:
-            fit2 = self._fitness[k]
-            self.rprop(k)
-            fit = self._fitness[k]
-            if fit > fit2:
-                self._best_fit = fit2
 
     def mem(self):
         l = filter(lambda x: self._p_st[x] is not None, range(self._popsize))

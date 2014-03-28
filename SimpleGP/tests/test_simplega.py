@@ -47,5 +47,5 @@ def test_SimpleGA_run_cl_error():
     X1 = np.vstack((x1**2, x1, np.ones(x1.shape[0]))).T
     X1[:, 0] = np.inf
     f = (X * pol).sum(axis=1)
-    s = SimpleGA().run_cl(X, f, test=X1, ntimes=1)
+    s = SimpleGA().run_cl(X, f, test=X1, ntries=1)
     assert s is None
