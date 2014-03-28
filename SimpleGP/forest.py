@@ -21,6 +21,12 @@ class GPForest(GP):
         self._ntrees = None
         super(GPForest, self).__init__(**kwargs)
 
+    def new_best(self, k):
+        output = self._output
+        super(GPForest, self).new_best(k)
+        self._output = output
+        self._eval.set_output_function(self._output)
+
     def train(self, x, f):
         super(GPForest, self).train(x, f)
         if self._ntrees is not None:
@@ -76,6 +82,16 @@ class SubTreeXO(GPForest):
 
 
 class SubTreeXOPDE(GPForest, GPPDE):
+    def new_best(self, k):
+        p_st = map(lambda x: self._p_st[x],
+                   range(self._popsize))
+        p_error_st = map(lambda x: self._p_error_st[x],
+                         range(self._popsize))
+        super(SubTreeXOPDE, self).new_best(k)
+        for i in range(self._popsize):
+            self._p_st[i] = p_st[i]
+            self._p_error_st[i] = p_error_st[i]
+
     def train(self, x, f):
         super(SubTreeXOPDE, self).train(x, f)
         for i in range(self._popsize):
