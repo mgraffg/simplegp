@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-from .forest import SubTreeXO
-from .tree import PDEXO
-from .simplegp import GPPDE
+from SimpleGP.forest import SubTreeXO
+from SimpleGP.tree import PDEXO
+from SimpleGP.gppde import GPPDE
 
 
 class Classification(SubTreeXO):

@@ -27,6 +27,14 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP(seed=0).train(x, y)
 
+    def test_predict(self):
+        self._gp.run()
+        ind = self._gp.get_best()
+        y = self._gp.eval(ind)
+        x1 = np.linspace(-1, 1, 100)
+        self._gp.predict(x1[:, np.newaxis], ind)
+        assert np.fabs(y - self._gp.eval(ind)).sum() == 0
+
     def test_type_of_nodes(self):
         gp = self._gp
         nvar = gp._x.shape[1]

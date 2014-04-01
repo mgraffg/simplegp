@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-from .RecursiveGP_mod import Recursive
-from .simplegp import GP
+from SimpleGP.RecursiveGP_mod import Recursive
+from SimpleGP.simplegp import GP
 
 
 class RecursiveGP(GP):

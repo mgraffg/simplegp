@@ -11,10 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-__version__ = '0.2.9.1'
+__version__ = '0.2.9.4'
 
 from .simplega import SimpleGA
-from .simplegp import GP, GPRPropU, GPPDE, GPwRestart, GPMAE
+from .simplegp import GP, GPRPropU, GPwRestart, GPMAE
+from .gppde import GPPDE
 from .forest import GPForest, SubTreeXO, SubTreeXOPDE
 from .classification import Classification, ClassificationPDE
 from .time_series import TimeSeries, RTimeSeries

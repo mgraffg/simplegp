@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-from .simplegp import GP
-from .recursiveGP import RecursiveGP
+from SimpleGP.simplegp import GP
+from SimpleGP.recursiveGP import RecursiveGP
 
 
 class TimeSeries(GP):

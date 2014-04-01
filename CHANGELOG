@@ -37,6 +37,10 @@ Version 0.2.8
 Version 0.2.9
 	+ It is tested (in new_best) that the best individual found so far can predict without nan and inf the test set. The test set is given in the function set_test
 	+ SimpleGA has doctest
-Version 0.2.9.1
+Version 0.2.9.*
 	+ Bug in the method new_best on the classes GPForest and SubTreeXOPDE
+	+ Restructuring the package, GPPDE is moved to gppde.py
+	+ Minor bug in predict
+	+ SimpleGP has doctest
+
 
