@@ -747,6 +747,13 @@ class GP(SimpleGA):
         try:
             fpt = open(self._fname_best)
             self._p = np.load(fpt)
+            arr = filter(lambda x: self._p[x] is None,
+                         range(self._p.shape[0]))
+            if len(arr):
+                a = np.array([0, self._nop.shape[0],
+                              self._nop.shape[0]])
+                for _i in arr:
+                    self._p[_i] = a.copy()
             self._p_constants = np.load(fpt)
             self._fitness = np.load(fpt)
             self.gens_ind = int(np.load(fpt))

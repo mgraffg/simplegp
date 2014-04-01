@@ -27,6 +27,37 @@ def test_gppde():
     assert gp.fitness(gp.get_best()) >= -3.272897322e-05
 
 
+def test_gppde_crossover_length():
+    x = np.linspace(-10, 10, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0])))
+    y = (X.T * pol).sum(axis=1)
+    x = x[:, np.newaxis]
+    gp = GPPDE.run_cl(x, y, generations=3,
+                      seed=0, do_simplify=False,
+                      max_length=1024)
+    for i in range(gp._p.shape[0]-1):
+        gp._min_length = gp._p[i].shape[0]
+        gp.tree_params()
+        gp._xo_father1 = i
+        gp._xo_father2 = i + 1
+        f1l = gp._p[gp._xo_father1].shape[0]
+        f2l = gp._p[gp._xo_father2].shape[0]
+        if (f1l < f2l):
+            for i in range(f1l):
+                gp._tree.crossover_mask(gp._p[gp._xo_father1],
+                                        gp._p[gp._xo_father2], i)
+                npoints = gp._tree_mask[:f2l].sum()
+                assert npoints > 0
+                pos = gp._tree.father2_crossing_point(gp._p[gp._xo_father1],
+                                                      gp._p[gp._xo_father2],
+                                                      i)
+                assert gp._tree_mask[pos]
+            ind = gp.crossover(gp._p[gp._xo_father1],
+                               gp._p[gp._xo_father2])
+            assert ind.shape[0] >= gp._min_length
+
+
 def test_gppde_mae():
     class G(GPMAE, GPPDE):
         pass

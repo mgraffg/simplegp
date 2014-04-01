@@ -37,14 +37,16 @@ class GPPDE(GP):
             d = d.nbytes / 1024. / 1024.
             self._used_mem += (d * sign)
 
-    def max_mem_per_individual(self):
-        p_st = np.empty((self._max_length, self._x.shape[0]),
+    def max_mem_per_individual(self, xs=None):
+        if xs is None:
+            xs = self._x.shape[0]
+        p_st = np.empty((self._max_length, xs),
                         dtype=self._dtype, order='C').nbytes
         p_error_st = np.ones((self._max_length,
-                              self._x.shape[0]),
+                              xs),
                              dtype=np.int8, order='C').nbytes
         p_der_st = np.ones((self._max_length,
-                            self._x.shape[0]*self._max_nargs),
+                            xs*self._max_nargs),
                            dtype=self._dtype,
                            order='C').nbytes
         return (p_der_st / 1024. / 1024.,
@@ -77,9 +79,18 @@ class GPPDE(GP):
         return r
 
     def mem(self):
+        """
+        Memory used
+        """
         return self._used_mem
 
     def free_mem(self):
+        """
+        This method free the memory when the memory used is more than
+        self._max_mem
+        """
+        if self.mem() < self._max_mem:
+            return None
         for i in range(self._popsize):
             self.update_mem(self._p_st[i], -1)
             self._p_st[i] = None
@@ -87,13 +98,6 @@ class GPPDE(GP):
             self._p_error_st[i] = None
             if hasattr(self, '_fitness'):
                 self._fitness[i] = -np.inf
-
-    def stats(self):
-        flag = super(GPPDE, self).stats()
-        if self._last_call_to_stats == self.gens_ind:
-            if self.mem() >= self._max_mem:
-                self.free_mem()
-        return flag
 
     def mutation(self, father1):
         kill = self.tournament(neg=True)
@@ -154,6 +158,7 @@ class GPPDE(GP):
             return self._p_st[k]
 
     def fitness(self, ind):
+        self.free_mem()
         fit = super(GPPDE, self).fitness(ind)
         if not self._use_cache and isinstance(ind,
                                               types.IntType):
@@ -196,8 +201,10 @@ class GPPDE(GP):
         return rprop
 
     def compute_derivatives(self, ind=None, pos=0, constants=None):
-        """Compute the partial derivative of the error w.r.t. every node
-        of the tree"""
+        """
+        Compute the partial derivative of the error w.r.t. every node
+        of the tree
+        """
         rprop = self.get_rprop()
         k = self._computing_fitness
         ind = self._p[k]
@@ -249,9 +256,21 @@ class GPPDE(GP):
         # print "terminando", k
 
     @classmethod
-    def init_cl(cls, max_mem=500, verbose_nind=50, **kwargs):
-        ins = cls(max_mem=max_mem, verbose_nind=verbose_nind,
-                  **kwargs)
+    def init_cl(cls, training_size=None,
+                max_mem=500, **kwargs):
+        ins = cls(max_mem=max_mem, **kwargs)
+        if training_size is None:
+            return ins
+        base, pr = ins.max_mem_per_individual(training_size)
+        if (pr * ins._popsize) + base > ins._max_mem:
+            mm = ins._max_mem - base
+            popsize = np.floor(mm / np.float(pr)).astype(np.int)
+            nind = ins._gens * ins._popsize
+            popsize = filter(lambda x: (nind % x) == 0,
+                             range(2, popsize+1))[-1]
+            ins._gens = np.floor(nind / popsize).astype(np.int)
+            ins._popsize = popsize
+            ins._pxo = 0.5
         return ins
 
     @classmethod
@@ -268,19 +287,10 @@ class GPPDE(GP):
         else:
             seed = 0
         kwargs['seed'] = seed
-        ins = cls.init_cl(**kwargs).train(x, f)
+        ins = cls.init_cl(training_size=x.shape[0],
+                          **kwargs).train(x, f)
         if test is not None:
             ins.set_test(test)
-        base, pr = ins.max_mem_per_individual()
-        if (pr * ins._popsize) + base > ins._max_mem:
-            mm = ins._max_mem - base
-            popsize = np.floor(mm / np.float(pr)).astype(np.int)
-            nind = ins._gens * ins._popsize
-            popsize = filter(lambda x: (nind % x) == 0,
-                             range(2, popsize+1))[-1]
-            ins._gens = np.floor(nind / popsize).astype(np.int)
-            ins._popsize = popsize
-            ins._pxo = 0.5
         ins.run()
         test_f = lambda x: ((not np.any(np.isnan(x))) and
                             (not np.any(np.isinf(x))))

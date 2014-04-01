@@ -69,8 +69,8 @@ class SimpleGA(object):
         self._test_set = None
         signal.signal(signal.SIGTERM, self.on_exit)
         if walltime is not None:
-            signal.alarm(walltime)
             signal.signal(signal.SIGALRM, self.walltime)
+            signal.alarm(walltime)
 
     def new_best(self, k):
         """
@@ -315,6 +315,7 @@ class SimpleGA(object):
             try:
                 son = self.genetic_operators()
                 kill = self.tournament(neg=True)
+                self._kill_ind = kill
                 self.kill_ind(kill, son)
                 self.stats()
                 self.gens_ind += 1

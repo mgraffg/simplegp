@@ -20,7 +20,7 @@ Version 0.2.6
 	+ Setting to Classification class the predict method.
 Version 0.2.7
 	+ SimpleGP.predict receives an optimal parameter that indicates which individual is used in the prediction
-	+ SimpleGP.init_cl to create a new instance of the class 
+	+ SimpleGP.init_cl to create a new instance of the class
 	+ Bug in GPwRestart it requires to overwrite on_exit to set self._run to true
 	+ A new class SubTreeXOPDE is added this class uses PDE
 	+ The init_cl method is added to Classification and GPPDE
@@ -42,5 +42,7 @@ Version 0.2.9.*
 	+ Restructuring the package, GPPDE is moved to gppde.py
 	+ Minor bug in predict
 	+ SimpleGP has doctest
+	+ SimpleGP.load_prev_run has a default individual in case the population has None.
+	+ SimpleGA has a new class variable _kill_ind. This variable has the position of the individual replace
 
 
