@@ -532,6 +532,7 @@ class GP(SimpleGA):
             if self._best_fit is None or self._best_fit < f:
                 self._best_fit = f
                 self.new_best(k)
+                return self._best_fit
         return f
 
     def compute_error_pr(self, ind, pos=0, constants=None, epoch=0):
@@ -623,8 +624,11 @@ class GP(SimpleGA):
             self.length_per_gen[i_pop] = np.asarray(map(lambda x: x.shape[0],
                                                         self._p)).mean()
         if self._verbose:
+            bf = self._best_fit
+            if bf is None:
+                bf = -1.
             print "Gen: " + str(i) + "/" + str(self._gens * self._popsize)\
-                + " " + "%0.4f" % self._best_fit
+                + " " + "%0.4f" % bf
         return True
 
     def kill_ind(self, kill, son):
@@ -832,9 +836,12 @@ class GPwRestart(GP):
             return flag
         if self._verbose:
             i = self.gens_ind
+            bf = self._best_fit
+            if bf is None:
+                bf = -1.
             print "Gen: (" + str(self._cnt_ntimes) + ") " + str(i) + "/" +\
                 str(self._gens * self._popsize)\
-                + " " + "%0.4f" % self._best_fit
+                + " " + "%0.4f" % bf
         return flag
 
     def run(self, exit_call=True):

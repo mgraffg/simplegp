@@ -44,5 +44,5 @@ Version 0.2.9.*
 	+ SimpleGP has doctest
 	+ SimpleGP.load_prev_run has a default individual in case the population has None.
 	+ SimpleGA has a new class variable _kill_ind. This variable has the position of the individual replace
-
+	+ In fitness returns the _best_fit when a new best is found
 

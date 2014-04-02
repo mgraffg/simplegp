@@ -252,6 +252,7 @@ class SimpleGA(object):
             if self._best_fit is None or self._best_fit < f:
                 self._best_fit = f
                 self.new_best(k)
+                return self._best_fit
         return f
 
     def get_best(self):
