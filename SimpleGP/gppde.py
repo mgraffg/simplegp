@@ -32,6 +32,11 @@ class GPPDE(GP):
         self._p_error_st = np.empty(self._popsize, dtype=np.object)
         self._used_mem = 0
 
+    def stats(self):
+        flag = super(GPPDE, self).stats()
+        self.free_mem()
+        return flag
+
     def update_mem(self, d, sign=1):
         if d is not None:
             d = d.nbytes / 1024. / 1024.
@@ -113,13 +118,24 @@ class GPPDE(GP):
         ind = self.crossover(father1, son)
         return ind
 
-    def crossover(self, father1, father2):
+    def crossover(self, father1, father2, p1=-1, p2=-1,
+                  force_xo=False):
         error = self._p_error_st[self._xo_father1]
         x = self._p_st[self._xo_father1]
         s = self._p_st[self._xo_father2]
         self._tree.father2_xp_extras(error,
                                      x, s)
-        return super(GPPDE, self).crossover(father1, father2)
+        if not force_xo and (
+                self.fitness(self._xo_father1) == -np.inf or
+                self.fitness(self._xo_father2) == -np.inf):
+            if self._tree.get_select_root():
+                p1 = np.random.randint(father1.shape[0])
+            else:
+                p1 = np.random.randint(father1.shape[0]-1) + 1
+            p2 = self._tree.father2_xo_point_super(father1,
+                                                   father2, p1)
+        return super(GPPDE, self).crossover(father1, father2,
+                                            p1, p2)
 
     def get_p_der_st(self, ind):
         if self._p_der_st is None:
@@ -158,7 +174,6 @@ class GPPDE(GP):
             return self._p_st[k]
 
     def fitness(self, ind):
-        self.free_mem()
         fit = super(GPPDE, self).fitness(ind)
         if not self._use_cache and isinstance(ind,
                                               types.IntType):

@@ -21,8 +21,8 @@ def test_gppde():
     X = np.vstack((x**2, x, np.ones(x.shape[0])))
     y = (X.T * pol).sum(axis=1)
     x = x[:, np.newaxis]
-    gp = GPPDE(generations=30, seed=0,
-               max_length=1000).train(x, y)
+    gp = GPPDE.init_cl(generations=30, seed=0,
+                       max_length=1000).train(x, y)
     gp.run()
     assert gp.fitness(gp.get_best()) >= -3.272897322e-05
 
@@ -54,7 +54,8 @@ def test_gppde_crossover_length():
                                                       i)
                 assert gp._tree_mask[pos]
             ind = gp.crossover(gp._p[gp._xo_father1],
-                               gp._p[gp._xo_father2])
+                               gp._p[gp._xo_father2],
+                               force_xo=True)
             assert ind.shape[0] >= gp._min_length
 
 
@@ -66,11 +67,10 @@ def test_gppde_mae():
     X = np.vstack((x**2, x, np.ones(x.shape[0])))
     y = (X.T * pol).sum(axis=1)
     x = x[:, np.newaxis]
-    gp = G(generations=30, seed=0,
-           max_length=1000).train(x, y)
-    gp.run()
+    gp = G.run_cl(x, y, generations=30, seed=0,
+                  max_length=1000)
     print gp.fitness(gp.get_best())
-    assert gp.fitness(gp.get_best()) >= -0.000165552947597
+    assert gp.fitness(gp.get_best()) >= -0.0023
 
 
 def test_gppde_rprop():
@@ -79,10 +79,11 @@ def test_gppde_rprop():
     X = np.vstack((x**2, x, np.ones(x.shape[0])))
     y = (X.T * pol).sum(axis=1)
     x = x[:, np.newaxis]
-    gp = GPPDE(generations=50, update_best_w_rprop=True, seed=0,
-               max_length=1000).train(x, y)
-    gp.run()
-    assert gp.fitness(gp.get_best()) >= -6.24303635529e-08
+    gp = GPPDE.run_cl(x, y, generations=50,
+                      update_best_w_rprop=True, seed=0,
+                      max_length=1000)
+    print gp.fitness(gp.get_best())
+    assert gp.fitness(gp.get_best()) >= -7.07015292191e-06
 
 
 def test_gppde_test_set():

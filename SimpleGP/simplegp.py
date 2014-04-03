@@ -404,12 +404,17 @@ class GP(SimpleGA):
         p = self._tree.length(ind)
         return self._tree_length[:p]
 
-    def crossover(self, father1, father2):
+    def crossover(self, father1, father2, p1=-1,
+                  p2=-1):
+        """
+        Performs subtree crossover. p1 and p2 are the crossing points
+        where -1 indicates that these points are computed in self._tree
+        """
         ncons = self._p_constants[self._xo_father1].shape[0]
         ind = self._tree.crossover(father1,
                                    father2,
                                    ncons=ncons,
-                                   p1=-1, p2=-1)
+                                   p1=p1, p2=p2)
         if self._xo_father2 is not None:
             c2 = self._p_constants[self._xo_father2]
         else:
@@ -598,15 +603,29 @@ class GP(SimpleGA):
             self._fitness[k] = fit_best
             self.set_extras_to_ind(k, ind)
 
-    def genetic_operators(self):
-        if np.random.rand() < self._pxo:
-            father1 = self.tournament()
+    def pre_crossover(self, father1=None, father2=None):
+        """
+        This function is called before calling crossover, here
+        it is set _xo_father1 and _xo_father2 which contains
+        the position where the parents are.
+        """
+        father1 = self.tournament() if father1 is None else father1
+        father2 = self.tournament() if father2 is None else father2
+        while not super(GP,
+                        self).pre_crossover(father1,
+                                            father2):
             father2 = self.tournament()
-            while father1 == father2:
-                father2 = self.tournament()
-            self._xo_father1 = father1
-            self._xo_father2 = father2
-            son = self.crossover(self._p[father1], self._p[father2])
+        self._xo_father1 = father1
+        self._xo_father2 = father2
+        if self._tree.equal_non_const(self._p[father1],
+                                      self._p[father2]):
+            return False
+        return True
+
+    def genetic_operators(self):
+        if np.random.rand() < self._pxo and self.pre_crossover():
+            son = self.crossover(self._p[self._xo_father1],
+                                 self._p[self._xo_father2])
         else:
             self._xo_father1 = self.tournament()
             son = self._p[self._xo_father1]
@@ -787,7 +806,7 @@ class GP(SimpleGA):
                   argmax_nargs=argmax_nargs,
                   verbose=verbose, verbose_nind=verbose_nind,
                   func=func, fname_best=fname_best, seed=seed,
-                  nrandom=0, pxo=pxo, pgrow=pgrow, walltime=walltime,
+                  pxo=pxo, pgrow=pgrow, walltime=walltime,
                   **kwargs)
         return ins
 

@@ -52,6 +52,9 @@ cdef class Tree:
         self._max_length = max_length
         self._select_root = select_root
 
+    def get_select_root(self):
+        return self._select_root
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def set_nvar(self, int a):
@@ -73,6 +76,24 @@ cdef class Tree:
     @cython.wraparound(False)
     cdef INT isconstant(self, INT a):
         if a < self._nfunc + self._nvar: return 0
+        return 1
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef INT equal_non_const(self,
+                              npc.ndarray[INT, ndim=1, mode="c"] ind1,
+                              npc.ndarray[INT, ndim=1, mode="c"] ind2):
+        cdef INT pos = 0
+        cdef INT *ind1C = <INT*> ind1.data
+        cdef INT *ind2C = <INT*> ind2.data
+        cdef INT end = ind1.shape[0]
+        if ind2.shape[0] != end:
+            return 0
+        for pos in range(end):
+            if self.isconstant(ind1C[pos]) and self.isconstant(ind2C[pos]):
+                continue
+            if ind1C[pos] != ind2C[pos]:
+                return 0
         return 1
 
     def any_constant(self, npc.ndarray[INT, ndim=1, mode="c"] ind):
@@ -339,3 +360,13 @@ cdef class PDEXO(Tree):
             elif flag == bflag and _length[i] < _length[res]:
                 res = i
         return res
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int father2_xo_point_super(self,
+                                     npc.ndarray[INT, ndim=1, mode="c"] father1,
+                                     npc.ndarray[INT, ndim=1, mode="c"] father2,
+                                     int p1):
+        return super(PDEXO, self).father2_crossing_point(father1,
+                                                         father2,
+                                                         p1)

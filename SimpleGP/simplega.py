@@ -261,6 +261,14 @@ class SimpleGA(object):
         """
         return int(self._fitness.argmax())
 
+    def pre_crossover(self, father1, father2):
+        """
+        This function is call before calling crossover, the idea
+        is to test that the fathers are different.
+        It returns True when the fathers are different
+        """
+        return not (father1 == father2)
+
     def genetic_operators(self):
         """
         Perform the genetic operations.
@@ -269,7 +277,7 @@ class SimpleGA(object):
         if np.random.rand() < self._pxo:
             father1 = self.tournament()
             father2 = self.tournament()
-            while father1 == father2:
+            while not self.pre_crossover(father1, father2):
                 father2 = self.tournament()
             son = self.crossover(self._p[father1], self._p[father2])
         if np.random.rand() < self._pm:
