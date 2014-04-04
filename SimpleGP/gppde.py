@@ -32,6 +32,16 @@ class GPPDE(GP):
         self._p_error_st = np.empty(self._popsize, dtype=np.object)
         self._used_mem = 0
 
+    def new_best(self, k):
+        super(GPPDE, self).new_best(k)
+        fit = self._best_fit
+        if not self._update_best_w_rprop or fit is None:
+            return None
+        self.rprop(k)
+        if self._fitness[k] > fit:
+            self._best_fit = self._fitness[k]
+            return super(GPPDE, self).new_best(k)
+
     def stats(self):
         flag = super(GPPDE, self).stats()
         self.free_mem()
@@ -268,6 +278,7 @@ class GPPDE(GP):
             if i - epoch_best >= self._max_n_worst_epochs:
                 break
         constants[:] = best_cons[:]
+        self._fitness[k] = fit_best
         # print "terminando", k
 
     @classmethod
@@ -285,7 +296,6 @@ class GPPDE(GP):
                              range(2, popsize+1))[-1]
             ins._gens = np.floor(nind / popsize).astype(np.int)
             ins._popsize = popsize
-            ins._pxo = 0.5
         return ins
 
     @classmethod

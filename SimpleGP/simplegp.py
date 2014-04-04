@@ -103,6 +103,8 @@ class GP(SimpleGA):
                 self._max_depth = depth
             if depth < self._mutation_depth:
                 self._mutation_depth = depth
+            if self._mutation_depth <= self._min_depth:
+                self._mutation_depth = self._min_depth + 1
         except OverflowError:
             pass
 
@@ -793,22 +795,47 @@ class GP(SimpleGA):
         return False
 
     @classmethod
-    def init_cl(cls, popsize=1000, generations=50, verbose=False,
-                verbose_nind=1000,
-                argmax_nargs=2,
+    def init_cl(cls, argmax_nargs=2, training_size=None,
                 func=["+", "-", "*", "/", 'abs', 'exp', 'sqrt',
                       'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
                       'ln', 'sq', 'argmax'],
-                fname_best=None,
-                seed=0,
-                pxo=0.9, pgrow=0.5, walltime=None, **kwargs):
-        ins = cls(popsize=popsize, generations=generations,
-                  argmax_nargs=argmax_nargs,
-                  verbose=verbose, verbose_nind=verbose_nind,
-                  func=func, fname_best=fname_best, seed=seed,
-                  pxo=pxo, pgrow=pgrow, walltime=walltime,
-                  **kwargs)
+                seed=0, **kwargs):
+        ins = cls(argmax_nargs=argmax_nargs,
+                  func=func, seed=seed, **kwargs)
         return ins
+
+    @classmethod
+    def max_time_per_eval(cls, x, y,
+                          popsize=1000,
+                          max_length=1024,
+                          seed=0,
+                          **kwargs):
+        import time
+
+        class G(cls):
+            def __init__(self, **kwargs):
+                super(G, self).__init__(**kwargs)
+                self.wstime = 0
+
+            def fitness(self, ind):
+                init = time.time()
+                fit = super(G, self).fitness(ind)
+                t = time.time() - init
+                if self.wstime < t:
+                    self.wstime = t
+                return fit
+        kwargs['func'] = ['+', '*', 'argmax']
+        kwargs['nrandom'] = 0
+        kwargs['argmax_nargs'] = 2
+        kwargs['generations'] = 10
+        max_depth = int(np.ceil(np.log2(max_length)))
+        g = G.run_cl(x, y, max_length=max_length,
+                     pgrow=0, verbose=True,
+                     max_depth=max_depth,
+                     min_depth=max_depth-1,
+                     seed=0, popsize=popsize,
+                     **kwargs)
+        return g.wstime
 
 
 class GPMAE(GP):

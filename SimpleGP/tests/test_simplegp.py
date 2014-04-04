@@ -27,6 +27,18 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP(seed=0).train(x, y)
 
+    def test_max_time_per_eval(self):
+        t = GP.max_time_per_eval(self._x, self._y)
+        assert t < 0.1
+
+    def test_max_time(self):
+        import time
+        t = GP.max_time_per_eval(self._x, self._y)
+        init = time.time()
+        tot = t * 1000 * 50
+        self._gp.run()
+        assert (time.time() - init) < tot
+
     def test_predict(self):
         self._gp.run()
         ind = self._gp.get_best()

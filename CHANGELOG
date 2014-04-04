@@ -47,5 +47,8 @@ Version 0.2.9.*
 	+ In fitness returns the _best_fit when a new best is found
 	+ Function pre_crossover is called before calling the crossover
 	+ free_mem is in stats
-Version 0.2.10
+Version 0.2.10.*
 	+ Crossover in GPPDE verifies the fitness and in the case it is -inf then it performs a traditional crossover.
+	+ The crossover probability (pxo) is not updated in GPPDE.run_cl
+	+ simplifying the parameters in init_cl
+	+ Calling rprop on GPPDE when a new best individual is found and the flag update_best_w_rprop is True
