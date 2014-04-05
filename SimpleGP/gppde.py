@@ -138,12 +138,14 @@ class GPPDE(GP):
         if not force_xo and (
                 self.fitness(self._xo_father1) == -np.inf or
                 self.fitness(self._xo_father2) == -np.inf):
-            if self._tree.get_select_root():
-                p1 = np.random.randint(father1.shape[0])
-            else:
-                p1 = np.random.randint(father1.shape[0]-1) + 1
-            p2 = self._tree.father2_xo_point_super(father1,
-                                                   father2, p1)
+            if p1 == -1:
+                if self._tree.get_select_root():
+                    p1 = np.random.randint(father1.shape[0])
+                else:
+                    p1 = np.random.randint(father1.shape[0]-1) + 1
+            if p2 == -1:
+                p2 = self._tree.father2_xo_point_super(father1,
+                                                       father2, p1)
         return super(GPPDE, self).crossover(father1, father2,
                                             p1, p2)
 
@@ -283,13 +285,17 @@ class GPPDE(GP):
 
     @classmethod
     def init_cl(cls, training_size=None,
+                update_best_w_rprop=True,
                 max_mem=500, **kwargs):
-        ins = cls(max_mem=max_mem, **kwargs)
+        ins = cls(max_mem=max_mem,
+                  update_best_w_rprop=update_best_w_rprop,
+                  **kwargs)
         if training_size is None:
             return ins
         base, pr = ins.max_mem_per_individual(training_size)
         if (pr * ins._popsize) + base > ins._max_mem:
             mm = ins._max_mem - base
+            assert mm > 0
             popsize = np.floor(mm / np.float(pr)).astype(np.int)
             nind = ins._gens * ins._popsize
             popsize = filter(lambda x: (nind % x) == 0,

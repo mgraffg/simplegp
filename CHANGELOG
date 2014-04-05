@@ -52,3 +52,4 @@ Version 0.2.10.*
 	+ The crossover probability (pxo) is not updated in GPPDE.run_cl
 	+ simplifying the parameters in init_cl
 	+ Calling rprop on GPPDE when a new best individual is found and the flag update_best_w_rprop is True
+	+ GPPDE.init_cl by default returns an instance that updates the constants of the best so far using RPROP.
