@@ -286,8 +286,10 @@ class GPPDE(GP):
     @classmethod
     def init_cl(cls, training_size=None,
                 update_best_w_rprop=True,
+                max_length=1024,
                 max_mem=500, **kwargs):
         ins = cls(max_mem=max_mem,
+                  max_length=max_length,
                   update_best_w_rprop=update_best_w_rprop,
                   **kwargs)
         if training_size is None:
@@ -318,8 +320,8 @@ class GPPDE(GP):
         else:
             seed = 0
         kwargs['seed'] = seed
-        ins = cls.init_cl(training_size=x.shape[0],
-                          **kwargs).train(x, f)
+        kwargs['training_size'] = x.shape[0]
+        ins = cls.init_cl(**kwargs).train(x, f)
         if test is not None:
             ins.set_test(test)
         ins.run()

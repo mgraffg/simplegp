@@ -27,6 +27,12 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP(seed=0).train(x, y)
 
+    def test_dosimplify(self):
+        gp = GP.run_cl(self._x, self._y, seed=0, do_simplify=False)
+        fit = gp.fitness(gp.get_best())
+        print fit
+        assert fit >= -3.48e-06
+
     def test_max_time_per_eval(self):
         t = GP.max_time_per_eval(self._x, self._y)
         assert t < 0.1

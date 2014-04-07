@@ -795,7 +795,7 @@ class GP(SimpleGA):
         return False
 
     @classmethod
-    def init_cl(cls, argmax_nargs=2, training_size=None,
+    def init_cl(cls, argmax_nargs=2,
                 func=["+", "-", "*", "/", 'abs', 'exp', 'sqrt',
                       'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
                       'ln', 'sq', 'argmax'],

@@ -26,17 +26,7 @@ class Classification(SubTreeXO):
         return self
 
     def predict(self, X, ind=None):
-        if ind is None:
-            ind = self.get_best()
-        cnt = np.unique(self._f).shape[0]
-        X = np.vstack((self._x[:cnt], np.atleast_2d(X)))
-        x = self._x
-        f = self._f
-        dummy = np.zeros(X.shape[0])
-        dummy[:cnt] = np.arange(cnt)
-        self.train(X, dummy)
-        pr = self.eval(ind)[cnt:]
-        self.train(x, f.argmax(axis=1))
+        pr = super(Classification, self).predict(X, ind=ind)
         r = pr.argmax(axis=1).astype(self._dtype)
         m = np.any(np.isnan(pr), axis=1) | np.any(np.isinf(pr), axis=1)
         r[m] = np.nan
@@ -47,13 +37,26 @@ class Classification(SubTreeXO):
         ins = cls(nrandom=nrandom, **kwargs)
         return ins
 
+    @staticmethod
+    def BER(y, yh):
+        u = np.unique(y)
+        b = 0
+        for cl in u:
+            m = y == cl
+            b += (~(y[m] == yh[m])).sum() / float(m.sum())
+        return (b / float(u.shape[0])) * 100.
 
-class ClassificationPDE(Classification, GPPDE):
+    @staticmethod
+    def success(y, yh):
+        return (y == yh).sum() / float(y.shape[0])
+
+
+class ClassificationPDE(GPPDE, Classification):
     def train(self, x, f):
-        super(ClassificationPDE, self).train(x, f)
-        for i in range(self._popsize):
-            self._p_st[i] = None
-            self._p_error_st[i] = None
+        y = np.zeros((f.shape[0], np.unique(f).shape[0]),
+                     dtype=self._dtype)
+        y[np.arange(y.shape[0]), f.astype(np.int)] = 1
+        super(Classification, self).train(x, y)
         return self
 
     def tree_params(self):
