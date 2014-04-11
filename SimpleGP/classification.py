@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-from SimpleGP.forest import SubTreeXO
-from SimpleGP.tree import PDEXO
-from SimpleGP.gppde import GPPDE
+from SimpleGP.forest import SubTreeXOPDE, SubTreeXO
 
 
 class Classification(SubTreeXO):
@@ -51,22 +49,5 @@ class Classification(SubTreeXO):
         return (y == yh).sum() / float(y.shape[0])
 
 
-class ClassificationPDE(GPPDE, Classification):
-    def train(self, x, f):
-        y = np.zeros((f.shape[0], np.unique(f).shape[0]),
-                     dtype=self._dtype)
-        y[np.arange(y.shape[0]), f.astype(np.int)] = 1
-        super(Classification, self).train(x, y)
-        return self
-
-    def tree_params(self):
-        self._tree_length = np.empty(self._max_length,
-                                     dtype=np.int)
-        self._tree_mask = np.empty(self._max_length,
-                                   dtype=np.int)
-        self._tree = PDEXO(self._nop,
-                           self._tree_length,
-                           self._tree_mask,
-                           self._min_length,
-                           self._max_length,
-                           select_root=0)
+class ClassificationPDE(SubTreeXOPDE, Classification):
+    pass

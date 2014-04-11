@@ -56,3 +56,6 @@ Version 0.2.10.*
 	+ Change the hierarchy in ClassificationPDE
 	+ Static functions added: Classification.BER and Classification.success
 	+ Bug fix in Classification.predict
+	+ ClassificationPDE is rewritten.
+	+ There is a new class PDEXOSubtree inherits from PDEXO
+	+ SubTreeXOPDE uses the new class aforementioned

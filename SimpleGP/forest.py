@@ -14,19 +14,13 @@
 import numpy as np
 from SimpleGP.simplegp import GP
 from SimpleGP.gppde import GPPDE
-from SimpleGP.tree import Tree, SubTree, PDEXO
+from SimpleGP.tree import Tree, SubTree, PDEXOSubtree
 
 
 class GPForest(GP):
     def __init__(self, ntrees=None, **kwargs):
         self._ntrees = None
         super(GPForest, self).__init__(**kwargs)
-
-    def new_best(self, k):
-        output = self._output
-        super(GPForest, self).new_best(k)
-        self._output = output
-        self._eval.set_output_function(self._output)
 
     def train(self, x, f):
         super(GPForest, self).train(x, f)
@@ -82,22 +76,19 @@ class SubTreeXO(GPForest):
                              select_root=0)
 
 
-class SubTreeXOPDE(GPForest, GPPDE):
-    def new_best(self, k):
-        p_st = map(lambda x: self._p_st[x],
-                   range(self._popsize))
-        p_error_st = map(lambda x: self._p_error_st[x],
-                         range(self._popsize))
-        super(SubTreeXOPDE, self).new_best(k)
-        for i in range(self._popsize):
-            self._p_st[i] = p_st[i]
-            self._p_error_st[i] = p_error_st[i]
-
+class SubTreeXOPDE(GPPDE, GPForest):
     def train(self, x, f):
         super(SubTreeXOPDE, self).train(x, f)
-        for i in range(self._popsize):
-            self._p_st[i] = None
-            self._p_error_st[i] = None
+        if self._ntrees is not None:
+            self._output = np.empty(self._ntrees, dtype=np.int)
+        else:
+            if f.ndim == 1:
+                self._output = np.empty(np.unique(f).shape[0], dtype=np.int)
+            else:
+                self._output = np.empty(f.shape[1], dtype=np.int)
+            self._ntrees = self._output.shape[0]
+        self._eval.set_output_function(self._output)
+        self._nop[self._output_pos] = self._ntrees
         return self
 
     def tree_params(self):
@@ -105,18 +96,9 @@ class SubTreeXOPDE(GPForest, GPPDE):
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
                                    dtype=np.int)
-        self._tree = PDEXO(self._nop,
-                           self._tree_length,
-                           self._tree_mask,
-                           self._min_length,
-                           self._max_length,
-                           select_root=0)
-
-
-
-
-
-
-
-
-
+        self._tree = PDEXOSubtree(self._nop,
+                                  self._tree_length,
+                                  self._tree_mask,
+                                  self._min_length,
+                                  self._max_length,
+                                  select_root=0)
