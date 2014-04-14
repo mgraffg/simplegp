@@ -284,13 +284,14 @@ class GPPDE(GP):
         # print "terminando", k
 
     @classmethod
-    def init_cl(cls, training_size=None,
-                update_best_w_rprop=True,
-                max_length=1024,
-                max_mem=500, **kwargs):
-        ins = cls(max_mem=max_mem,
-                  max_length=max_length,
+    def init_cl(cls, training_size=None, update_best_w_rprop=True,
+                max_length=1024, max_mem=500, argmax_nargs=2,
+                func=["+", "-", "*", "/", 'abs', 'exp', 'sqrt', 'sin',
+                      'cos', 'sigmoid', 'if', 'max', 'min', 'ln', 'sq',
+                      'argmax'], seed=0, **kwargs):
+        ins = cls(max_mem=max_mem, max_length=max_length,
                   update_best_w_rprop=update_best_w_rprop,
+                  argmax_nargs=argmax_nargs, func=func, seed=seed,
                   **kwargs)
         if training_size is None:
             return ins

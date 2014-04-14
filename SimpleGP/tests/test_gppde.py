@@ -15,6 +15,62 @@ from SimpleGP import GPPDE, GPMAE, GPwRestart
 import numpy as np
 
 
+class TestSimpleGPPDE(object):
+    def __init__(self):
+        x = np.linspace(-10, 10, 100)
+        pol = np.array([0.2, -0.3, 0.2])
+        X = np.vstack((x**2, x, np.ones(x.shape[0])))
+        self._y = (X.T * pol).sum(axis=1)
+        self._x = x[:, np.newaxis]
+        self._gp = GPPDE.init_cl(training_size=self._x.shape[0],
+                                 seed=0)
+        self._gp.train(self._x, self._y)
+
+    def test_parent(self):
+        gp = self._gp
+        gp.create_population()
+        ind = np.argmax(map(lambda x: x.shape[0], gp._p))
+        parent = np.empty_like(gp._p[ind])
+        gp._tree.compute_parents(gp._p[ind],
+                                 parent)
+        end = gp._tree.traverse(gp._p[ind], pos=1)
+        assert parent[end] == 0
+
+    def test_path_to_root(self):
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           seed=1).train(self._x, self._y)
+        gp.create_population()
+        ind = filter(lambda x: (gp._p[x] == 11).sum(),
+                     range(gp._p.shape[0]))
+        ind = ind[np.argmax(map(lambda x: gp._p[x].shape[0], ind))]
+        parent = np.empty_like(gp._p[ind])
+        gp._tree.compute_parents(gp._p[ind],
+                                 parent)
+        end = gp._tree.traverse(gp._p[ind], pos=1)
+        path = np.empty_like(gp._p[ind])
+        gp._tree.path_to_root(gp._p[ind], parent,
+                              path, end)
+        print gp.print_infix(ind)
+        assert (path[0] == 0) and (path[1] == end)
+
+    def test_argument_position(self):
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        ind = filter(lambda x: (gp._p[x] == 11).sum(),
+                     range(gp._p.shape[0]))
+        ind = ind[np.argmax(map(lambda x: gp._p[x].shape[0], ind))]
+        parent = np.empty_like(gp._p[ind])
+        gp._tree.compute_parents(gp._p[ind],
+                                 parent)
+        ind = gp._p[ind]
+        for i in range(ind.shape[0]):
+            if ind[i] < gp._nop.shape[0]:
+                for j in range(gp._nop[ind[i]]):
+                    c = gp._tree.get_pos_arg(ind, i, j)
+                    assert parent[c] == i
+
+
 def test_gppde():
     x = np.linspace(-10, 10, 100)
     pol = np.array([0.2, -0.3, 0.2])

@@ -80,6 +80,58 @@ cdef class Tree:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cpdef int get_pos_arg(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                          int pos,
+                          int narg):
+        cdef int i
+        pos += 1
+        for i in range(narg):
+            pos = self.traverse(ind, pos)
+        return pos
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int path_to_root(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                           npc.ndarray[INT, ndim=1, mode="c"] parent,
+                           npc.ndarray[INT, ndim=1, mode="c"] path,
+                           int pos):
+        cdef INT *indC = <INT*>ind.data
+        cdef INT *parentC = <INT*>parent.data
+        cdef INT *pathC = <INT*>path.data
+        cdef int c = 0, i, j, tmp
+        while pos >= 0:
+            path[c] = pos
+            c += 1
+            pos = parent[pos]
+        for i in range(c/2):
+            tmp = path[i]
+            path[i] = path[c -i -1]
+            path[c -i -1] = tmp
+        return c
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef compute_parents(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                          npc.ndarray[INT, ndim=1, mode="c"] parent):
+        self._pos = 0
+        self.compute_parents_inner(<INT*>ind.data,
+                                   <INT*>parent.data, -1)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef compute_parents_inner(self, INT *ind,
+                               INT *parent,
+                               int p):
+        cdef int opos = self._pos
+        cdef INT *nop = self._nop
+        parent[opos] = p
+        self._pos += 1
+        if self.isfunc(ind[opos]):
+            for j in range(nop[ind[opos]]):
+                self.compute_parents_inner(ind, parent, opos)
+    
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cpdef INT equal_non_const(self,
                               npc.ndarray[INT, ndim=1, mode="c"] ind1,
                               npc.ndarray[INT, ndim=1, mode="c"] ind2):

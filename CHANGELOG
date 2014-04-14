@@ -59,3 +59,9 @@ Version 0.2.10.*
 	+ ClassificationPDE is rewritten.
 	+ There is a new class PDEXOSubtree inherits from PDEXO
 	+ SubTreeXOPDE uses the new class aforementioned
+Version 0.3.0
+	+ New functions in tree.pyx:
+	++ get_pos_arg returs the position of the i-th argument in the node pos, where the first argument is represented by i=0
+	++ path_to_root computes the path to the root starting at node pos
+	++ compute_parents fill an array with the indexes of the parents
+	+ GPPDE.init_cl has new default parameters
