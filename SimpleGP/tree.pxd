@@ -39,90 +39,75 @@ cdef class Tree:
     cdef int __f1_end
     cdef int _select_root
  
-    cdef INT isfunc(self, INT a):
+    cdef INT isfunc(self, INT a)
 
-    cdef INT isvar(self, INT a):
+    cdef INT isvar(self, INT a)
 
-    cdef INT isconstant(self, INT a):
+    cdef INT isconstant(self, INT a)
 
-    cdef int get_pos_arg(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+    cpdef int get_pos_arg(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                           int pos,
-                          int narg):
+                          int narg)
 
-    cdef int path_to_root(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+    cpdef int path_to_root(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                            npc.ndarray[INT, ndim=1, mode="c"] parent,
                            npc.ndarray[INT, ndim=1, mode="c"] path,
-                           int pos):
+                           int pos)
 
-    cdef compute_parents(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
-                          npc.ndarray[INT, ndim=1, mode="c"] parent):
+    cpdef compute_parents(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                          npc.ndarray[INT, ndim=1, mode="c"] parent)
 
     cdef compute_parents_inner(self, INT *ind,
                                INT *parent,
-                               int p):
+                               int p)
     
-    cdef INT equal_non_const(self,
-                             npc.ndarray[INT, ndim=1, mode="c"] ind1,
-                             npc.ndarray[INT, ndim=1, mode="c"] ind2):
+    cpdef INT equal_non_const(self,
+                              npc.ndarray[INT, ndim=1, mode="c"] ind1,
+                              npc.ndarray[INT, ndim=1, mode="c"] ind2)
 
-    cdef int fix(self, int node, int ncons):
+    cdef int fix(self, int node, int ncons)
 
-    cdef int crossover_mask(self,
-                            npc.ndarray[INT, ndim=1, mode="c"] father1,
-                            npc.ndarray[INT, ndim=1, mode="c"] father2,
-                            int p1):
+    cpdef int crossover_mask(self,
+                             npc.ndarray[INT, ndim=1, mode="c"] father1,
+                             npc.ndarray[INT, ndim=1, mode="c"] father2,
+                             int p1)
 
-    cdef int father2_crossing_point(self,
-                                    npc.ndarray[INT, ndim=1, mode="c"] father1,
-                                    npc.ndarray[INT, ndim=1, mode="c"] father2,
-                                    int p1):
+    cpdef int father2_crossing_point(self,
+                                     npc.ndarray[INT, ndim=1, mode="c"] father1,
+                                     npc.ndarray[INT, ndim=1, mode="c"] father2,
+                                     int p1)
 
-    cdef crossover(self, npc.ndarray[INT, ndim=1, mode="c"] father1,
-                   npc.ndarray[INT, ndim=1, mode="c"] father2,
-                   int ncons=2,
-                   int p1=-1,
-                   int p2=-2):
+    cpdef crossover(self, npc.ndarray[INT, ndim=1, mode="c"] father1,
+                    npc.ndarray[INT, ndim=1, mode="c"] father2,
+                    int ncons=?,
+                    int p1=?,
+                    int p2=?)
 
-    cdef int traverse(self,
-                      npc.ndarray[INT, ndim=1, mode="c"] ind, 
-                      INT pos=0):
+    cpdef int traverse(self,
+                       npc.ndarray[INT, ndim=1, mode="c"] ind, 
+                       INT pos=?)
 
-    cdef int length(self,
-                    npc.ndarray[INT, ndim=1, mode="c"] ind):
+    cpdef int length(self,
+                     npc.ndarray[INT, ndim=1, mode="c"] ind)
     
-    cdef int compute_length(self):
+    cdef int compute_length(self)
 
 cdef class SubTree(Tree):
-    cdef int get_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] father1,
-                         int p1):
-    
-    cdef int crossover_mask(self,
-                            npc.ndarray[INT, ndim=1, mode="c"] father1,
-                            npc.ndarray[INT, ndim=1, mode="c"] father2,
-                            int p1):
-    
+    cpdef int get_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] father1,
+                          int p1)
+
 
 cdef class PDEXO(Tree):
     cdef INT8 *_xo_error
     cdef FLOAT *_xo_x, *_xo_s
     cdef int _xo_c
 
-    cdef int father2_crossing_point(self,
-                                    npc.ndarray[INT, ndim=1, mode="c"] father1,
-                                    npc.ndarray[INT, ndim=1, mode="c"] father2,
-                                    int p1):
-
-    cdef int father2_xo_point_super(self,
-                                    npc.ndarray[INT, ndim=1, mode="c"] father1,
-                                    npc.ndarray[INT, ndim=1, mode="c"] father2,
-                                    int p1):
+    cpdef int father2_xo_point_super(self,
+                                     npc.ndarray[INT, ndim=1, mode="c"] father1,
+                                     npc.ndarray[INT, ndim=1, mode="c"] father2,
+                                     int p1)
 
 
 cdef class PDEXOSubtree(PDEXO):
-    cdef int get_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] father1,
-                         int p1):
-
-    cdef int crossover_mask(self,
-                            npc.ndarray[INT, ndim=1, mode="c"] father1,
-                            npc.ndarray[INT, ndim=1, mode="c"] father2,
-                            int p1):
+    cpdef int get_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] father1,
+                          int p1)

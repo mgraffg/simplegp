@@ -14,9 +14,6 @@
 cimport numpy as npc
 import numpy as np
 cimport cython
-ctypedef npc.float_t FLOAT
-ctypedef npc.int_t INT
-ctypedef npc.int8_t INT8
 cimport libc
 cimport libc.math as math
 cimport libc.stdlib as stdlib
@@ -24,22 +21,6 @@ cimport libc.stdlib as stdlib
 np.seterr(all='ignore')
 
 cdef class Tree:
-    cdef INT *_father1
-    cdef INT *_father2
-    cdef INT *_length
-    cdef INT *_nop
-    cdef INT *_m
-    cdef INT _p1
-    cdef INT _p2
-    cdef INT _ncons
-    cdef INT _nfunc
-    cdef INT _nvar
-    cdef int _pos
-    cdef int _min_length
-    cdef int _max_length
-    cdef int __length_p1
-    cdef int __f1_end
-    cdef int _select_root
     def __cinit__(self, npc.ndarray[INT, ndim=1, mode="c"] nop,
                   npc.ndarray[INT, ndim=1, mode="c"] _length,
                   npc.ndarray[INT, ndim=1, mode="c"] _mask,
@@ -360,9 +341,6 @@ cdef class SubTree(Tree):
 
 
 cdef class PDEXO(Tree):
-    cdef INT8 *_xo_error
-    cdef FLOAT *_xo_x, *_xo_s
-    cdef int _xo_c
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def father2_xp_extras(self,
