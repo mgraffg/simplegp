@@ -61,33 +61,50 @@ cdef class Tree:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cdef void set_pos(self, int pos):
+        self._pos = pos
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cpdef int get_pos_arg(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                           int pos,
                           int narg):
+        return self.get_pos_arg_inner(<INT *>ind.data, pos, narg)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef int get_pos_arg_inner(self, INT *ind,
+                               int pos,
+                               int narg):
         cdef int i
         pos += 1
         for i in range(narg):
-            pos = self.traverse(ind, pos)
+            pos = self.traverse_inner(ind, pos)
         return pos
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cpdef int path_to_root(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
-                           npc.ndarray[INT, ndim=1, mode="c"] parent,
+    cpdef int path_to_root(self, npc.ndarray[INT, ndim=1, mode="c"] parent,
                            npc.ndarray[INT, ndim=1, mode="c"] path,
                            int pos):
-        cdef INT *indC = <INT*>ind.data
-        cdef INT *parentC = <INT*>parent.data
-        cdef INT *pathC = <INT*>path.data
+        return self.path_to_root_inner(<INT*>parent.data,
+                                       <INT*>path.data,
+                                       pos)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef int path_to_root_inner(self, INT *parentC,
+                                INT *pathC,
+                                int pos):
         cdef int c = 0, i, j, tmp
         while pos >= 0:
-            path[c] = pos
+            pathC[c] = pos
             c += 1
-            pos = parent[pos]
+            pos = parentC[pos]
         for i in range(c/2):
-            tmp = path[i]
-            path[i] = path[c -i -1]
-            path[c -i -1] = tmp
+            tmp = pathC[i]
+            pathC[i] = pathC[c -i -1]
+            pathC[c -i -1] = tmp
         return c
 
     @cython.boundscheck(False)
@@ -234,12 +251,16 @@ cdef class Tree:
     cpdef int traverse(self,
                        npc.ndarray[INT, ndim=1, mode="c"] ind, 
                        INT pos=0):
+        return self.traverse_inner(<INT *>ind.data, pos)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef int traverse_inner(self, INT *indC, INT pos):
         cdef INT nargs = 1
         cdef INT cnt = 0
         cdef INT pos_ini = pos
         cdef INT ele
         cdef INT shape = self._nfunc
-        cdef INT *indC = <INT*> ind.data
         cdef INT *_funcC = self._nop
         while True:
             ele = indC[pos]

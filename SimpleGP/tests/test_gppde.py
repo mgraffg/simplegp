@@ -48,7 +48,7 @@ class TestSimpleGPPDE(object):
                                  parent)
         end = gp._tree.traverse(gp._p[ind], pos=1)
         path = np.empty_like(gp._p[ind])
-        gp._tree.path_to_root(gp._p[ind], parent,
+        gp._tree.path_to_root(parent,
                               path, end)
         print gp.print_infix(ind)
         assert (path[0] == 0) and (path[1] == end)
@@ -70,6 +70,140 @@ class TestSimpleGPPDE(object):
                     c = gp._tree.get_pos_arg(ind, i, j)
                     assert parent[c] == i
 
+    def test_pde(self):
+        from SimpleGP.pde import PDE
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        gp.fitness(0)
+        print gp.print_infix(0)
+        pde = PDE(gp._tree)
+        pos = np.random.randint(gp._p[0].shape[0])
+        p_der = np.ones_like(gp._p_st[0])
+        pde.compute(gp._p[0], pos,
+                    gp._p_st[0],
+                    p_der)
+
+    def test_pde_add(self):
+        from SimpleGP.pde import PDE
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        nfunc = gp._nop.shape[0]
+        gp._p[0] = np.array([0, nfunc, nfunc])
+        gp.fitness(0)
+        print gp.print_infix(0)
+        p_der = np.ones_like(gp._p_st[0])
+        p_der[0] = gp.eval(0)
+        pde = PDE(gp._tree, p_der)
+        pde.compute(gp._p[0], 1,
+                    gp._p_st[0])
+        assert np.all(p_der[1] == p_der[0])
+        assert np.all(p_der[2] == 1)
+        pde.compute(gp._p[0], 2,
+                    gp._p_st[0])
+        assert np.all(p_der[2] == p_der[0])
+
+    def test_pde_subtract(self):
+        from SimpleGP.pde import PDE
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        nfunc = gp._nop.shape[0]
+        gp._p[0] = np.array([1, nfunc, nfunc])
+        gp.fitness(0)
+        print gp.print_infix(0)
+        p_der = np.ones_like(gp._p_st[0])
+        p_der[0] = gp.eval(0)
+        pde = PDE(gp._tree, p_der)
+        pde.compute(gp._p[0], 1,
+                    gp._p_st[0])
+        assert np.all(p_der[1] == p_der[0])
+        assert np.all(p_der[2] == 1)
+        pde.compute(gp._p[0], 2,
+                    gp._p_st[0])
+        assert np.all(p_der[2] == -p_der[0])
+
+    def test_pde_multiply(self):
+        from SimpleGP.pde import PDE
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           update_best_w_rprop=False,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        nfunc = gp._nop.shape[0]
+        gp._p[0] = np.array([2, nfunc, nfunc+1])
+        gp._p_constants[0].fill(-1)
+        gp.fitness(0)
+        print gp.print_infix(0)
+        p_der = np.ones_like(gp._p_st[0])
+        p_der[0] = gp.eval(0)
+        pde = PDE(gp._tree, p_der)
+        pde.compute(gp._p[0], 1,
+                    gp._p_st[0])
+        assert np.all(p_der[1] == -p_der[0])
+        assert np.all(p_der[2] == 1)
+        pde.compute(gp._p[0], 2,
+                    gp._p_st[0])
+        assert np.all(p_der[2] == (p_der[0] * gp._p_st[0][1]))
+
+    def test_pde_divide(self):
+        from SimpleGP.pde import PDE
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           update_best_w_rprop=False,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        nfunc = gp._nop.shape[0]
+        gp._p[0] = np.array([3, nfunc, nfunc+1])
+        gp._p_constants[0].fill(-2)
+        gp.fitness(0)
+        print gp.print_infix(0)
+        p_der = np.ones_like(gp._p_st[0])
+        p_der[0] = gp.eval(0)
+        pde = PDE(gp._tree, p_der)
+        pde.compute(gp._p[0], 1,
+                    gp._p_st[0])
+        assert np.all(p_der[1] == (p_der[0] / gp._p_st[0][2]))
+        assert np.all(p_der[2] == 1)
+        pde.compute(gp._p[0], 2,
+                    gp._p_st[0])
+        r = - p_der[0] * gp._p_st[0][1] / gp._p_st[0][2]**2
+        assert np.all(p_der[2] == r)
+
+    def test_pde_fabs(self):
+        from SimpleGP.pde import PDE
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           update_best_w_rprop=False,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        nfunc = gp._nop.shape[0]
+        gp._p[0] = np.array([4, nfunc])
+        gp.fitness(0)
+        print gp.print_infix(0)
+        p_der = np.ones_like(gp._p_st[0])
+        p_der[0] = gp.eval(0)
+        pde = PDE(gp._tree, p_der)
+        pde.compute(gp._p[0], 1,
+                    gp._p_st[0])
+        assert np.all(p_der[1] == gp._p_st[0][1])
+
+    def test_pde_exp(self):
+        from SimpleGP.pde import PDE
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           update_best_w_rprop=False,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        nfunc = gp._nop.shape[0]
+        gp._p[0] = np.array([5, nfunc])
+        gp.fitness(0)
+        print gp.print_infix(0)
+        p_der = np.ones_like(gp._p_st[0])
+        p_der[0] = 1
+        pde = PDE(gp._tree, p_der)
+        pde.compute(gp._p[0], 1,
+                    gp._p_st[0])
+        x = np.exp(gp._p_st[0][1])
+        assert np.all(p_der[1] == x)
+
 
 def test_gppde():
     x = np.linspace(-10, 10, 100)
@@ -77,9 +211,8 @@ def test_gppde():
     X = np.vstack((x**2, x, np.ones(x.shape[0])))
     y = (X.T * pol).sum(axis=1)
     x = x[:, np.newaxis]
-    gp = GPPDE.init_cl(generations=30, seed=0,
-                       max_length=1000).train(x, y)
-    gp.run()
+    gp = GPPDE.run_cl(x, y, seed=0,
+                      verbose=True)
     assert gp.fitness(gp.get_best()) >= -3.272897322e-05
 
 

@@ -50,6 +50,11 @@ ext_modules = [Extension("SimpleGP.EA_aux_functions",
                Extension("SimpleGP.tree",
                          ["SimpleGP/tree.pyx"],
                          libraries=["m"],
+                         include_dirs=[numpy.get_include()]),
+               Extension("SimpleGP.pde",
+                         ["SimpleGP/pde.pxd",
+                          "SimpleGP/pde.pyx"],
+                         libraries=["m"],
                          include_dirs=[numpy.get_include()])]
 
 version = open("VERSION").readline().lstrip().rstrip()

@@ -45,14 +45,23 @@ cdef class Tree:
 
     cdef INT isconstant(self, INT a)
 
+    cdef void set_pos(self, int pos)
+
     cpdef int get_pos_arg(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                           int pos,
                           int narg)
 
-    cpdef int path_to_root(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
-                           npc.ndarray[INT, ndim=1, mode="c"] parent,
+    cdef int get_pos_arg_inner(self, INT *ind,
+                               int pos,
+                               int narg)
+
+    cpdef int path_to_root(self, npc.ndarray[INT, ndim=1, mode="c"] parent,
                            npc.ndarray[INT, ndim=1, mode="c"] path,
                            int pos)
+
+    cdef int path_to_root_inner(self, INT *parent,
+                                INT *path,
+                                int pos)
 
     cpdef compute_parents(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                           npc.ndarray[INT, ndim=1, mode="c"] parent)
@@ -86,6 +95,8 @@ cdef class Tree:
     cpdef int traverse(self,
                        npc.ndarray[INT, ndim=1, mode="c"] ind, 
                        INT pos=?)
+
+    cdef int traverse_inner(self, INT *indC, INT pos)
 
     cpdef int length(self,
                      npc.ndarray[INT, ndim=1, mode="c"] ind)
