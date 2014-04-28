@@ -75,14 +75,13 @@ class TestSimpleGPPDE(object):
         gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
                            seed=0).train(self._x, self._y)
         gp.create_population()
-        gp.fitness(0)
-        print gp.print_infix(0)
-        pde = PDE(gp._tree)
-        pos = np.random.randint(gp._p[0].shape[0])
-        p_der = np.ones_like(gp._p_st[0])
-        pde.compute(gp._p[0], pos,
-                    gp._p_st[0],
-                    p_der)
+        p_der = np.empty((gp._max_length, gp._x.shape[0]), dtype=gp._dtype)
+        pde = PDE(gp._tree, p_der)
+        for i in range(gp._p.shape[0]):
+            gp.fitness(i)
+            for pos in range(gp._p[i].shape[0]):
+                pde.compute(gp._p[i], pos,
+                            gp._p_st[i])
 
     def test_pde_add(self):
         from SimpleGP.pde import PDE

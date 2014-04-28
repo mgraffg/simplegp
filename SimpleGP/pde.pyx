@@ -94,6 +94,7 @@ cdef class PDE:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef void divide(self, int _i):
         cdef int i, ii, oi, l_st = self._l_st, v, v2
         cdef INT *path = self._path
@@ -139,6 +140,7 @@ cdef class PDE:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef void sqrt(self, int _i):
         cdef int i, ii, oi, l_st = self._l_st, v, v2
         cdef INT *path = self._path
@@ -263,6 +265,7 @@ cdef class PDE:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef void ln(self, int _i):
         cdef int i, ii, oi, l_st = self._l_st, v, v2
         cdef INT *path = self._path
@@ -292,6 +295,7 @@ cdef class PDE:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef void argmax(self, int _i):
         cdef int i, ii, oi, l_st = self._l_st, v, v2, nargs, j
         cdef int *pos
