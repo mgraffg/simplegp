@@ -276,19 +276,6 @@ def test_gppde_mae():
     assert gp.fitness(gp.get_best()) >= -0.0023
 
 
-def test_gppde_rprop():
-    x = np.linspace(-10, 10, 100)
-    pol = np.array([0.2, -0.3, 0.2])
-    X = np.vstack((x**2, x, np.ones(x.shape[0])))
-    y = (X.T * pol).sum(axis=1)
-    x = x[:, np.newaxis]
-    gp = GPPDE.run_cl(x, y, generations=50,
-                      update_best_w_rprop=True, seed=0,
-                      max_length=1000)
-    print gp.fitness(gp.get_best())
-    assert gp.fitness(gp.get_best()) >= -7.07015292191e-06
-
-
 def test_gppde_test_set():
     x = np.linspace(-10, 10, 100)
     pol = np.array([0.2, -0.3, 0.2])
@@ -320,8 +307,3 @@ def test_gppde_predict():
     gp._gens = 6
     gp.run()
     assert gp is not None
-
-
-
-
-

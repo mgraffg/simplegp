@@ -12,35 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-import types
-from SimpleGP.tree import PDEXO
-from SimpleGP.Rprop_mod import RpropSign
 from SimpleGP.simplegp import GP
+from SimpleGP.pde import PDE
 
 
 class GPPDE(GP):
-    def __init__(self, compute_derivatives=True,
+    def __init__(self, compute_derivatives=False,
                  max_mem=300.0,
                  update_best_w_rprop=False,
                  **kwargs):
-        assert compute_derivatives
-        super(GPPDE, self).__init__(compute_derivatives=compute_derivatives,
+        super(GPPDE, self).__init__(compute_derivatives=False,
                                     **kwargs)
         self._max_mem = max_mem
         self._update_best_w_rprop = update_best_w_rprop
         self._p_st = np.empty(self._popsize, dtype=np.object)
-        self._p_error_st = np.empty(self._popsize, dtype=np.object)
         self._used_mem = 0
 
-    def new_best(self, k):
-        super(GPPDE, self).new_best(k)
-        fit = self._best_fit
-        if not self._update_best_w_rprop or fit is None:
-            return None
-        self.rprop(k)
-        if self._fitness[k] > fit:
-            self._best_fit = self._fitness[k]
-            return super(GPPDE, self).new_best(k)
+    # def new_best(self, k):
+    #     super(GPPDE, self).new_best(k)
+    #     fit = self._best_fit
+    #     if not self._update_best_w_rprop or fit is None:
+    #         return None
+    #     self.rprop(k)
+    #     if self._fitness[k] > fit:
+    #         self._best_fit = self._fitness[k]
+    #         return super(GPPDE, self).new_best(k)
 
     def stats(self):
         flag = super(GPPDE, self).stats()
@@ -57,30 +53,19 @@ class GPPDE(GP):
             xs = self._x.shape[0]
         p_st = np.empty((self._max_length, xs),
                         dtype=self._dtype, order='C').nbytes
-        p_error_st = np.ones((self._max_length,
-                              xs),
-                             dtype=np.int8, order='C').nbytes
         p_der_st = np.ones((self._max_length,
-                            xs*self._max_nargs),
+                            xs),
                            dtype=self._dtype,
                            order='C').nbytes
         return (p_der_st / 1024. / 1024.,
-                (p_st + p_error_st) / 1024. / 1024.)
-
-    def tree_params(self):
-        self._tree_length = np.empty(self._max_length,
-                                     dtype=np.int)
-        self._tree_mask = np.empty(self._max_length,
-                                   dtype=np.int)
-        self._tree = PDEXO(self._nop,
-                           self._tree_length,
-                           self._tree_mask,
-                           self._min_length,
-                           self._max_length)
+                p_st / 1024. / 1024.)
 
     def train(self, x, f):
         super(GPPDE, self).train(x, f)
         self.free_mem()
+        self._p_der = np.empty((self._max_length, self._x.shape[0]),
+                               dtype=self._dtype)
+        self._pde = PDE(self._tree, self._p_der)
         return self
 
     def load_prev_run(self):
@@ -109,8 +94,6 @@ class GPPDE(GP):
         for i in range(self._popsize):
             self.update_mem(self._p_st[i], -1)
             self._p_st[i] = None
-            self.update_mem(self._p_error_st[i], -1)
-            self._p_error_st[i] = None
             if hasattr(self, '_fitness'):
                 self._fitness[i] = -np.inf
 
@@ -130,39 +113,35 @@ class GPPDE(GP):
 
     def crossover(self, father1, father2, p1=-1, p2=-1,
                   force_xo=False):
-        error = self._p_error_st[self._xo_father1]
-        x = self._p_st[self._xo_father1]
-        s = self._p_st[self._xo_father2]
-        self._tree.father2_xp_extras(error,
-                                     x, s)
-        if not force_xo and (
+        if p1 == -1:
+            if self._tree.get_select_root():
+                p1 = np.random.randint(father1.shape[0])
+            else:
+                p1 = np.random.randint(father1.shape[0]-1) + 1
+        if False and not force_xo and (
                 self.fitness(self._xo_father1) == -np.inf or
                 self.fitness(self._xo_father2) == -np.inf):
-            if p1 == -1:
-                if self._tree.get_select_root():
-                    p1 = np.random.randint(father1.shape[0])
-                else:
-                    p1 = np.random.randint(father1.shape[0]-1) + 1
             if p2 == -1:
-                p2 = self._tree.father2_xo_point_super(father1,
-                                                       father2, p1)
+                p2 = self._tree.father2_xo_point(father1,
+                                                 father2, p1)
+        else:
+            self._tree.crossover_mask(father1, father2, p1)
+            self._computing_fitness = self._xo_father1
+            e, g = self.compute_error_pr(None)
+            self._p_der[self._output] = e.T
+            self._pde.compute(self._p[self._xo_father1], p1,
+                              self._p_st[self._xo_father1])
+            e = np.sign(self._p_der[p1])
+            s = self._p_st[self._xo_father2][:father2.shape[0]]
+            p = self._p_st[self._xo_father1][p1]
+            p2 = (np.sign(p - s) * e).sum(axis=1)
+            p2[np.isnan(p2)] = -np.inf
+            p2 = p2.argsort()[::-1]
+            m = self._tree_mask[:father2.shape[0]].astype(np.bool)
+            p2 = p2[m[p2]]
+            p2 = p2[0]
         return super(GPPDE, self).crossover(father1, father2,
                                             p1, p2)
-
-    def get_p_der_st(self, ind):
-        if self._p_der_st is None:
-            self._p_der_st = np.ones((ind.shape[0],
-                                      self._x.shape[0]*self._max_nargs),
-                                     dtype=self._dtype,
-                                     order='C')
-            self.update_mem(self._p_der_st)
-        elif self._p_der_st.shape[0] < ind.shape[0]:
-            self.update_mem(self._p_der_st, -1)
-            self._p_der_st.resize((ind.shape[0],
-                                   self._x.shape[0]*self._max_nargs))
-            self.update_mem(self._p_der_st)
-            self._p_der_st.fill(1)
-        return None, self._p_der_st
 
     def get_st(self, ind):
         if self._computing_fitness is None:
@@ -185,112 +164,13 @@ class GPPDE(GP):
                 self.update_mem(self._p_st[k])
             return self._p_st[k]
 
-    def fitness(self, ind):
-        fit = super(GPPDE, self).fitness(ind)
-        if not self._use_cache and isinstance(ind,
-                                              types.IntType):
-            self.compute_derivatives(ind)
-            self.set_extras_to_ind(ind, self._p[ind])
-        if isinstance(ind, types.IntType):
-            return self._fitness[ind]
-        return fit
-
-    def get_error_st(self):
-        assert self._computing_fitness is not None
-        ind = self._computing_fitness
-        l = self._p[ind].shape[0]
-        if self._p_error_st[ind] is None:
-            self._p_error_st[ind] = np.ones((l,
-                                             self._x.shape[0]),
-                                            dtype=np.int8, order='C')
-            self.update_mem(self._p_error_st[ind])
-        if self._p_error_st[ind].shape[0] < l:
-            self.update_mem(self._p_error_st[ind], -1)
-            self._p_error_st[ind].resize(l, self._x.shape[0])
-            self.update_mem(self._p_error_st[ind])
-            self._p_error_st[ind].fill(1)
-        return self._p_error_st[ind]
-
-    def get_rprop(self, update_constants=0):
-        assert self._computing_fitness is not None
-        k = self._computing_fitness
-        ind = self._p[k]
-        constants = self._p_constants[k]
-        self.__prev_step = np.zeros(ind.shape[0], dtype=self._dtype)
-        self.__prev_slope = np.zeros(ind.shape[0], dtype=self._dtype)
-        rprop = RpropSign(ind, constants, self._nop,
-                          self._x.shape[1], self._p_der_st,
-                          self._x.shape[0],
-                          self.__prev_step,
-                          self.__prev_slope,
-                          update_constants=update_constants,
-                          max_nargs=self._max_nargs)
-        return rprop
-
-    def compute_derivatives(self, ind=None, pos=0, constants=None):
-        """
-        Compute the partial derivative of the error w.r.t. every node
-        of the tree
-        """
-        rprop = self.get_rprop()
-        k = self._computing_fitness
-        ind = self._p[k]
-        constants = self._p_constants[k]
-        error_st = self.get_error_st()
-        rprop.set_error_st_sign(error_st)
-        e, g = self.compute_error_pr(ind, pos=pos, constants=constants,
-                                     epoch=0)
-        rprop.set_zero_pos()
-        error_st[self._output] = np.sign(e.T)
-        rprop.update_constants_rprop()
-
-    def rprop(self, ind=None, pos=0, constants=None,
-              epochs=10000):
-        """Update the constants of the tree using RPROP"""
-        fit_best = -np.inf
-        epoch_best = 0
-        rprop = self.get_rprop(update_constants=1)
-        error_st = self.get_error_st()
-        rprop.set_error_st_sign(error_st)
-        k = self._computing_fitness
-        ind = self._p[k]
-        constants = self._p_constants[k]
-        best_cons = constants.copy()
-        if not self.any_constant(ind):
-            return None
-        # print "empezando", k
-        for i in range(epochs):
-            if i > 0:
-                self.gens_ind += 1
-            # print "compute_error_pr", k
-            e, g = self.compute_error_pr(ind, pos=pos, constants=constants,
-                                         epoch=i)
-            # print "end compute_error_pr", k
-            fit = - self.distance(self._f, g)
-            if fit > fit_best and not np.isnan(fit):
-                fit_best = fit
-                best_cons = constants.copy()
-                epoch_best = i
-            if i < epochs - 1:
-                # print "update_constants", k
-                rprop.set_zero_pos()
-                error_st[self._output] = np.sign(e.T)
-                rprop.update_constants_rprop()
-                # print "end update_constants", k
-            if i - epoch_best >= self._max_n_worst_epochs:
-                break
-        constants[:] = best_cons[:]
-        self._fitness[k] = fit_best
-        # print "terminando", k
-
     @classmethod
-    def init_cl(cls, training_size=None, update_best_w_rprop=True,
+    def init_cl(cls, training_size=None,
                 max_length=1024, max_mem=500, argmax_nargs=2,
                 func=["+", "-", "*", "/", 'abs', 'exp', 'sqrt', 'sin',
                       'cos', 'sigmoid', 'if', 'max', 'min', 'ln', 'sq',
                       'argmax'], seed=0, **kwargs):
         ins = cls(max_mem=max_mem, max_length=max_length,
-                  update_best_w_rprop=update_best_w_rprop,
                   argmax_nargs=argmax_nargs, func=func, seed=seed,
                   **kwargs)
         if training_size is None:
