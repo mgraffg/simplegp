@@ -552,7 +552,7 @@ class GP(SimpleGA):
                 g = self._p_st[self._computing_fitness][self._output].T
         else:
             g = self.eval_ind(ind, pos=pos, constants=constants)
-        e = g - self._f
+        e = 2 * (g - self._f)
         return e, g
 
     def rprop(self, ind=None, pos=0, constants=None,

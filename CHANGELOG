@@ -59,3 +59,6 @@ Version 0.2.10.*
 	+ ClassificationPDE is rewritten.
 	+ There is a new class PDEXOSubtree inherits from PDEXO
 	+ SubTreeXOPDE uses the new class aforementioned
+	+ Bug in PDEXO, it did not handle a zero
+	+ Missing 2 in compute_error_pr
+	+ Crossover does not verify whether the fitness is infinity

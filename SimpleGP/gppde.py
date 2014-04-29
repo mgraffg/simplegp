@@ -133,19 +133,7 @@ class GPPDE(GP):
         error = self._p_error_st[self._xo_father1]
         x = self._p_st[self._xo_father1]
         s = self._p_st[self._xo_father2]
-        self._tree.father2_xp_extras(error,
-                                     x, s)
-        if not force_xo and (
-                self.fitness(self._xo_father1) == -np.inf or
-                self.fitness(self._xo_father2) == -np.inf):
-            if p1 == -1:
-                if self._tree.get_select_root():
-                    p1 = np.random.randint(father1.shape[0])
-                else:
-                    p1 = np.random.randint(father1.shape[0]-1) + 1
-            if p2 == -1:
-                p2 = self._tree.father2_xo_point_super(father1,
-                                                       father2, p1)
+        self._tree.father2_xp_extras(error, x, s)
         return super(GPPDE, self).crossover(father1, father2,
                                             p1, p2)
 

@@ -347,6 +347,8 @@ cdef class PDEXO(Tree):
             flag = 0
             for j in range(c):
                 # p2[m] = ((s[m] > x) == error).sum(axis=1)
+                if s[j1] == x[j]:
+                    continue
                 if s[j1] > x[j]:
                     if error[j] == -1:
                         flag += 1
