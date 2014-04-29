@@ -111,6 +111,15 @@ class GPPDE(GP):
         ind = self.crossover(father1, son)
         return ind
 
+    def get_error(self, p1):
+        self._computing_fitness = self._xo_father1
+        e, g = self.compute_error_pr(None)
+        self._p_der[self._output] = e.T
+        self._pde.compute(self._p[self._xo_father1], p1,
+                          self._p_st[self._xo_father1])
+        e = np.sign(self._p_der[p1])
+        return e
+
     def crossover(self, father1, father2, p1=-1, p2=-1,
                   force_xo=False):
         if p1 == -1:
@@ -118,20 +127,9 @@ class GPPDE(GP):
                 p1 = np.random.randint(father1.shape[0])
             else:
                 p1 = np.random.randint(father1.shape[0]-1) + 1
-        if False and not force_xo and (
-                self.fitness(self._xo_father1) == -np.inf or
-                self.fitness(self._xo_father2) == -np.inf):
-            if p2 == -1:
-                p2 = self._tree.father2_xo_point(father1,
-                                                 father2, p1)
-        else:
+        if p2 == -1:
             self._tree.crossover_mask(father1, father2, p1)
-            self._computing_fitness = self._xo_father1
-            e, g = self.compute_error_pr(None)
-            self._p_der[self._output] = e.T
-            self._pde.compute(self._p[self._xo_father1], p1,
-                              self._p_st[self._xo_father1])
-            e = np.sign(self._p_der[p1])
+            e = self.get_error(p1)
             s = self._p_st[self._xo_father2][:father2.shape[0]]
             p = self._p_st[self._xo_father1][p1]
             p2 = (np.sign(p - s) * e).sum(axis=1)

@@ -91,6 +91,21 @@ class SubTreeXOPDE(GPPDE, GPForest):
         self._nop[self._output_pos] = self._ntrees
         return self
 
+    def get_error(self, p1):
+        self._computing_fitness = self._xo_father1
+        ind = self._p[self._xo_father1]
+        pos = 1
+        self._output[0] = pos
+        for i in range(self._output.shape[0] - 1):
+            pos = self._tree.traverse(ind, pos)
+            self._output[i+1] = pos
+        e, g = self.compute_error_pr(None)
+        self._p_der[self._output] = e.T
+        self._pde.compute(self._p[self._xo_father1], p1,
+                          self._p_st[self._xo_father1])
+        e = np.sign(self._p_der[p1])
+        return e
+
     def tree_params(self):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
