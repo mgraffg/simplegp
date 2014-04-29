@@ -109,8 +109,7 @@ cdef class SubTree(Tree):
 
 
 cdef class PDEXO(Tree):
-    cdef INT8 *_xo_error
-    cdef FLOAT *_xo_x, *_xo_s
+    cdef FLOAT *_xo_x, *_xo_s, *_xo_error
     cdef int _xo_c
 
     cpdef int father2_xo_point_super(self,

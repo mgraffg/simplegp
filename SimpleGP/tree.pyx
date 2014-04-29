@@ -365,10 +365,10 @@ cdef class PDEXO(Tree):
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def father2_xp_extras(self,
-                          npc.ndarray[INT8, ndim=2, mode="c"] error,
-                          npc.ndarray[FLOAT, ndim=2, mode="c"] x,
+                          npc.ndarray[FLOAT, ndim=1, mode="c"] error,
+                          npc.ndarray[FLOAT, ndim=1, mode="c"] x,
                           npc.ndarray[FLOAT, ndim=2, mode="c"] s):
-        self._xo_error = <INT8 *> error.data
+        self._xo_error = <FLOAT *> error.data
         self._xo_x = <FLOAT *> x.data
         self._xo_s = <FLOAT *> s.data
         self._xo_c = s.shape[1]
@@ -382,13 +382,12 @@ cdef class PDEXO(Tree):
         cdef int f2_end = father2.shape[0], i, j, j1, c
         cdef unsigned int flag, bflag=0, res=0
         cdef INT *m, *_length
-        cdef INT8 *error
-        cdef FLOAT *x, *s
+        cdef FLOAT *x, *s, *error
         self.crossover_mask(father1, father2, p1)
         m = self._m
         c = self._xo_c
-        error = & self._xo_error[p1 * c]
-        x = & self._xo_x[p1 * c]
+        error = self._xo_error
+        x = self._xo_x
         s = self._xo_s
         _length = self._length
         for i in range(f2_end):
@@ -398,6 +397,8 @@ cdef class PDEXO(Tree):
             flag = 0
             for j in range(c):
                 # p2[m] = ((s[m] > x) == error).sum(axis=1)
+                if s[j1] == x[j]:
+                    continue
                 if s[j1] > x[j]:
                     if error[j] == -1:
                         flag += 1

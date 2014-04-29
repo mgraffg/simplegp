@@ -14,6 +14,7 @@
 import numpy as np
 from SimpleGP.simplegp import GP
 from SimpleGP.pde import PDE
+from SimpleGP.tree import PDEXO
 
 
 class GPPDE(GP):
@@ -111,6 +112,17 @@ class GPPDE(GP):
         ind = self.crossover(father1, son)
         return ind
 
+    def tree_params(self):
+        self._tree_length = np.empty(self._max_length,
+                                     dtype=np.int)
+        self._tree_mask = np.empty(self._max_length,
+                                   dtype=np.int)
+        self._tree = PDEXO(self._nop,
+                           self._tree_length,
+                           self._tree_mask,
+                           self._min_length,
+                           self._max_length)
+
     def get_error(self, p1):
         self._computing_fitness = self._xo_father1
         e, g = self.compute_error_pr(None)
@@ -128,16 +140,18 @@ class GPPDE(GP):
             else:
                 p1 = np.random.randint(father1.shape[0]-1) + 1
         if p2 == -1:
-            self._tree.crossover_mask(father1, father2, p1)
+            # self._tree.crossover_mask(father1, father2, p1)
             e = self.get_error(p1)
-            s = self._p_st[self._xo_father2][:father2.shape[0]]
+            s = self._p_st[self._xo_father2]
             p = self._p_st[self._xo_father1][p1]
-            p2 = (np.sign(p - s) * e).sum(axis=1)
-            p2[np.isnan(p2)] = -np.inf
-            p2 = p2.argsort()[::-1]
-            m = self._tree_mask[:father2.shape[0]].astype(np.bool)
-            p2 = p2[m[p2]]
-            p2 = p2[0]
+            self._tree.father2_xp_extras(e, p, s)
+            p2 = self._tree.father2_crossing_point(father1, father2, p1)
+            # p2 = (np.sign(p - s) * e).sum(axis=1)
+            # p2[np.isnan(p2)] = -np.inf
+            # p2 = p2.argsort()[::-1]
+            # m = self._tree_mask[:father2.shape[0]].astype(np.bool)
+            # p2 = p2[m[p2]]
+            # p2 = p2[0]
         return super(GPPDE, self).crossover(father1, father2,
                                             p1, p2)
 
