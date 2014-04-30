@@ -28,6 +28,9 @@ cdef class PDE:
     cdef FLOAT *_p_st
     cdef int _end
 
+    cpdef int compute_constants(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                                npc.ndarray[FLOAT, ndim=2, mode="c"] _st)
+
     cpdef int compute(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                       int pos,
                       npc.ndarray[FLOAT, ndim=2, mode="c"] _st)

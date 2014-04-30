@@ -65,3 +65,4 @@ Version 0.3.0
 	++ path_to_root computes the path to the root starting at node pos
 	++ compute_parents fill an array with the indexes of the parents
 	+ GPPDE.init_cl has new default parameters
+	+ There is a new class, PDE, that handles the computation of the partial derivative this class is used by GPPDE, by doing this one is able to remove the cache of the partial derivative and the complexity is improved

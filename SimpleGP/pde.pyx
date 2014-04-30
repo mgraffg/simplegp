@@ -38,6 +38,24 @@ cdef class PDE:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cpdef int compute_constants(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                                npc.ndarray[FLOAT, ndim=2, mode="c"] _st):
+        cdef int pos, ind_size=ind.shape[0]
+        cdef INT *indC = <INT *>ind.data
+        self._l_st = _st.shape[1]
+        self._ind = indC
+        self._st = <FLOAT *>_st.data
+        self._tree.set_pos(0)
+        self._tree.compute_parents_inner(self._ind, self._parent, -1)
+        for pos in range(ind_size):
+            if self._tree.isconstant(indC[pos]):
+                self._end = self._tree.path_to_root_inner(self._parent, self._path,
+                                                          pos)
+                self.compute_inner()
+        return 1
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cpdef int compute(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                       int pos,
                       npc.ndarray[FLOAT, ndim=2, mode="c"] _st):
@@ -221,7 +239,7 @@ cdef class PDE:
     cdef void max(self, int _i):
         cdef int i, ii, oi, l_st = self._l_st, a_i, b_i
         cdef INT *path = self._path
-        cdef FLOAT *p_st = self._p_st, *st = self._st
+        cdef FLOAT *p_st = self._p_st, *st = self._st, x, y, s
         ii = path[_i] * l_st
         oi = path[_i+1] * l_st
         a_i = (path[_i] + 1) * l_st
@@ -245,7 +263,7 @@ cdef class PDE:
     cdef void min(self, int _i):
         cdef int i, ii, oi, l_st = self._l_st, a_i, b_i
         cdef INT *path = self._path
-        cdef FLOAT *p_st = self._p_st, *st = self._st
+        cdef FLOAT *p_st = self._p_st, *st = self._st, x, y, s
         ii = path[_i] * l_st
         oi = path[_i+1] * l_st
         a_i = (path[_i] + 1) * l_st

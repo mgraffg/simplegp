@@ -15,6 +15,7 @@ import numpy as np
 from SimpleGP.simplegp import GP
 from SimpleGP.pde import PDE
 from SimpleGP.tree import PDEXO
+from SimpleGP.Rprop_mod import RPROP2
 
 
 class GPPDE(GP):
@@ -29,15 +30,15 @@ class GPPDE(GP):
         self._p_st = np.empty(self._popsize, dtype=np.object)
         self._used_mem = 0
 
-    # def new_best(self, k):
-    #     super(GPPDE, self).new_best(k)
-    #     fit = self._best_fit
-    #     if not self._update_best_w_rprop or fit is None:
-    #         return None
-    #     self.rprop(k)
-    #     if self._fitness[k] > fit:
-    #         self._best_fit = self._fitness[k]
-    #         return super(GPPDE, self).new_best(k)
+    def new_best(self, k):
+        super(GPPDE, self).new_best(k)
+        fit = self._best_fit
+        if not self._update_best_w_rprop or fit is None:
+            return None
+        self.rprop(k)
+        if self._fitness[k] > fit:
+            self._best_fit = self._fitness[k]
+            return super(GPPDE, self).new_best(k)
 
     def stats(self):
         flag = super(GPPDE, self).stats()
@@ -175,6 +176,49 @@ class GPPDE(GP):
                 self._p_st[k].resize(l, self._x.shape[0])
                 self.update_mem(self._p_st[k])
             return self._p_st[k]
+
+    def compute_error_pr(self, ind, pos=0, constants=None, epoch=0):
+        k = self._computing_fitness
+        if epoch == 0:
+            g = self._p_st[self._computing_fitness][self._output].T
+        else:
+            g = self.eval(k)
+        e = 2 * (g - self._f)
+        return e, g
+
+    def rprop(self, k, epochs=10000):
+        """Update the constants of the tree using RPROP"""
+        self._computing_fitness = k
+        ind = self._p[k]
+        constants = self._p_constants[k]
+        self._computing_fitness = k
+        if not self.any_constant(ind):
+            return None
+        best_cons = constants.copy()
+        fit_best = self._fitness[k]
+        epoch_best = 0
+        rprop = RPROP2(ind, constants,
+                       self._p_der, self._tree)
+        e, g = self.compute_error_pr(None)
+        self._p_der[self._output] = e.T
+        for i in range(epochs):
+            if i > 0:
+                self.gens_ind += 1
+            self._pde.compute_constants(ind, self._p_st[k])
+            rprop.update_constants_rprop()
+            e, g = self.compute_error_pr(None, epoch=i)
+            fit = - self.distance(self._f, g)
+            if fit > fit_best and not np.isnan(fit):
+                fit_best = fit
+                best_cons = constants.copy()
+                epoch_best = i
+            if i < epochs - 1:
+                self._p_der[self._output] = e.T
+            if i - epoch_best >= self._max_n_worst_epochs:
+                break
+        constants[:] = best_cons[:]
+        self._fitness[k] = fit_best
+        e, g = self.compute_error_pr(None, epoch=i)
 
     @classmethod
     def init_cl(cls, training_size=None,

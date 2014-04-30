@@ -203,6 +203,31 @@ class TestSimpleGPPDE(object):
         x = np.exp(gp._p_st[0][1])
         assert np.all(p_der[1] == x)
 
+    def test_pde_constants(self):
+        from SimpleGP.pde import PDE
+        from SimpleGP.Rprop_mod import RPROP2
+        gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
+                           update_best_w_rprop=False,
+                           seed=0).train(self._x, self._y)
+        gp.create_population()
+        fit = gp.fitness(0)
+        e, g = gp.compute_error_pr(None)
+        print fit
+        p_der = np.ones_like(gp._p_st[0])
+        p_der[0] = e
+        pde = PDE(gp._tree, p_der)
+        cons = gp._p_constants[0].copy()
+        pde.compute_constants(gp._p[0],
+                              gp._p_st[0])
+        rprop = RPROP2(gp._p[0], gp._p_constants[0],
+                       p_der, gp._tree)
+        rprop.update_constants_rprop()
+        nfunc = gp._nop.shape[0]
+        nvar = gp._x.shape[1]
+        print "n cons", (gp._p[0] >= nfunc+nvar).sum(), cons.shape
+        gp._fitness[0] = -np.inf
+        assert gp.fitness(0) > fit
+
 
 def test_gppde():
     x = np.linspace(-10, 10, 100)
