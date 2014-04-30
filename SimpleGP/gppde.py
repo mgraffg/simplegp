@@ -177,15 +177,6 @@ class GPPDE(GP):
                 self.update_mem(self._p_st[k])
             return self._p_st[k]
 
-    def compute_error_pr(self, ind, pos=0, constants=None, epoch=0):
-        k = self._computing_fitness
-        if epoch == 0:
-            g = self._p_st[self._computing_fitness][self._output].T
-        else:
-            g = self.eval(k)
-        e = 2 * (g - self._f)
-        return e, g
-
     def rprop(self, k, epochs=10000):
         """Update the constants of the tree using RPROP"""
         self._computing_fitness = k

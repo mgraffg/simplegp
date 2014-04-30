@@ -551,7 +551,10 @@ class GP(SimpleGA):
             else:
                 g = self._p_st[self._computing_fitness][self._output].T
         else:
-            g = self.eval_ind(ind, pos=pos, constants=constants)
+            if ind is None:
+                g = self.eval(self._computing_fitness)
+            else:
+                g = self.eval_ind(ind, pos=pos, constants=constants)
         # e = - 2 * ( self._f - g)
         e = 2 * (g - self._f)
         return e, g
@@ -857,7 +860,10 @@ class GPMAE(GP):
             else:
                 g = self._p_st[self._computing_fitness][self._output].T
         else:
-            g = self.eval_ind(ind, pos=pos, constants=constants)
+            if ind is None:
+                g = self.eval(self._computing_fitness)
+            else:
+                g = self.eval_ind(ind, pos=pos, constants=constants)
         e = self._f - g
         s = np.sign(e)
         e = -1 * s
