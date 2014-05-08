@@ -61,7 +61,7 @@ cdef class Tree:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void set_pos(self, int pos):
+    cpdef set_pos(self, int pos):
         self._pos = pos
 
     @cython.boundscheck(False)

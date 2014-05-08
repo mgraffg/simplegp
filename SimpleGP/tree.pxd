@@ -45,7 +45,7 @@ cdef class Tree:
 
     cdef INT isconstant(self, INT a)
 
-    cdef void set_pos(self, int pos)
+    cpdef set_pos(self, int pos)
 
     cpdef int get_pos_arg(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                           int pos,

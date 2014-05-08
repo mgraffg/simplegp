@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from SimpleGP import GPPDE, GPMAE, GPwRestart
+import time
 import numpy as np
 
 
@@ -25,6 +26,13 @@ class TestSimpleGPPDE(object):
         self._gp = GPPDE.init_cl(training_size=self._x.shape[0],
                                  seed=0)
         self._gp.train(self._x, self._y)
+
+    def test_time(self):
+        t = time.time()
+        gp = self._gp
+        gp._verbose = True
+        gp.run()
+        assert (time.time() - t) < 30
 
     def test_parent(self):
         gp = self._gp
