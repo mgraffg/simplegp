@@ -70,3 +70,7 @@ Version 0.3.1
 	+ Making the tests simpler and faster
 	+ removing the computing_derivative from GP
 	+ Removing from eval.pyx the procedures that compute the derivative
+=======
+	+ Bug in PDEXO, it did not handle a zero
+	+ Missing 2 in compute_error_pr
+	+ Crossover does not verify whether the fitness is infinity

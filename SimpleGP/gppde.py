@@ -139,18 +139,11 @@ class GPPDE(GP):
             else:
                 p1 = np.random.randint(father1.shape[0]-1) + 1
         if p2 == -1:
-            # self._tree.crossover_mask(father1, father2, p1)
             e = self.get_error(p1)
             s = self._p_st[self._xo_father2]
             p = self._p_st[self._xo_father1][p1]
             self._tree.father2_xp_extras(e, p, s)
             p2 = self._tree.father2_crossing_point(father1, father2, p1)
-            # p2 = (np.sign(p - s) * e).sum(axis=1)
-            # p2[np.isnan(p2)] = -np.inf
-            # p2 = p2.argsort()[::-1]
-            # m = self._tree_mask[:father2.shape[0]].astype(np.bool)
-            # p2 = p2[m[p2]]
-            # p2 = p2[0]
         return super(GPPDE, self).crossover(father1, father2,
                                             p1, p2)
 
