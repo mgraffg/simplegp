@@ -68,3 +68,5 @@ Version 0.3.0
 	+ There is a new class, PDE, that handles the computation of the partial derivative this class is used by GPPDE, by doing this one is able to remove the cache of the partial derivative and the complexity is improved
 Version 0.3.1
 	+ Making the tests simpler and faster
+	+ removing the computing_derivative from GP
+	+ Removing from eval.pyx the procedures that compute the derivative

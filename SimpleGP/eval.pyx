@@ -33,20 +33,9 @@ cdef class Eval:
         self._nfunc = nop.shape[0]
         # number of variables
         self._nvar = nvar
-        # whether to compute the derivative
-        self._p_der = 0
         # setting the maximum number of arguments
         self._max_nargs = max_nargs
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    def set_p_der_st(self, npc.ndarray[FLOAT, ndim=2, mode="c"] _st):
-        """Set the partial derivative stack.
-        Let (r, c) be the shape of self._st then the
-        shape of self._p_der_st is (r, max_nargs * c)."""
-        self._p_der_st = <FLOAT *> _st.data
-        self._p_der = 1
-
+ 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def set_output_function(self, npc.ndarray[INT, ndim=1] _output):
@@ -165,14 +154,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = math.fabs(st[a_i + i])
-        if self._p_der:
-            for i in range(l):
-                if st[a_i + i] == 0:
-                    self._p_der_st[po_i + i] = 0
-                elif st[a_i + i] < 0:
-                    self._p_der_st[po_i + i] = -1
-                else:
-                    self._p_der_st[po_i + i] = 1
         return 1
 
     @cython.boundscheck(False)
@@ -188,9 +169,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = math.exp(st[a_i + i])
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = st[o_i + i]
         return 1
 
     @cython.boundscheck(False)
@@ -207,9 +185,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = math.sqrt(st[a_i + i])
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = 1 / (2 * st[o_i + i])
         return 1
 
     @cython.boundscheck(False)
@@ -225,9 +200,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = math.sin(st[a_i + i])
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = math.cos(st[a_i + i])
         return 1
 
     @cython.boundscheck(False)
@@ -243,9 +215,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = math.cos(st[a_i + i])
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = - math.sin(st[a_i + i])
         return 1
 
     @cython.boundscheck(False)
@@ -262,9 +231,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = 1 / (1 + math.exp(-st[a_i + i]))
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = st[o_i + i] * (1 - st[o_i + i])
         return 1
 
     @cython.boundscheck(False)
@@ -281,9 +247,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = math.log(math.fabs(st[a_i + i]))
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = 1 / st[a_i + i]
         return 1
 
     @cython.boundscheck(False)
@@ -299,9 +262,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = st[a_i + i] * st[a_i + i]
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = 2 * st[a_i + i]
         return 1
 
     @cython.boundscheck(False)
@@ -339,10 +299,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = st[a_i + i] + st[b_i + i]
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = 1
-                self._p_der_st[po_i + i + l] = 1
         return 1
 
     @cython.boundscheck(False)
@@ -360,10 +316,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = st[a_i + i] - st[b_i + i]
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = 1
-                self._p_der_st[po_i + i + l] = -1
         return 1
 
     @cython.boundscheck(False)
@@ -381,10 +333,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = st[a_i + i] * st[b_i + i]
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = st[b_i + i]
-                self._p_der_st[po_i + i + l] = st[a_i + i]
         return 1
 
     @cython.boundscheck(False)
@@ -403,10 +351,6 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         for i in range(l):
             st[o_i + i] = st[a_i + i] / st[b_i + i]
-        if self._p_der:
-            for i in range(l):
-                self._p_der_st[po_i + i] = 1 / st[b_i + i]
-                self._p_der_st[po_i + i + l] = - st[a_i + i] / (st[b_i + i] * st[b_i + i])
         return 1
 
     @cython.boundscheck(False)
@@ -429,13 +373,6 @@ cdef class Eval:
             y = st[b_i + i]
             s = 1 / (1 + math.exp(-100 * (x-y)))
             st[o_i + i] = s * (x - y) + y
-        if self._p_der:
-            for i in range(l):
-                x = st[a_i + i]
-                y = st[b_i + i]
-                s = 1 / (1 + math.exp(-100 * (x-y)))
-                self._p_der_st[po_i + i] = (x - y) * s * (1 - s) + s
-                self._p_der_st[po_i + i + l] = (x - y) * s * (s - 1) + 1 - s
         return 1
 
     @cython.boundscheck(False)
@@ -458,13 +395,6 @@ cdef class Eval:
             y = st[b_i + i]
             s = 1 / (1 + math.exp(-100 * (x-y)))
             st[o_i + i] = s * (y - x) + x
-        if self._p_der:
-            for i in range(l):
-                x = st[a_i + i]
-                y = st[b_i + i]
-                s = 1 / (1 + math.exp(-100 * (x-y)))
-                self._p_der_st[po_i + i] = (y - x) * s * (1 - s) + 1 - s
-                self._p_der_st[po_i + i + l] = (y - x) * s * (s - 1) + s
         return 1
 
     @cython.boundscheck(False)
@@ -492,15 +422,6 @@ cdef class Eval:
             z = st[c_i + i]
             s = 1 / (1 + math.exp(-100 * x))
             st[o_i + i] = s * (y - z) + z
-        if self._p_der:
-            for i in range(l):
-                x = st[a_i + i]
-                y = st[b_i + i]
-                z = st[c_i + i]
-                s = 1 / (1 + math.exp(-100 * x))
-                self._p_der_st[po_i + i] = (y - z) * s * (1 - s)
-                self._p_der_st[po_i + i + l] = s
-                self._p_der_st[po_i + i + l + l] = 1-s
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -521,11 +442,6 @@ cdef class Eval:
                     argmax = j
                     max = st[output[j] * l + i]
             st[i] = argmax
-        if self._p_der:
-            for j in range(nargs):
-                po_i = j * l
-                for i in range(l):
-                    self._p_der_st[po_i + i] = 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -544,33 +460,14 @@ cdef class Eval:
         cdef FLOAT *st = self._st
         cdef FLOAT sup, sdown, up, down, beta, xi, c
         beta = 2.
-        if self._p_der:
-            for i in range(l):
-                sup = 0
-                sdown = 0
-                for j in range(nargs):
-                    xi = st[l * a[j] + i]
-                    down = math.exp(beta * xi)
-                    up = j * down
-                    sdown += down
-                    sup += up
-                st[o_i + i] = sup / sdown
-                for j in range(nargs):
-                    xi = st[l * a[j] + i]
-                    down = math.exp(beta * xi)
-                    up = (j * beta * beta * down) / sdown 
-                    c = - sup / (sdown * sdown)
-                    c = c * beta * beta * down
-                    self._p_der_st[po_i + i + j*l] = up + c
-        else:
-            for i in range(l):
-                sup = 0
-                sdown = 0
-                for j in range(nargs):
-                    xi = st[l * a[j] + i]
-                    down = math.exp(beta * xi)
-                    up = j * down
-                    sdown += down
-                    sup += up
-                st[o_i + i] = sup / sdown
+        for i in range(l):
+            sup = 0
+            sdown = 0
+            for j in range(nargs):
+                xi = st[l * a[j] + i]
+                down = math.exp(beta * xi)
+                up = j * down
+                sdown += down
+                sup += up
+            st[o_i + i] = sup / sdown
     

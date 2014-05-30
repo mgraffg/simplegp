@@ -24,8 +24,6 @@ cdef class Eval:
     cdef FLOAT *_st
     cdef INT _l_st
     cdef INT *_nop
-    cdef INT _p_der
-    cdef FLOAT *_p_der_st
     cdef INT *_output
     cdef INT _n_output
     cdef INT _max_nargs

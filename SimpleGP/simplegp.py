@@ -11,14 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import types
-import numpy as np
 import os
-from SimpleGP.simplega import SimpleGA
+import types
+
+import numpy as np
 from SimpleGP.Simplify_mod import Simplify
 from SimpleGP.eval import Eval
 from SimpleGP.tree import Tree
-from SimpleGP.Rprop_mod import RPROP
+
+from SimpleGP.simplega import SimpleGA
 
 
 class GP(SimpleGA):
