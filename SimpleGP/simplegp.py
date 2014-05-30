@@ -28,9 +28,6 @@ class GP(SimpleGA):
 
     - It simplifies each new individual if do_simplify is set to True.
 
-    - The method self.rprop can be used to optimize constants if
-    compute_derivatives is set to True
-
     >>> import numpy as np
     >>> from SimpleGP import GP
 
@@ -60,7 +57,6 @@ class GP(SimpleGA):
                  nrandom=100, max_length=262143, verbose=False,
                  max_depth=7, max_length_subtree=np.inf,
                  min_depth=1, pgrow=0.5, pleaf=None,
-                 compute_derivatives=False,
                  verbose_nind=None, argmax_nargs=None,
                  do_simplify=True, max_n_worst_epochs=3, ppm=0.0,
                  **kwargs):
@@ -71,7 +67,7 @@ class GP(SimpleGA):
         self.constants_params(nrandom)
         self.genetic_operators_params(pgrow, pleaf, ppm,
                                       mutation_depth)
-        self.derivative_params(compute_derivatives)
+        self.st_params()
         self.max_length_checks()
         self.function_set(func, argmax_nargs)
         self.format_params(verbose, verbose_nind)
@@ -176,11 +172,10 @@ class GP(SimpleGA):
         else:
             self._verbose_nind = verbose_nind
 
-    def derivative_params(self, compute_derivatives):
+    def st_params(self):
         self._st = None
         self._p_der_st = None
         self._error_st = None
-        self._compute_derivatives = compute_derivatives
 
     def min_max_length_params(self, minimum=None, maximum=None):
         if minimum is not None:
@@ -505,9 +500,6 @@ class GP(SimpleGA):
         st = self.get_st(ind)
         e = self._eval
         e.set_pos(0)
-        if self._compute_derivatives:
-            error_st, p_der_st = self.get_p_der_st(ind)
-            e.set_p_der_st(p_der_st)
         e.eval_ind(ind,
                    self._x,
                    st,
@@ -541,73 +533,6 @@ class GP(SimpleGA):
                 self.new_best(k)
                 return self._best_fit
         return f
-
-    def compute_error_pr(self, ind, pos=0, constants=None, epoch=0):
-        if epoch == 0:
-            k = self._computing_fitness
-            if k is None or (not hasattr(self, '_p_st')
-                             or self._p_st[k] is None):
-                g = self._st[self._output].T
-            else:
-                g = self._p_st[self._computing_fitness][self._output].T
-        else:
-            if ind is None:
-                g = self.eval(self._computing_fitness)
-            else:
-                g = self.eval_ind(ind, pos=pos, constants=constants)
-        # e = - 2 * ( self._f - g)
-        e = 2 * (g - self._f)
-        return e, g
-
-    def rprop(self, ind=None, pos=0, constants=None,
-              epochs=10000):
-        """Update the constants of the tree using RPROP"""
-        assert self._compute_derivatives
-        self._computing_fitness = None
-        k = ind
-        if ind is None:
-            ind = self._p[self.get_best()]
-            constants = self._p_constants[self.get_best()]
-            self._computing_fitness = self.get_best()
-        if isinstance(ind, types.IntType):
-            ind = self._p[k]
-            constants = self._p_constants[k]
-            self._computing_fitness = k
-        if not self.any_constant(ind):
-            return None
-        constants if constants is not None else self._constants
-        prev = np.zeros(ind.shape[0], dtype=self._dtype)
-        slope = np.zeros(ind.shape[0], dtype=self._dtype)
-        fit_best = -np.inf
-        epoch_best = 0
-        best_cons = constants.copy()
-        rprop = RPROP(ind, constants, self._nop,
-                      self._x.shape[1], self._p_der_st,
-                      self._x.shape[0],
-                      prev, slope,
-                      max_nargs=self._max_nargs)
-        error_st = self._error_st
-        rprop.set_error_st(error_st)
-        for i in range(epochs):
-            if i > 0:
-                self.gens_ind += 1
-            e, g = self.compute_error_pr(ind, pos=pos, constants=constants,
-                                         epoch=i)
-            fit = - self.distance(self._f, g)
-            if fit > fit_best and not np.isnan(fit):
-                fit_best = fit
-                best_cons = constants.copy()
-                epoch_best = i
-            if i < epochs - 1:
-                rprop.set_zero_pos()
-                error_st[self._output] = e.T
-                rprop.update_constants_rprop()
-            if i - epoch_best >= self._max_n_worst_epochs:
-                break
-        constants[:] = best_cons[:]
-        if isinstance(k, types.IntType):
-            self._fitness[k] = fit_best
-            self.set_extras_to_ind(k, ind)
 
     def pre_crossover(self, father1=None, father2=None):
         """
@@ -928,28 +853,6 @@ class GPwRestart(GP):
             self.on_exit()
         self.nodes_evaluated = nodes_evaluated
         return flag
-
-
-class GPRPropU(GP):
-    """This GP updates always the constants using RPROP."""
-    def __init__(self, compute_derivatives=True, **kwargs):
-        super(GPRPropU, self).__init__(compute_derivatives=True,
-                                       **kwargs)
-
-    def fitness(self, ind):
-        fit = super(GPRPropU, self).fitness(ind)
-        if not self._use_cache and isinstance(ind,
-                                              types.IntType):
-            if fit == -np.inf:
-                return fit
-            self.rprop(ind)
-            fit2 = self._fitness[ind]
-            if (fit2 > fit and (self._best_fit is None
-                                or self._best_fit < fit2)):
-                self._best_fit = fit2
-                self.new_best(ind)
-            return fit2
-        return fit
 
 
 if __name__ == '__main__':

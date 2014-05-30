@@ -31,7 +31,6 @@ def run(seed=0, pxo=0.9):
     gp = GP2(popsize=1000,
              generations=50,
              verbose=True,
-             compute_derivatives=True,
              verbose_nind=100,
              min_length=1,
              pleaf=None,

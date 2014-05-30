@@ -14,7 +14,7 @@
 __version__ = '0.3.1'
 
 from .simplega import SimpleGA
-from .simplegp import GP, GPRPropU, GPwRestart, GPMAE
+from .simplegp import GP, GPwRestart, GPMAE
 from .gppde import GPPDE
 from .forest import GPForest, SubTreeXO, SubTreeXOPDE
 from .classification import Classification, ClassificationPDE
@@ -26,7 +26,7 @@ from utils import Pool, VerifyOutput
 
 
 __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
-           GPRPropU, GPForest, SubTreeXO, SubTreeXOPDE, Classification,
+           GPForest, SubTreeXO, SubTreeXOPDE, Classification,
            RecursiveGP, RGP, RTimeSeries, GPwRestart, GPMAE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool]

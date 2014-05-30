@@ -19,12 +19,10 @@ from SimpleGP.Rprop_mod import RPROP2
 
 
 class GPPDE(GP):
-    def __init__(self, compute_derivatives=False,
-                 max_mem=300.0,
+    def __init__(self, max_mem=300.0,
                  update_best_w_rprop=False,
                  **kwargs):
-        super(GPPDE, self).__init__(compute_derivatives=False,
-                                    **kwargs)
+        super(GPPDE, self).__init__(**kwargs)
         self._max_mem = max_mem
         self._update_best_w_rprop = update_best_w_rprop
         self._p_st = np.empty(self._popsize, dtype=np.object)
@@ -176,6 +174,18 @@ class GPPDE(GP):
                 self._p_st[k].resize(l, self._x.shape[0])
                 self.update_mem(self._p_st[k])
             return self._p_st[k]
+
+    def compute_error_pr(self, ind, pos=0, constants=None, epoch=0):
+        if epoch == 0:
+            g = self._p_st[self._computing_fitness][self._output].T
+        else:
+            if ind is None:
+                g = self.eval(self._computing_fitness)
+            else:
+                g = self.eval_ind(ind, pos=pos, constants=constants)
+        # e = - 2 * ( self._f - g)
+        e = 2 * (g - self._f)
+        return e, g
 
     def rprop(self, k, epochs=10000):
         """Update the constants of the tree using RPROP"""
