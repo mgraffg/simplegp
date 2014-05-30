@@ -5,3 +5,7 @@ $ python setup.py install --user
 for all the users in the system
 
 $ sudo python setup.py install
+
+for the case you only want to compile cython
+
+$ python setup.py build_ext --inplace

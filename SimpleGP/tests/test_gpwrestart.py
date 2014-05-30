@@ -28,8 +28,9 @@ class TestGPwRestart(object):
         self._y = y
 
     def test_gpwrestart(self):
+        self._gp._gens = 5
         flag = self._gp.run()
-        pr = self._gp.eval(self._gp.get_best())
+        pr = self._gp.predict(self._gp._x)
         assert not np.isinf(self._gp._fitness[self._gp.get_best()])
         assert self._gp.distance(self._gp._f,
                                  pr) < 0.1
@@ -37,17 +38,7 @@ class TestGPwRestart(object):
 
     def test_walltime(self):
         gp = GPwRestart(generations=25,
-                        walltime=5).train(self._x,
+                        walltime=1).train(self._x,
                                           self._y)
         flag = gp.run()
         assert not flag
-
-
-
-
-
-
-
-
-
-

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from SimpleGP import GP
+from SimpleGP import GPPDE
 import numpy as np
 
 
@@ -23,7 +23,7 @@ class TestRprop(object):
         X = np.vstack((x**2, x, np.ones(x.shape[0])))
         y = (X.T * pol).sum(axis=1)
         x = x[:, np.newaxis]
-        self._gp = GP(compute_derivatives=True).train(x, y)
+        self._gp = GPPDE().train(x, y)
         self._gp.create_population()
 
     def test_rprop(self):
@@ -32,7 +32,7 @@ class TestRprop(object):
                                    nvar, nvar+1, 0,
                                    2, nvar, nvar+2, nvar+3])
         self._gp._p_constants[0] = self._pol * -1
-        self._gp.eval(0)
+        fit = self._gp.fitness(0)
         self._gp.rprop(0)
-        c2 = self._gp._p_constants[0]
-        assert np.fabs(self._pol - c2).mean() < 0.01
+        fit2 = self._gp.fitness(0)
+        assert fit2 > fit

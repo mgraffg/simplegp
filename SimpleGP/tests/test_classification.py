@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from SimpleGP import Classification, ClassificationPDE
 import numpy as np
+from SimpleGP import Classification, ClassificationPDE
 
 
 cl = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -176,32 +176,22 @@ X = np.array([[ 5.1,  3.5,  1.4,  0.2],
 
 def test_classification():
     np.random.RandomState(0)
-    gp = Classification.init_cl().train(X, cl)
-    gp.run()
-    gp.eval(gp.get_best())
+    gp = Classification.run_cl(X, cl, generations=5)
     pr = gp.predict(X)
-    assert (not np.any(np.isnan(pr))) or (not np.any(np.isinf(pr)))
+    assert (not np.any(np.isnan(pr))) and (not np.any(np.isinf(pr)))
 
 
 def test_classification_run_cl():
     np.random.RandomState(0)
     X1 = X + np.random.normal(loc=0.0, scale=0.01,
                               size=X.shape)
-    gp = Classification.run_cl(X, cl, test=X1)
+    gp = Classification.run_cl(X, cl, generations=5,
+                               test=X1)
     assert gp is not None
 
 
 def test_classification_gppde():
     np.random.RandomState(0)
-    gp = ClassificationPDE.run_cl(X, cl)
+    gp = ClassificationPDE.run_cl(X, cl, generations=5)
     pr = gp.predict(X)
-    assert (not np.any(np.isnan(pr))) or (not np.any(np.isinf(pr)))
-
-
-
-
-
-
-
-
-
+    assert (not np.any(np.isnan(pr))) and (not np.any(np.isinf(pr)))
