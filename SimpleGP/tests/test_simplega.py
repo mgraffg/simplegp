@@ -53,3 +53,15 @@ def test_SimpleGA_run_cl_error():
     s = SimpleGA().run_cl(X, f, generations=5,
                           test=X1, ntries=1)
     assert s is None
+
+
+def test_popsize_property():
+    np.random.RandomState(0)
+    x = np.linspace(0, 1, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    f = (X * pol).sum(axis=1)
+    s = SimpleGA.init_cl(popsize=10, generations=5).train(X, f)
+    s.create_population()
+    s.popsize = 100
+    assert s._p.shape[0] == 100

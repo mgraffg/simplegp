@@ -72,6 +72,43 @@ class SimpleGA(object):
             signal.signal(signal.SIGALRM, self.walltime)
             signal.alarm(walltime)
 
+    @property
+    def population(self):
+        return self._p
+
+    @property
+    def popsize(self):
+        """Population size"""
+        return self._popsize
+
+    @popsize.setter
+    def popsize(self, popsize):
+        """Set the population size, it handles the case where the new
+population size is smaller or larger than the current one
+
+        """
+        if self._popsize == popsize:
+            return
+        if self._popsize > popsize:
+            index = self._fitness.argsort()[::-1][:popsize]
+            self._p = self._p[index]
+            self._fitness = self._fitness[index]
+        else:
+            d = popsize - self._popsize
+            cl = self._chromosome_length
+            self._p.resize((popsize, cl))
+            self._p[self._popsize:] = self.random_ind(size=((d, cl)))
+        self._popsize = popsize
+
+    @property
+    def generations(self):
+        """Number of generations"""
+        return self._gens
+
+    @generations.setter
+    def generations(self, v):
+        self._gens = v
+
     def new_best(self, k):
         """
         This method is called when the best so far is beaten by k.

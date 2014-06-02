@@ -195,6 +195,34 @@ class GP(SimpleGA):
                           self._min_length,
                           self._max_length)
 
+    @property
+    def popsize(self):
+        """Population size"""
+        return self._popsize
+
+    @popsize.setter
+    def popsize(self, popsize):
+        """Set the population size, it handles the case where the new
+population size is smaller or larger than the current one
+
+        """
+        if self._popsize == popsize:
+            return
+        if self._popsize > popsize:
+            index = self._fitness.argsort()[::-1][:popsize]
+            self._p = self._p[index]
+            self._fitness = self._fitness[index]
+            self._p_constants = self._p_constants[index]
+        else:
+            d = popsize - self._popsize
+            self._p.resize(popsize)
+            self._p_constants.resize(popsize)
+            for i, ind, cons in self.create_population_generator(d):
+                pos = i + self._popsize
+                self._p[pos] = ind
+                self._p_constants[pos] = cons
+        self._popsize = popsize
+
     def simplify(self, ind, constants=None):
         k = ind
         if isinstance(ind, types.IntType):
@@ -256,6 +284,18 @@ class GP(SimpleGA):
         self.eval(ind)
         return pr
 
+    def create_population_generator(self, popsize=None):
+        if popsize is None:
+            popsize = self._popsize
+        depth = self._max_depth
+        for i in range(popsize):
+            ind = self.create_random_ind(depth=depth)
+            cons = self._ind_generated_c
+            depth -= 1
+            if depth < self._min_depth:
+                depth = self._max_depth
+            yield (i, ind, cons)
+
     def create_population(self):
         if self._fname_best is not None and\
            os.path.isfile(self._fname_best)\
@@ -265,13 +305,9 @@ class GP(SimpleGA):
         self._p = np.empty(self._popsize, dtype=np.object)
         self._fitness = np.zeros(self._popsize)
         self._fitness[:] = -np.inf
-        depth = self._max_depth
-        for i in range(self._popsize):
-            self._p[i] = self.create_random_ind(depth=depth)
-            self._p_constants[i] = self._ind_generated_c
-            depth -= 1
-            if depth < self._min_depth:
-                depth = self._max_depth
+        for i, ind, cons in self.create_population_generator():
+            self._p[i] = ind
+            self._p_constants[i] = cons
 
     def isfunc(self, a):
         return a < self._nop.shape[0]

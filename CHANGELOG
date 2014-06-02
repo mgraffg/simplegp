@@ -66,11 +66,12 @@ Version 0.3.0
 	++ compute_parents fill an array with the indexes of the parents
 	+ GPPDE.init_cl has new default parameters
 	+ There is a new class, PDE, that handles the computation of the partial derivative this class is used by GPPDE, by doing this one is able to remove the cache of the partial derivative and the complexity is improved
-Version 0.3.1
+Version 0.3.*
 	+ Making the tests simpler and faster
 	+ removing the computing_derivative from GP
 	+ Removing from eval.pyx the procedures that compute the derivative
-=======
 	+ Bug in PDEXO, it did not handle a zero
 	+ Missing 2 in compute_error_pr
 	+ Crossover does not verify whether the fitness is infinity
+	+ Merge with the master branch
+	+ Setting properties to the classes. These are generations and population size

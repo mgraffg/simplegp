@@ -27,6 +27,24 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
 
+    def test_create_population(self):
+        self._gp.create_population()
+
+    def test_popsize(self):
+        gp = self._gp
+        gp.create_population()
+        fit = np.array(map(lambda x: gp.fitness,
+                           range(gp.popsize)))
+        s = fit.argsort()[::-1][:50]
+        gp.popsize = 50
+        fit2 = np.array(map(lambda x: gp.fitness,
+                            range(gp.popsize)))
+        assert np.all(fit[s] == fit2)
+        gp.popsize = 100
+        fit = np.array(map(lambda x: gp.fitness,
+                           range(gp.popsize)))
+        assert np.all(fit2 == fit[:50])
+
     def test_dosimplify(self):
         gp = GP.run_cl(self._x, self._y, generations=5,
                        seed=0, do_simplify=False)
