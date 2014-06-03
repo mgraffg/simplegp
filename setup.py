@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy
-from distutils.core import setup
-from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Distutils import build_ext
 from distutils import sysconfig
 import os
@@ -77,8 +77,8 @@ setup(
     author_email="mgraffg@dep.fie.umich.mx",
     cmdclass={"build_ext": build_ext},
     ext_modules=ext_modules,
-    packages=['SimpleGP',
-              'SimpleGP.tests']
+    packages=['SimpleGP']
+    # install_requires=['cython >= 0.19.2']
 )
 
 

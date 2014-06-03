@@ -722,30 +722,41 @@ population size is smaller or larger than the current one
     def save(self, fname=None):
         fname = fname if fname is not None else self._fname_best
         if fname is None:
-            return
-        fpt = open(fname, 'w')
-        np.save(fpt, self._p)
-        np.save(fpt, self._p_constants)
-        np.save(fpt, self._fitness)
-        np.save(fpt, self.gens_ind)
-        np.save(fpt, self.nodes_evaluated)
-        if self._stats:
-            np.save(fpt, self.fit_per_gen)
-            np.save(fpt, self.length_per_gen)
-        fpt.close()
+            return False
+        with open(fname, 'w') as fpt:
+            np.save(fpt, self._p)
+            np.save(fpt, self._p_constants)
+            np.save(fpt, self._fitness)
+            np.save(fpt, self.gens_ind)
+            np.save(fpt, self.nodes_evaluated)
+            if self._stats:
+                np.save(fpt, self.fit_per_gen)
+                np.save(fpt, self.length_per_gen)
+        return True
+
+    def save_best(self, fname=None):
+        """
+        Save only best individual
+        """
+        bs = self.get_best()
+        mask = np.ones(self.popsize, dtype=np.bool)
+        mask[bs] = False
+        self.population[bs] = None
+        self._p_constants[bs] = None
+        return self.save(fname=fname)
 
     def load_prev_run(self):
         try:
             fpt = open(self._fname_best)
             self._p = np.load(fpt)
+            self._p_constants = np.load(fpt)
             arr = filter(lambda x: self._p[x] is None,
                          range(self._p.shape[0]))
             if len(arr):
-                a = np.array([0, self._nop.shape[0],
-                              self._nop.shape[0]])
-                for _i in arr:
-                    self._p[_i] = a.copy()
-            self._p_constants = np.load(fpt)
+                for i, ind, c in self.create_population_generator(len(arr)):
+                    _i = arr[i]
+                    self.population[_i] = ind
+                    self._p_constants[_i] = c
             self._fitness = np.load(fpt)
             self.gens_ind = int(np.load(fpt))
             self.nodes_evaluated = np.load(fpt)

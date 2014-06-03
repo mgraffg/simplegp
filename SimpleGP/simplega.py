@@ -384,13 +384,12 @@ population size is smaller or larger than the current one
         fname = fname if fname is not None else self._fname_best
         if fname is None:
             return
-        fpt = open(fname, 'w')
-        np.save(fpt, self._p)
-        np.save(fpt, self._fitness)
-        np.save(fpt, self.gens_ind)
-        if self._stats:
-            np.save(fpt, self.fit_per_gen)
-        fpt.close()
+        with open(fname, 'w') as fpt:
+            np.save(fpt, self._p)
+            np.save(fpt, self._fitness)
+            np.save(fpt, self.gens_ind)
+            if self._stats:
+                np.save(fpt, self.fit_per_gen)
 
     @classmethod
     def init_cl(cls, generations=10000,

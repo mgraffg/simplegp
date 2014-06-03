@@ -55,6 +55,36 @@ class TestSimpleGP(object):
         t = GP.max_time_per_eval(self._x, self._y)
         assert t < 0.1
 
+    def test_save(self):
+        import tempfile
+        s = self._gp
+        s.create_population()
+        map(lambda x: s.fitness, range(s.popsize))
+        fname = tempfile.mktemp()
+        p = s.population
+        s.save(fname)
+        s1 = GP.init_cl(fname_best=fname,
+                        generations=5).train(self._x, self._y)
+        s1.create_population()
+        assert np.all(map(lambda x: np.all(p[x] == s1.population[x]),
+                          range(s.popsize)))
+
+    def test_save_best(self):
+        import tempfile
+        s = self._gp
+        s.create_population()
+        map(lambda x: s.fitness, range(s.popsize))
+        bs = s.get_best()
+        fname = tempfile.mktemp()
+        p = s.population[bs]
+        cons = s._p_constants[bs]
+        s.save_best(fname)
+        s1 = GP.init_cl(fname_best=fname,
+                        generations=5).train(self._x, self._y)
+        s1.create_population()
+        assert np.all(s1.population[bs] == p)
+        assert np.all(s1._p_constants[bs] == cons)
+
     def test_max_time(self):
         import time
         t = GP.max_time_per_eval(self._x, self._y)
