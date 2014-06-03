@@ -278,7 +278,7 @@ population size is smaller or larger than the current one
             end = xs if (init + xs) < Xs else Xs - init
             self._x[:end] = X[init:(end+init)]
             init += xs
-            _pr = self.eval(ind)
+            _pr = self.eval(ind).copy()
             pr = _pr[:end] if pr is None else npcon((pr, _pr[:end]))
         self._x[:] = x[:]
         self.eval(ind)

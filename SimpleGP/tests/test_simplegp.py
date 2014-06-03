@@ -64,12 +64,22 @@ class TestSimpleGP(object):
         assert (time.time() - init) < tot
 
     def test_predict(self):
-        self._gp.run()
-        ind = self._gp.get_best()
-        y = self._gp.eval(ind)
-        x1 = np.linspace(-1, 1, 100)
-        self._gp.predict(x1[:, np.newaxis], ind)
-        assert np.fabs(y - self._gp.eval(ind)).sum() == 0
+        gp = self._gp
+        gp.run()
+        best = gp.get_best()
+        x1 = np.linspace(-1, 1, 997)[:, np.newaxis]
+        gp._x[:] = np.nan
+        y = gp.predict(x1, ind=best)
+        gp.train(x1, np.zeros(997))
+        yh = gp.eval(best)
+        print y - yh
+        assert np.all(y == yh)
+        x1 = np.linspace(-1, 1, 10)[:, np.newaxis]
+        gp._x[:] = np.nan
+        y = gp.predict(x1, ind=best)
+        gp.train(x1, np.zeros(10))
+        yh = gp.eval(best)
+        assert np.all(y == yh)
 
     def test_type_of_nodes(self):
         gp = self._gp

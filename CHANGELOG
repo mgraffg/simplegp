@@ -75,3 +75,4 @@ Version 0.3.*
 	+ Crossover does not verify whether the fitness is infinity
 	+ Merge with the master branch
 	+ Setting properties to the classes. These are generations and population size
+	+ Bug in predict
