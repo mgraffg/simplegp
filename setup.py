@@ -17,6 +17,7 @@ from setuptools import Extension
 from Cython.Distutils import build_ext
 from distutils import sysconfig
 import os
+from os.path import join
 
 # -mno-fused-madd
 
@@ -58,14 +59,13 @@ ext_modules = [Extension("SimpleGP.EA_aux_functions",
                          include_dirs=[numpy.get_include()])]
 
 version = open("VERSION").readline().lstrip().rstrip()
-lst = open("SimpleGP/__init__.py").readlines()
+lst = open(join("SimpleGP", "__init__.py")).readlines()
 for k in range(len(lst)):
     v = lst[k]
     if v.count("__version__"):
         lst[k] = "__version__ = '%s'\n" % version
-fpt = open("SimpleGP/__init__.py", "w")
-fpt.write("".join(lst))
-fpt.close()
+with open(join("SimpleGP", "__init__.py"), "w") as fpt:
+    fpt.write("".join(lst))
 
 setup(
     name="SimpleGP",
@@ -77,8 +77,8 @@ setup(
     author_email="mgraffg@dep.fie.umich.mx",
     cmdclass={"build_ext": build_ext},
     ext_modules=ext_modules,
-    packages=['SimpleGP']
-    # install_requires=['cython >= 0.19.2']
+    packages=['SimpleGP'],
+    install_requires=['cython >= 0.19.2', 'numpy >= 1.6.2']
 )
 
 
