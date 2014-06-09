@@ -50,7 +50,7 @@ class VerifyOutput(object):
 
     def ratio(self, ts, vs):
         self.compute(ts, vs)
-        return self.value / self.value_ts
+        return (self.value + 1) / (self.value_ts + 1)
 
     def compute(self, ts, vs):
         from scipy import optimize
@@ -60,7 +60,7 @@ class VerifyOutput(object):
             x = np.arange(ts.shape[0])
             x = np.concatenate((x, np.arange(vs.shape[0])))
         lst = []
-        for func in [self.line, self.exp]:
+        for func in [self.line, self.power, self.exp]:
             popt, pcov = optimize.curve_fit(func, x[:ts.shape[0]], ts)
             lst.append((self.n_mae(ts, func(x[:ts.shape[0]],
                                             *popt)),
@@ -73,6 +73,12 @@ class VerifyOutput(object):
         self.value_ts = r[0]
 
     def verify(self, ts, vs):
+        if ts.shape[0] + vs.shape[0] > 200:
+            if vs.shape[0] > 190:
+                raise Exception("At this moment the forecast cannot be\
+                greater than 190")
+            cnt = 200 - vs.shape[0]
+            ts = ts[-cnt:]
         r = self.ratio(ts, vs)
         if np.isnan(r):
             r = np.inf
@@ -87,6 +93,10 @@ class VerifyOutput(object):
     @staticmethod
     def exp(x, a):
         return np.exp(a*x)
+
+    @staticmethod
+    def power(x, a, b, c):
+        return a*x**b + c
 
     @staticmethod
     def n_mae(a, b):

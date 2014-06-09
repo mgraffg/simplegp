@@ -14,6 +14,7 @@
 import numpy as np
 from SimpleGP.simplegp import GP
 from SimpleGP.recursiveGP import RecursiveGP
+from SimpleGP.utils import VerifyOutput
 
 
 class TimeSeries(GP):
@@ -21,22 +22,78 @@ class TimeSeries(GP):
         super(TimeSeries, self).__init__(**kwargs)
         self._nsteps = nsteps
         self._nlags = nlags
+        self._verify_output = VerifyOutput()
 
-    def predict_best(self, xreg=None):
-        x, f = self._x, self._f
-        pr = np.zeros(self._nsteps, dtype=self._dtype)
-        xp = np.zeros((self._nsteps, x.shape[1]), dtype=self._dtype)
-        xp[0, :self._nlags] = f[-self._nlags:][::-1].copy()
-        if xreg is not None:
-            xp[:, self._nlags:] = xreg[:, :]
-        for i in range(self._nsteps):
-            self.train(xp, np.zeros(1, dtype=self._dtype))
-            pr[i] = self.eval(self.get_best())[i]
-            if i+1 < self._nsteps:
-                xp[i+1, 1:self._nlags] = xp[i, :self._nlags-1].copy()
-                xp[i+1, 0] = pr[i].copy()
-        self.train(x, f)
+    @property
+    def nsteps(self):
+        """Number of steps, i.e., points ahead"""
+        return self._nsteps
+
+    @property
+    def nlags(self):
+        """Number of Lags"""
+        return self._nlags
+
+    def test_f(self, r):
+        flag = super(TimeSeries, self).test_f(r)
+        if not flag:
+            return flag
+        return self._verify_output.verify(self._f, r)
+
+    def predict(self, X, ind=None):
+        end = self.nsteps
+        if X.shape[1] > self.nlags and X.shape[0] < end:
+            end = X.shape[0]
+        if X.shape[0] < end:
+            x = np.repeat(np.atleast_2d(X[-1]), end,
+                          axis=0)
+        else:
+            x = X.copy()
+        xorigin = self._x.copy()
+        nlags = self.nlags
+        pr = np.zeros(end, dtype=self._dtype)
+        for i in range(end):
+            self._x[0] = x[i]
+            pr[i] = self.eval(ind)[0].copy()
+            if i+1 < end:
+                x[i+1, 1:nlags] = x[i, :nlags-1]
+                x[i+1, 0] = pr[i]
+        self._x[:] = xorigin[:]
         return pr
+
+    def predict_best(self, X=None):
+        if X is None:
+            X = np.atleast_2d(self._x[-1])
+        return self.predict(X, ind=self.get_best())
+
+    @classmethod
+    def run_cl(cls, serie, y=None, test=None, nlags=None, max_length=None,
+               **kwargs):
+        if serie.ndim == 1:
+            assert y is None
+            if nlags is None:
+                nlags = cls.compute_nlags(serie.shape[0])
+            X, y = cls.create_W(serie, window=nlags)
+            if max_length is None:
+                max_length = X.shape[0] // 2
+            if test is None:
+                test = np.atleast_2d(X[-1].copy())
+            return super(TimeSeries, cls).run_cl(X, y, nlags=nlags,
+                                                 test=test,
+                                                 max_length=max_length,
+                                                 **kwargs)
+        assert y is not None and nlags is not None
+        if max_length is None:
+            max_length = serie.shape[0] // 2
+        if test is None:
+            test = np.atleast_2d(serie[-1].copy())
+        return super(TimeSeries, cls).run_cl(serie, y, nlags=nlags,
+                                             test=test,
+                                             max_length=max_length, **kwargs)
+
+    @staticmethod
+    def compute_nlags(size):
+        return int(np.ceil(np.log2(size)))
 
     @staticmethod
     def create_W(serie, window=10):

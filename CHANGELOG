@@ -78,3 +78,5 @@ Version 0.3.*
 	+ Bug in predict
 	+ Method save uses with statement
 	+ New method save_best
+	+ Working on the time series class
+	+ The method test_f tests whether a prediction is valid

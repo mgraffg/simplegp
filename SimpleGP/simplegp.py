@@ -223,6 +223,11 @@ population size is smaller or larger than the current one
                 self._p_constants[pos] = cons
         self._popsize = popsize
 
+    @property
+    def nfunc(self):
+        """Number of function in the function set"""
+        return self._nop.shape[0]
+
     def simplify(self, ind, constants=None):
         k = ind
         if isinstance(ind, types.IntType):

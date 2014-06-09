@@ -109,6 +109,14 @@ population size is smaller or larger than the current one
     def generations(self, v):
         self._gens = v
 
+    def test_f(self, x):
+        """This method test whether the prediction is valid. It is called from
+new_best. Returns True when x is a valid prediction
+
+        """
+        return ((not np.any(np.isnan(x))) and
+                (not np.any(np.isinf(x))))
+
     def new_best(self, k):
         """
         This method is called when the best so far is beaten by k.
@@ -117,10 +125,8 @@ population size is smaller or larger than the current one
         """
         if self._test_set is not None:
             x = self._test_set
-            test_f = lambda x: ((not np.any(np.isnan(x))) and
-                                (not np.any(np.isinf(x))))
             r = self.predict(x, k)
-            if not test_f(r):
+            if not self.test_f(r):
                 self._best_fit = None
                 self._fitness[k] = -np.inf
 
