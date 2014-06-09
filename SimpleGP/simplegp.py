@@ -746,8 +746,8 @@ population size is smaller or larger than the current one
         bs = self.get_best()
         mask = np.ones(self.popsize, dtype=np.bool)
         mask[bs] = False
-        self.population[bs] = None
-        self._p_constants[bs] = None
+        self.population[mask] = None
+        self._p_constants[mask] = None
         return self.save(fname=fname)
 
     def load_prev_run(self):

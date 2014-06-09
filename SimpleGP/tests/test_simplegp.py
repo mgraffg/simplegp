@@ -57,31 +57,56 @@ class TestSimpleGP(object):
 
     def test_save(self):
         import tempfile
-        s = self._gp
-        s.create_population()
-        map(lambda x: s.fitness, range(s.popsize))
+        s = GP.run_cl(self._x, self._y, seed=0, generations=1)
+        # p = s.population
+        p = []
+        for i in s.population:
+            p.append(i.copy())
+        p = np.array(p)
+        cons = s._p_constants.copy()
         fname = tempfile.mktemp()
-        p = s.population
         s.save(fname)
-        s1 = GP.init_cl(fname_best=fname,
-                        generations=5).train(self._x, self._y)
-        s1.create_population()
-        assert np.all(map(lambda x: np.all(p[x] == s1.population[x]),
+        with open(fname, 'r') as fpt:
+            p1 = np.load(fpt)
+            assert np.all(map(lambda x: np.all(p[x] == p1[x]),
+                              range(s.popsize)))
+            cons1 = np.load(fpt)
+            assert np.all(map(lambda x: np.all(cons[x] == cons1[x]),
+                              range(s.popsize)))
+
+    def test_save_run(self):
+        import tempfile
+        s = GP.run_cl(self._x, self._y, seed=0, generations=1)
+        # p = s.population
+        p = []
+        for i in s.population:
+            p.append(i.copy())
+        p = np.array(p)
+        cons = s._p_constants.copy()
+        fname = tempfile.mktemp()
+        s.save(fname)
+        s1 = GP.run_cl(self._x, self._y, seed=1, generations=1,
+                       fname_best=fname)
+        p1 = s1.population
+        cons1 = s1._p_constants
+        assert np.all(map(lambda x: np.all(p[x] == p1[x]),
+                          range(s.popsize)))
+        assert np.all(map(lambda x: np.all(cons[x] == cons1[x]),
                           range(s.popsize)))
 
     def test_save_best(self):
         import tempfile
-        s = self._gp
-        s.create_population()
-        map(lambda x: s.fitness, range(s.popsize))
+        s = GP.run_cl(self._x, self._y, seed=0, generations=2)
         bs = s.get_best()
+        p = s.population[bs].copy()
+        cons = s._p_constants[bs].copy()
         fname = tempfile.mktemp()
-        p = s.population[bs]
-        cons = s._p_constants[bs]
         s.save_best(fname)
-        s1 = GP.init_cl(fname_best=fname,
-                        generations=5).train(self._x, self._y)
+        s1 = GP.run_cl(self._x, self._y, fname_best=fname,
+                       generations=5)
         s1.create_population()
+        print p
+        print s1.population[bs]
         assert np.all(s1.population[bs] == p)
         assert np.all(s1._p_constants[bs] == cons)
 
