@@ -61,16 +61,23 @@ class VerifyOutput(object):
             x = np.concatenate((x, np.arange(vs.shape[0])))
         lst = []
         for func in [self.line, self.power, self.exp]:
-            popt, pcov = optimize.curve_fit(func, x[:ts.shape[0]], ts)
+            try:
+                popt, pcov = optimize.curve_fit(func, x[:ts.shape[0]], ts)
+            except RuntimeError:
+                continue
             lst.append((self.n_mae(ts, func(x[:ts.shape[0]],
                                             *popt)),
                         self.n_mae(np.concatenate((ts,
                                                    func(x[ts.shape[0]:],
                                                         *popt))),
                                    np.concatenate((ts, vs)))))
-        r = lst[np.argmin(map(lambda x: x[0], lst))]
-        self.value = r[1]
-        self.value_ts = r[0]
+        if len(lst) == 0:
+            self.value = np.inf
+            self.value_ts = 0
+        else:
+            r = lst[np.argmin(map(lambda x: x[0], lst))]
+            self.value = r[1]
+            self.value_ts = r[0]
 
     def verify(self, ts, vs):
         if ts.shape[0] + vs.shape[0] > 200:

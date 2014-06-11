@@ -30,5 +30,9 @@ def test_verify_output():
         assert True
     b = 2.5*a**3 + 12 + np.random.normal(0, scale=1.0, size=a.shape[0])
     flag = v.verify(b[:-190], b[-190:])
-    print v.value_ts, v.value, v.value/v.value_ts
     assert flag
+    x = np.array([8.05, 8.15, 7.39, 7.84, 7.23, 8.52, 6.59, 7.85, 9.33])
+    y = np.array([4.34281000e+01, 6.16225000e+01, 1.88599987e+03,
+                  3.79733251e+03, 3.55699551e+06, 1.44197342e+07])
+    flag = v.verify(x, y)
+    assert not flag

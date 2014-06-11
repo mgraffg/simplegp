@@ -369,8 +369,8 @@ new_best. Returns True when x is a valid prediction
                 kill = self.tournament(neg=True)
                 self._kill_ind = kill
                 self.kill_ind(kill, son)
-                self.stats()
                 self.gens_ind += 1
+                self.stats()
             except KeyboardInterrupt:
                 if exit_call:
                     self.on_exit()
