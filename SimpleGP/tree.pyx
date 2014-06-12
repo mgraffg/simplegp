@@ -24,7 +24,8 @@ cdef class Tree:
     def __cinit__(self, npc.ndarray[INT, ndim=1, mode="c"] nop,
                   npc.ndarray[INT, ndim=1, mode="c"] _length,
                   npc.ndarray[INT, ndim=1, mode="c"] _mask,
-                  int min_length, int max_length, int select_root=1):
+                  int min_length, int max_length, int select_root=1,
+                  int type_xpoint_selection=0):
         self._nop = <INT *>nop.data
         self._length = <INT *>_length.data
         self._m = <INT *> _mask.data
@@ -32,6 +33,13 @@ cdef class Tree:
         self._min_length = min_length
         self._max_length = max_length
         self._select_root = select_root
+        self._depth = <INT *>stdlib.malloc(sizeof(INT)*max_length)
+        self._hist = <INT *>stdlib.malloc(sizeof(INT)*max_length)
+        self._type_xpoint_selection = type_xpoint_selection
+        
+    def __dealloc__(self):
+        stdlib.free(self._depth)
+        stdlib.free(self._hist)
 
     def get_select_root(self):
         return self._select_root
@@ -109,6 +117,93 @@ cdef class Tree:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cpdef int compute_depth(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                            npc.ndarray[INT, ndim=1, mode="c"] depth):
+        self._pos = 0
+        self.compute_depth_inner(<INT*> ind.data,
+                                 <INT*> depth.data,
+                                 0)
+        return self._pos
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void compute_depth_inner(self, INT *ind,
+                                  INT *depth,
+                                  int p):
+        cdef int pos = self._pos, j, nop
+        depth[pos] = p
+        self._pos += 1
+        if self.isfunc(ind[pos]):
+            nop = self._nop[ind[pos]]
+            for j in range(nop):
+                self.compute_depth_inner(ind, depth, p+1)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int compute_depth_histogram(self, npc.ndarray[INT, ndim=1, mode="c"] depth,
+                                      npc.ndarray[INT, ndim=1, mode="c"] hist,
+                                      int end):
+        return self.compute_depth_histogram_inner(<INT*> depth.data,
+                                                  <INT*> hist.data,
+                                                  end)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef int compute_depth_histogram_inner(self, INT *depthC,
+                                           INT *histC,
+                                           int end):
+        cdef int max=-1, i, tmp
+        for i in range(end):
+            histC[i] = 0
+        for i in range(end):
+            tmp = depthC[i]
+            if tmp > max:
+                max = tmp
+            histC[tmp] += 1
+        return max + 1
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int select_xpoint_depth(self, npc.ndarray[INT, ndim=1, mode="c"] ind):
+        cdef int end, p1, p2, i
+        self._pos = 0
+        cdef INT *depth
+        depth = self._depth
+        self.compute_depth_inner(<INT *>ind.data, depth, 0)
+        end = self.compute_depth_histogram_inner(depth, self._hist, self._pos)
+        if self._select_root:
+            p1 = np.random.randint(end)
+        else:
+            p1 = np.random.randint(end-1) + 1
+        p2 = np.random.randint(self._hist[p1])
+        for i in range(self._pos):
+            if depth[i] == p1:
+                if p2 == 0:
+                    return i
+                else:
+                    p2 -= 1
+        return -1
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int select_xpoint_uniform(self, npc.ndarray[INT, ndim=1, mode="c"] ind):
+        cdef int p1, s = ind.shape[0]
+        if self._select_root:
+            p1 = np.random.randint(s)
+        else:
+            p1 = np.random.randint(s - 1) + 1
+        return p1
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int father1_crossing_point(self, npc.ndarray[INT, ndim=1, mode="c"] ind):
+        if self._type_xpoint_selection == 0:
+            return self.select_xpoint_uniform(ind)
+        elif self._type_xpoint_selection == 1:
+            return self.select_xpoint_depth(ind)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cpdef compute_parents(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                           npc.ndarray[INT, ndim=1, mode="c"] parent):
         self._pos = 0
@@ -120,7 +215,7 @@ cdef class Tree:
     cdef compute_parents_inner(self, INT *ind,
                                INT *parent,
                                int p):
-        cdef int opos = self._pos
+        cdef int opos = self._pos, j
         cdef INT *nop = self._nop
         parent[opos] = p
         self._pos += 1
@@ -220,10 +315,7 @@ cdef class Tree:
         f1 = <INT *> father1.data
         f2 = <INT *> father2.data
         if p1 < 0:
-            if self._select_root:
-                p1 = np.random.randint(father1.shape[0])
-            else:
-                p1 = np.random.randint(father1.shape[0]-1) + 1
+            p1 = self.father1_crossing_point(father1)
         if p2 < 0:
             p2 = self.father2_crossing_point(father1, father2, p1)
             l_p1 = self.__length_p1

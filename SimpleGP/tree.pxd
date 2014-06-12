@@ -26,6 +26,8 @@ cdef class Tree:
     cdef INT *_father2
     cdef INT *_length
     cdef INT *_nop
+    cdef INT *_depth
+    cdef INT *_hist
     cdef INT *_m
     cdef INT _p1
     cdef INT _p2
@@ -38,6 +40,7 @@ cdef class Tree:
     cdef int __length_p1
     cdef int __f1_end
     cdef int _select_root
+    cdef int _type_xpoint_selection
  
     cdef INT isfunc(self, INT a)
 
@@ -62,6 +65,27 @@ cdef class Tree:
     cdef int path_to_root_inner(self, INT *parent,
                                 INT *path,
                                 int pos)
+
+    cpdef int compute_depth(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                            npc.ndarray[INT, ndim=1, mode="c"] depth)
+
+    cdef void compute_depth_inner(self, INT *ind,
+                                 INT *depth,
+                                 int p)
+
+    cpdef int compute_depth_histogram(self, npc.ndarray[INT, ndim=1, mode="c"] depth,
+                                      npc.ndarray[INT, ndim=1, mode="c"] hist,
+                                      int end)
+
+    cdef int compute_depth_histogram_inner(self, INT *depth,
+                                           INT *hist,
+                                           int end)
+
+    cpdef int select_xpoint_depth(self, npc.ndarray[INT, ndim=1, mode="c"] ind)
+
+    cpdef int select_xpoint_uniform(self, npc.ndarray[INT, ndim=1, mode="c"] ind)
+
+    cpdef int father1_crossing_point(self, npc.ndarray[INT, ndim=1, mode="c"] ind)
 
     cpdef compute_parents(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                           npc.ndarray[INT, ndim=1, mode="c"] parent)

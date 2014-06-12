@@ -80,3 +80,5 @@ Version 0.3.*
 	+ New method save_best
 	+ Working on the time series class
 	+ The method test_f tests whether a prediction is valid
+Version 0.4.*
+	+ Select the crossing point according to the depth

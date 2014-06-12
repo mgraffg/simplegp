@@ -60,6 +60,7 @@ class GP(SimpleGA):
                  min_depth=1, pgrow=0.5, pleaf=None,
                  verbose_nind=None, argmax_nargs=None,
                  do_simplify=True, max_n_worst_epochs=3, ppm=0.0,
+                 type_xpoint_selection=0,
                  **kwargs):
         super(GP, self).__init__(**kwargs)
         self.individuals_params(do_simplify, min_depth,
@@ -74,7 +75,7 @@ class GP(SimpleGA):
         self.format_params(verbose, verbose_nind)
         self.eval_params(max_n_worst_epochs)
         self.min_max_length_params()
-        self.tree_params()
+        self.tree_params(type_xpoint_selection)
 
     def individuals_params(self, do_simplify, min_depth,
                            max_depth, max_length, min_length,
@@ -184,7 +185,7 @@ class GP(SimpleGA):
         if maximum is not None:
             self._max_length = maximum
 
-    def tree_params(self):
+    def tree_params(self, type_xpoint_selection=0):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -193,7 +194,8 @@ class GP(SimpleGA):
                           self._tree_length,
                           self._tree_mask,
                           self._min_length,
-                          self._max_length)
+                          self._max_length,
+                          type_xpoint_selection=type_xpoint_selection)
 
     @property
     def popsize(self):

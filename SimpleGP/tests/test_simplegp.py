@@ -27,6 +27,86 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
 
+    def test_depth(self):
+        gp = self._gp
+        var = gp.nfunc
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        depth = np.empty_like(ind)
+        end = gp._tree.compute_depth(ind, depth)
+        assert end == ind.shape[0]
+        assert np.all(depth == np.array([0, 1, 2, 2, 1, 2, 2, 3, 3]))
+
+    def test_depth_histogram(self):
+        gp = self._gp
+        var = gp.nfunc
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        depth = np.empty_like(ind)
+        end = gp._tree.compute_depth(ind, depth)
+        hist = np.zeros_like(ind)
+        e = gp._tree.compute_depth_histogram(depth, hist, end)
+        assert e == 4
+        assert np.all(hist[:4] == np.array([1, 2, 4, 2]))
+        e = gp._tree.compute_depth_histogram(depth, hist, end)
+        assert e == 4
+        assert np.all(hist[:4] == np.array([1, 2, 4, 2]))
+
+    def test_select_xpoint_depth(self):
+        gp = self._gp
+        var = gp.nfunc
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        a = np.ones_like(ind, dtype=np.bool)
+        while np.any(a):
+            pos = gp._tree.select_xpoint_depth(ind)
+            a[pos] = False
+            assert pos >= 0 and pos < ind.shape[0]
+
+    def test_select_xpoint_uniform(self):
+        gp = self._gp
+        var = gp.nfunc
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        a = np.ones_like(ind, dtype=np.bool)
+        while np.any(a):
+            pos = gp._tree.select_xpoint_uniform(ind)
+            a[pos] = False
+            assert pos >= 0 and pos < ind.shape[0]
+
+    def test_father1_crossing_point(self):
+        gp = self._gp
+        var = gp.nfunc
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        a = np.ones_like(ind, dtype=np.bool)
+        while np.any(a):
+            pos = gp._tree.father1_crossing_point(ind)
+            a[pos] = False
+            assert pos >= 0 and pos < ind.shape[0]
+
+    def test_type_xpoint_selection(self):
+        ins = lambda x: GP.init_cl(seed=0, generations=5,
+                                   type_xpoint_selection=x).train(self._x,
+                                                                  self._y)
+        gp = ins(0)
+        var = gp.nfunc
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        a = np.zeros_like(ind)
+        cnt = 100
+        for i in range(cnt):
+            pos = gp._tree.father1_crossing_point(ind)
+            a[pos] += 1
+        gp = ins(0)
+        for i in range(cnt):
+            pos = gp._tree.select_xpoint_uniform(ind)
+            a[pos] -= 1
+        assert np.all(a == 0)
+        gp = ins(1)
+        for i in range(cnt):
+            pos = gp._tree.father1_crossing_point(ind)
+            a[pos] += 1
+        gp = ins(1)
+        for i in range(cnt):
+            pos = gp._tree.select_xpoint_depth(ind)
+            a[pos] -= 1
+        assert np.all(a == 0)
+
     def test_create_population(self):
         self._gp.create_population()
 

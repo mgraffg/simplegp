@@ -28,6 +28,20 @@ class TestSimpleGPPDE(object):
                                  seed=0)
         self._gp.train(self._x, self._y)
 
+    def test_type_xpoint_selection(self):
+        gp = GPPDE.run_cl(self._x, self._y, type_xpoint_selection=1,
+                          generations=5)
+        gp2 = GPPDE.run_cl(self._x, self._y, type_xpoint_selection=0,
+                           generations=5)
+        b1 = gp.population[gp.get_best()]
+        b2 = gp2.population[gp.get_best()]
+        assert np.all(b1 != b2)
+
+    def test_walltime(self):
+        t = time.time()
+        GPPDE.run_cl(self._x, self._y, walltime=1)
+        assert time.time() - t < 1.1
+
     def test_time(self):
         t = time.time()
         gp = self._gp

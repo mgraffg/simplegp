@@ -13,6 +13,7 @@
 # limitations under the License.
 import numpy as np
 from SimpleGP import TimeSeries
+import time
 
 ts = np.array([3600.0, 7700.0, 12300.0, 30500.0, 47390.0, 57006.0,
                98563.0, 117759.0, 115097.0, 133759.0, 142485.0,
@@ -23,6 +24,12 @@ vs = np.array([588568.0, 646758.0, 849998.0, 1106740.0, 1184550.0, 1425090.0])
 
 
 class TestTimeSeries(object):
+    def test_walltime(self):
+        t = time.time()
+        TimeSeries.run_cl(ts, walltime=1,
+                          nsteps=vs.shape[0])
+        assert time.time() - t < 1.1
+
     def test_nlags(self):
         gp = TimeSeries.run_cl(ts, generations=1,
                                nsteps=vs.shape[0])

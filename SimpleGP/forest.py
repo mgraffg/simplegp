@@ -44,7 +44,7 @@ class GPForest(GP):
         if maximum is not None:
             self._max_length = maximum
 
-    def tree_params(self):
+    def tree_params(self, type_xpoint_selection=0):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -54,7 +54,8 @@ class GPForest(GP):
                           self._tree_mask,
                           self._min_length,
                           self._max_length,
-                          select_root=0)
+                          select_root=0,
+                          type_xpoint_selection=type_xpoint_selection)
 
     def random_func(self, first_call=False):
         if first_call:
@@ -63,7 +64,7 @@ class GPForest(GP):
 
 
 class SubTreeXO(GPForest):
-    def tree_params(self):
+    def tree_params(self, type_xpoint_selection=0):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -73,7 +74,8 @@ class SubTreeXO(GPForest):
                              self._tree_mask,
                              self._min_length,
                              self._max_length,
-                             select_root=0)
+                             select_root=0,
+                             type_xpoint_selection=type_xpoint_selection)
 
 
 class SubTreeXOPDE(GPPDE, GPForest):
@@ -106,7 +108,7 @@ class SubTreeXOPDE(GPPDE, GPForest):
         e = np.sign(self._p_der[p1])
         return e
 
-    def tree_params(self):
+    def tree_params(self, type_xpoint_selection=0):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -116,4 +118,5 @@ class SubTreeXOPDE(GPPDE, GPForest):
                                   self._tree_mask,
                                   self._min_length,
                                   self._max_length,
-                                  select_root=0)
+                                  select_root=0,
+                                  type_xpoint_selection=type_xpoint_selection)

@@ -111,7 +111,7 @@ class GPPDE(GP):
         ind = self.crossover(father1, son)
         return ind
 
-    def tree_params(self):
+    def tree_params(self, type_xpoint_selection=0):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -120,7 +120,8 @@ class GPPDE(GP):
                            self._tree_length,
                            self._tree_mask,
                            self._min_length,
-                           self._max_length)
+                           self._max_length,
+                           type_xpoint_selection=type_xpoint_selection)
 
     def get_error(self, p1):
         self._computing_fitness = self._xo_father1
@@ -134,10 +135,7 @@ class GPPDE(GP):
     def crossover(self, father1, father2, p1=-1, p2=-1,
                   force_xo=False):
         if p1 == -1:
-            if self._tree.get_select_root():
-                p1 = np.random.randint(father1.shape[0])
-            else:
-                p1 = np.random.randint(father1.shape[0]-1) + 1
+            p1 = self._tree.father1_crossing_point(father1)
         if p2 == -1:
             e = self.get_error(p1)
             s = self._p_st[self._xo_father2]
