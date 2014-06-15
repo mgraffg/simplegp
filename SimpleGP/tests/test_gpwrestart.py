@@ -37,8 +37,8 @@ class TestGPwRestart(object):
         assert flag
 
     def test_walltime(self):
-        gp = GPwRestart(generations=25,
-                        walltime=1).train(self._x,
-                                          self._y)
-        flag = gp.run()
-        assert not flag
+        import time
+        t = time.time()
+        GPwRestart.run_cl(self._x, self._y, generations=25,
+                          walltime=1)
+        assert time.time() - t < 1.1

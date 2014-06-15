@@ -254,11 +254,9 @@ class GPPDE(GP):
         if test is not None:
             ins.set_test(test)
         ins.run()
-        test_f = lambda x: ((not np.any(np.isnan(x))) and
-                            (not np.any(np.isinf(x))))
-        a = test_f(ins.predict(x))
+        a = ins.test_f(ins.predict(x))
         if test is not None:
-            b = test_f(ins.predict(test))
+            b = ins.test_f(ins.predict(test))
         else:
             b = True
         if a and b:

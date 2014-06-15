@@ -424,8 +424,6 @@ new_best. Returns True when x is a valid prediction
                 seed = int(seed)
         else:
             seed = 0
-        test_f = lambda x: ((not np.any(np.isnan(x))) and
-                            (not np.any(np.isinf(x))))
         kwargs['seed'] = seed
         for i in range(ntries):
             ins = cls.init_cl(**kwargs).train(x, f)
@@ -433,9 +431,9 @@ new_best. Returns True when x is a valid prediction
                 ins.set_test(test)
             ins.run()
             r = ins.predict(x)
-            if test_f(r):
+            if ins.test_f(r):
                 if test is not None:
-                    if test_f(ins.predict(test)):
+                    if ins.test_f(ins.predict(test)):
                         return ins
                 else:
                     return ins

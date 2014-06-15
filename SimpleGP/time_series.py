@@ -76,6 +76,8 @@ class TimeSeries(GP):
             X, y = cls.create_W(serie, window=nlags)
             if max_length is None:
                 max_length = X.shape[0] // 2
+                if max_length < 16:
+                    max_length = X.shape[0]
             if test is None:
                 test = np.atleast_2d(X[-1].copy())
             return super(TimeSeries, cls).run_cl(X, y, nlags=nlags,
@@ -85,6 +87,8 @@ class TimeSeries(GP):
         assert y is not None and nlags is not None
         if max_length is None:
             max_length = serie.shape[0] // 2
+            if max_length < 16:
+                max_length = serie.shape[0]
         if test is None:
             test = np.atleast_2d(serie[-1].copy())
         return super(TimeSeries, cls).run_cl(serie, y, nlags=nlags,
