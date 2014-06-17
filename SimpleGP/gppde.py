@@ -233,15 +233,12 @@ class GPPDE(GP):
         return ins
 
     @classmethod
-    def run_cl(cls, x, f, test=None, seed=0, pgrow=0.0,
-               **kwargs):
+    def run_cl(cls, x, f, pgrow=0.0, training_size=None, **kwargs):
         """
         Returns a trained system that does not output nan or inf neither
         in the training set (i.e., x) or test set (i.e., test).
         """
-        kwargs['training_size'] = x.shape[0]
-        ins = cls.init_cl(**kwargs).train(x, f)
-        if test is not None:
-            ins.set_test(test)
-        ins.run()
-        return ins
+        if training_size is None:
+            training_size = x.shape[0]
+        return super(GPPDE, cls).run_cl(x, f, pgrow=pgrow,
+                                        training_size=training_size, **kwargs)

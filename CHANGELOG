@@ -84,3 +84,4 @@ Version 0.4.*
 	+ Select the crossing point according to the depth + new_best is
 	rewritten
 	+ GPwRestart is rewritten. It uses the population generator on stats
+	+ New Exception that it is raised when the run ends with an unsuitable individual

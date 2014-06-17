@@ -17,6 +17,13 @@ import os
 import signal
 
 
+class BestNotFound(Exception):
+    """
+    This exception is raised when the run exit with an non-viable individual.
+    """
+    pass
+
+
 class SimpleGA(object):
     """
     SimpleGA is a steady state genetic algorithm with tournament selection,
@@ -430,10 +437,8 @@ population size is smaller or larger than the current one
         if test is not None:
             ins.set_test(test)
         ins.run()
-        # I think this behaviour is not reasonable, maybe it is
-        # better to raise an exception
-        if ins._best != ins.get_best():
-            return None
+        if ins._best is None:
+            raise BestNotFound()
         return ins
 
 

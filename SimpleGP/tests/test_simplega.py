@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from SimpleGP import SimpleGA
+from SimpleGP import SimpleGA, BestNotFound
 import numpy as np
 
 
@@ -50,9 +50,12 @@ def test_SimpleGA_run_cl_error():
     X1 = np.vstack((x1**2, x1, np.ones(x1.shape[0]))).T
     X1[:, 0] = np.inf
     f = (X * pol).sum(axis=1)
-    s = SimpleGA().run_cl(X, f, generations=5,
+    try:
+        SimpleGA().run_cl(X, f, generations=5,
                           test=X1)
-    assert s is None
+    except BestNotFound:
+        return
+    assert False
 
 
 def test_popsize_property():
