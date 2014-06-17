@@ -377,8 +377,8 @@ population size is smaller or larger than the current one
                 kill = self.tournament(neg=True)
                 self._kill_ind = kill
                 self.kill_ind(kill, son)
-                self.gens_ind += 1
                 self.stats()
+                self.gens_ind += 1
             except KeyboardInterrupt:
                 if exit_call:
                     self.on_exit()
