@@ -17,7 +17,7 @@ import numpy as np
 
 class TestSimpleGP(object):
     def __init__(self):
-        x = np.linspace(0, 1, 100)
+        x = np.linspace(-10, 10, 100)
         pol = np.array([0.2, -0.3, 0.2])
         self._pol = pol
         X = np.vstack((x**2, x, np.ones(x.shape[0])))
@@ -26,6 +26,23 @@ class TestSimpleGP(object):
         self._x = x
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
+
+    def test_new_best(self):
+        gp = self._gp
+        gp.set_test(np.array([[0]]))
+        gp.create_population()
+        var = gp.nfunc
+        gp._p_constants[1][0] = 1
+        gp._p[1] = np.array([0, 0, var, var, var+1])
+        gp.fitness(1)
+        # The following ind is invalid for the test set
+        gp._p[0] = np.array([0, 0, var, var, 3, var, var])
+        gp.fitness(0)
+        gp._p[2] = np.array([0, var, 3, var, var])
+        gp.fitness(2)
+        # assert gp._best_fit is None
+        print gp._best_fit, gp._fitness[:3], gp.get_best()
+        assert gp.get_best() == 1
 
     def test_depth(self):
         gp = self._gp
@@ -137,7 +154,7 @@ class TestSimpleGP(object):
 
     def test_save(self):
         import tempfile
-        s = GP.run_cl(self._x, self._y, seed=0, generations=1)
+        s = GP.run_cl(self._x, self._y, seed=0, generations=2)
         # p = s.population
         p = []
         for i in s.population:
@@ -156,7 +173,7 @@ class TestSimpleGP(object):
 
     def test_save_run(self):
         import tempfile
-        s = GP.run_cl(self._x, self._y, seed=0, generations=1)
+        s = GP.run_cl(self._x, self._y, seed=0, generations=2)
         # p = s.population
         p = []
         for i in s.population:
@@ -165,7 +182,7 @@ class TestSimpleGP(object):
         cons = s._p_constants.copy()
         fname = tempfile.mktemp()
         s.save(fname)
-        s1 = GP.run_cl(self._x, self._y, seed=1, generations=1,
+        s1 = GP.run_cl(self._x, self._y, seed=1, generations=2,
                        fname_best=fname)
         p1 = s1.population
         cons1 = s1._p_constants

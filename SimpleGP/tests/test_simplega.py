@@ -51,7 +51,7 @@ def test_SimpleGA_run_cl_error():
     X1[:, 0] = np.inf
     f = (X * pol).sum(axis=1)
     s = SimpleGA().run_cl(X, f, generations=5,
-                          test=X1, ntries=1)
+                          test=X1)
     assert s is None
 
 

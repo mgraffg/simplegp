@@ -31,13 +31,13 @@ class TestTimeSeries(object):
         assert time.time() - t < 1.1
 
     def test_nlags(self):
-        gp = TimeSeries.run_cl(ts, generations=1,
+        gp = TimeSeries.run_cl(ts, generations=2,
                                nsteps=vs.shape[0])
         assert gp.nlags == gp._x.shape[1]
         TS = TimeSeries
         x, y = TimeSeries.create_W(ts,
                                    window=TS.compute_nlags(ts.shape[0]))
-        gp = TimeSeries.run_cl(x, y, generations=1, nlags=x.shape[1],
+        gp = TimeSeries.run_cl(x, y, generations=2, nlags=x.shape[1],
                                nsteps=vs.shape[0])
         assert gp.nlags == gp._x.shape[1]
 
@@ -62,7 +62,7 @@ class TestTimeSeries(object):
         assert np.all(pr1 != pr)
 
     def test_test_set(self):
-        gp = TimeSeries.run_cl(ts, generations=1,
+        gp = TimeSeries.run_cl(ts, generations=2,
                                nsteps=6)
         nfunc = gp._nop.shape[0]
         gp.population[0] = np.array([0, nfunc, nfunc+1])
@@ -72,7 +72,7 @@ class TestTimeSeries(object):
         assert np.all(pr == output)
         TS = TimeSeries
         x, y = TS.create_W(ts, TS.compute_nlags(ts.shape[0]))
-        gp = TS.run_cl(x, y, nlags=x.shape[1] - 1, generations=1,
+        gp = TS.run_cl(x, y, nlags=x.shape[1] - 1, generations=2,
                        nsteps=6)
         gp.population[0] = np.array([0, nfunc, nfunc+gp.nlags])
         x = np.ones((6, x.shape[1]))
@@ -83,17 +83,17 @@ class TestTimeSeries(object):
         assert gp._test_set is not None
 
     def test_max_length(self):
-        gp = TimeSeries.run_cl(ts, generations=1,
+        gp = TimeSeries.run_cl(ts, generations=2,
                                nsteps=6)
         max_length = gp._max_length
         TS = TimeSeries
         x, y = TS.create_W(ts, TS.compute_nlags(ts.shape[0]))
-        gp = TS.run_cl(x, y, generations=1, nlags=x.shape[1],
+        gp = TS.run_cl(x, y, generations=2, nlags=x.shape[1],
                        nsteps=6)
         assert gp._max_length == max_length
 
     def test_test_f(self):
-        gp = TimeSeries.run_cl(ts, generations=1,
+        gp = TimeSeries.run_cl(ts, generations=2,
                                nsteps=6)
         output = np.empty(6)
         output.fill(np.inf)

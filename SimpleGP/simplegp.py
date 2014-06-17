@@ -572,10 +572,8 @@ population size is smaller or larger than the current one
             self.set_extras_to_ind(k, ind=ind,
                                    constants=constants)
             self._fitness[k] = f
-            if self._best_fit is None or self._best_fit < f:
-                self._best_fit = f
-                self.new_best(k)
-                return self._best_fit
+            self.new_best(k)
+            f = self._fitness[k]
         return f
 
     def pre_crossover(self, father1=None, father2=None):
@@ -752,25 +750,33 @@ population size is smaller or larger than the current one
         self._p_constants[mask] = None
         return self.save(fname=fname)
 
+    def set_best(self):
+        bsf = self._fitness.max()
+        m = np.where(bsf == self._fitness)[0]
+        for i in m:
+            self._fitness[i] = -np.inf
+            self.fitness(i)
+
     def load_prev_run(self):
         try:
-            fpt = open(self._fname_best)
-            self._p = np.load(fpt)
-            self._p_constants = np.load(fpt)
-            arr = filter(lambda x: self._p[x] is None,
-                         range(self._p.shape[0]))
-            if len(arr):
-                for i, ind, c in self.create_population_generator(len(arr)):
-                    _i = arr[i]
-                    self.population[_i] = ind
-                    self._p_constants[_i] = c
-            self._fitness = np.load(fpt)
-            self.gens_ind = int(np.load(fpt))
-            self.nodes_evaluated = np.load(fpt)
-            if self._stats:
-                self.fit_per_gen = np.load(fpt)
-                self.length_per_gen = np.load(fpt)
-            fpt.close()
+            with open(self._fname_best) as fpt:
+                self._p = np.load(fpt)
+                self._p_constants = np.load(fpt)
+                arr = filter(lambda x: self._p[x] is None,
+                             range(self._p.shape[0]))
+                if len(arr):
+                    cp_gen = self.create_population_generator
+                    for i, ind, c in cp_gen(len(arr)):
+                        _i = arr[i]
+                        self.population[_i] = ind
+                        self._p_constants[_i] = c
+                self._fitness = np.load(fpt)
+                self.gens_ind = int(np.load(fpt))
+                self.nodes_evaluated = np.load(fpt)
+                if self._stats:
+                    self.fit_per_gen = np.load(fpt)
+                    self.length_per_gen = np.load(fpt)
+            self.set_best()
             if self._p.dtype == np.object\
                and self._p.shape[0] == self._popsize:
                 return True
@@ -853,61 +859,23 @@ class GPMAE(GP):
 class GPwRestart(GP):
     def __init__(self, ntimes=2, **kwargs):
         super(GPwRestart, self).__init__(**kwargs)
-        self._ntimes = ntimes
-
-    def create_population(self, flag=False):
-        if flag or not hasattr(self, '_p'):
-            super(GPwRestart, self).create_population()
-        self._fitness.fill(-np.inf)
+        self._ind_eval_per_gen = self.generations * self.popsize
+        self.generations = self.generations * ntimes
+        self._ntimes = 0
 
     def stats(self):
-        verbose = self._verbose
-        self._verbose = False
-        flag = super(GPwRestart, self).stats()
-        self._verbose = verbose
-        if not flag:
-            return flag
-        if self._verbose:
-            i = self.gens_ind
-            bf = self._best_fit
-            if bf is None:
-                bf = -1.
-            print "Gen: (" + str(self._cnt_ntimes) + ") " + str(i) + "/" +\
-                str(self._gens * self._popsize)\
-                + " " + "%0.4f" % bf
-        return flag
-
-    def run(self, exit_call=True):
-        """
-        This methods repeats the evolutionary process as many times as
-        indicated in ntimes, the best individual found is kept during
-        this process.
-        """
-        self._cnt_ntimes = 0
-        ntimes = self._ntimes
-        while not self._timeout and (self._cnt_ntimes < ntimes or ntimes <= 0):
-            self._cnt_ntimes += 1
-            self.init()
-            nodes_evaluated = self.nodes_evaluated
-            flag = super(GPwRestart, self).run(exit_call=False)
-            nodes_evaluated += self.nodes_evaluated
-            if not flag:
-                self.nodes_evaluated = nodes_evaluated
-                if exit_call:
-                    self.on_exit()
-                return False
-            map(self.fitness, range(self._p.shape[0]))
-            ind = self._p[self.get_best()].copy()
-            cons = self._p_constants[self.get_best()].copy()
-            fit = self.fitness(self.get_best())
-            self.create_population(flag=True)
-            self._p[0] = ind
-            self._p_constants[0] = cons
-            self._fitness[0] = fit
-        if exit_call:
-            self.on_exit()
-        self.nodes_evaluated = nodes_evaluated
-        return flag
+        tot = self.generations * self.popsize
+        gens_ind = self.gens_ind
+        if 0 == (gens_ind % self._ind_eval_per_gen) and gens_ind < tot:
+            # print "*"*10, self.gens_ind
+            self._ntimes += 1
+            for i, ind, cons in self.create_population_generator(self.popsize):
+                if i == self.get_best():
+                    continue
+                self._p[i] = ind
+                self._p_constants[i] = cons
+                self._fitness[i] = -np.inf
+        return super(GPwRestart, self).stats()
 
 
 if __name__ == '__main__':

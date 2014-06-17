@@ -63,6 +63,7 @@ class SimpleGA(object):
             self.fit_per_gen = np.zeros(self._gens)
         self.set_seed(seed)
         self._best_fit = None
+        self._best = None
         self._fname_best = fname_best
         self._run = True
         self._last_call_to_stats = 0
@@ -111,7 +112,7 @@ population size is smaller or larger than the current one
 
     def test_f(self, x):
         """This method test whether the prediction is valid. It is called from
-new_best. Returns True when x is a valid prediction
+        new_best. Returns True when x is a valid prediction
 
         """
         return ((not np.any(np.isnan(x))) and
@@ -119,16 +120,22 @@ new_best. Returns True when x is a valid prediction
 
     def new_best(self, k):
         """
-        This method is called when the best so far is beaten by k.
+        This method is called to test whether the best so far is beaten by k.
         Here is verified that the best individual is capable of
         predicting the test set, in the case it is given.
         """
-        if self._test_set is not None:
-            x = self._test_set
-            r = self.predict(x, k)
-            if not self.test_f(r):
-                self._best_fit = None
-                self._fitness[k] = -np.inf
+        f = self._fitness[k]
+        if self._best_fit is None or self._best_fit < f:
+            if self._test_set is not None:
+                x = self._test_set
+                r = self.predict(x, k)
+                if not self.test_f(r):
+                    self._fitness[k] = -np.inf
+                    return False
+            self._best_fit = f
+            self._best = k
+            return True
+        return False
 
     def init(self):
         """
@@ -138,6 +145,7 @@ new_best. Returns True when x is a valid prediction
         self._run = True
         self._last_call_to_stats = 0
         self._best_fit = None
+        self._best = None
 
     def walltime(self, *args, **kwargs):
         """
@@ -292,17 +300,17 @@ new_best. Returns True when x is a valid prediction
             f = -np.inf
         if isinstance(k, types.IntType):
             self._fitness[k] = f
-            if self._best_fit is None or self._best_fit < f:
-                self._best_fit = f
-                self.new_best(k)
-                return self._best_fit
+            self.new_best(k)
+            f = self._fitness[k]
         return f
 
     def get_best(self):
         """
         Get the position of the best individual
         """
-        return int(self._fitness.argmax())
+        if self._best is None:
+            return self._fitness.argmax()
+        return self._best
 
     def pre_crossover(self, father1, father2):
         """
@@ -412,33 +420,21 @@ new_best. Returns True when x is a valid prediction
         return ins
 
     @classmethod
-    def run_cl(cls, x, f, test=None, ntries=10,
+    def run_cl(cls, x, f, test=None, seed=0,
                **kwargs):
         """
         Returns a trained system that does not output nan or inf neither
         in the training set (i.e., x) or test set (i.e., test).
         """
-        if 'seed' in kwargs:
-            seed = kwargs['seed']
-            if seed is not None:
-                seed = int(seed)
-        else:
-            seed = 0
-        kwargs['seed'] = seed
-        for i in range(ntries):
-            ins = cls.init_cl(**kwargs).train(x, f)
-            if test is not None:
-                ins.set_test(test)
-            ins.run()
-            r = ins.predict(x)
-            if ins.test_f(r):
-                if test is not None:
-                    if ins.test_f(ins.predict(test)):
-                        return ins
-                else:
-                    return ins
-            kwargs['seed'] = None
-        return None
+        ins = cls.init_cl(**kwargs).train(x, f)
+        if test is not None:
+            ins.set_test(test)
+        ins.run()
+        # I think this behaviour is not reasonable, maybe it is
+        # better to raise an exception
+        if ins._best != ins.get_best():
+            return None
+        return ins
 
 
 if __name__ == "__main__":

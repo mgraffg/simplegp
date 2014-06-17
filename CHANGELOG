@@ -81,4 +81,6 @@ Version 0.3.*
 	+ Working on the time series class
 	+ The method test_f tests whether a prediction is valid
 Version 0.4.*
-	+ Select the crossing point according to the depth
+	+ Select the crossing point according to the depth + new_best is
+	rewritten
+	+ GPwRestart is rewritten. It uses the population generator on stats

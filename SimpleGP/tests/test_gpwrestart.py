@@ -27,10 +27,17 @@ class TestGPwRestart(object):
         self._x = x
         self._y = y
 
+    def test_ntimes(self):
+        gp = GPwRestart.run_cl(self._x, self._y, ntimes=3,
+                               generations=3, popsize=5, verbose=False)
+        assert gp._ntimes == 2
+        assert gp.generations == 9
+
     def test_gpwrestart(self):
         self._gp._gens = 5
         flag = self._gp.run()
         pr = self._gp.predict(self._gp._x)
+        print self._gp._best, self._gp._fitness
         assert not np.isinf(self._gp._fitness[self._gp.get_best()])
         assert self._gp.distance(self._gp._f,
                                  pr) < 0.1

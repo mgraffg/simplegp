@@ -29,14 +29,11 @@ class GPPDE(GP):
         self._used_mem = 0
 
     def new_best(self, k):
-        super(GPPDE, self).new_best(k)
-        fit = self._best_fit
-        if not self._update_best_w_rprop or fit is None:
-            return None
+        flag = super(GPPDE, self).new_best(k)
+        if not self._update_best_w_rprop or not flag:
+            return False
         self.rprop(k)
-        if self._fitness[k] > fit:
-            self._best_fit = self._fitness[k]
-            return super(GPPDE, self).new_best(k)
+        return super(GPPDE, self).new_best(k)
 
     def stats(self):
         flag = super(GPPDE, self).stats()
@@ -236,29 +233,15 @@ class GPPDE(GP):
         return ins
 
     @classmethod
-    def run_cl(cls, x, f, test=None, ntries=10, pgrow=0.0,
+    def run_cl(cls, x, f, test=None, seed=0, pgrow=0.0,
                **kwargs):
         """
         Returns a trained system that does not output nan or inf neither
         in the training set (i.e., x) or test set (i.e., test).
         """
-        if 'seed' in kwargs:
-            seed = kwargs['seed']
-            if seed is not None:
-                seed = int(seed)
-        else:
-            seed = 0
-        kwargs['seed'] = seed
         kwargs['training_size'] = x.shape[0]
         ins = cls.init_cl(**kwargs).train(x, f)
         if test is not None:
             ins.set_test(test)
         ins.run()
-        a = ins.test_f(ins.predict(x))
-        if test is not None:
-            b = ins.test_f(ins.predict(test))
-        else:
-            b = True
-        if a and b:
-            return ins
-        return None
+        return ins
