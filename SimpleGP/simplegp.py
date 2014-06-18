@@ -224,6 +224,7 @@ population size is smaller or larger than the current one
                 self._p[pos] = ind
                 self._p_constants[pos] = cons
         self._popsize = popsize
+        self.set_best()
 
     @property
     def nfunc(self):
@@ -748,6 +749,7 @@ population size is smaller or larger than the current one
         mask[bs] = False
         self.population[mask] = None
         self._p_constants[mask] = None
+        self._fitness[mask] = -np.inf
         return self.save(fname=fname)
 
     def set_best(self):

@@ -196,7 +196,7 @@ class TestSimpleGP(object):
         fname = tempfile.mktemp()
         s.save_best(fname)
         s1 = GP.run_cl(self._x, self._y, fname_best=fname,
-                       generations=5)
+                       generations=2)
         s1.create_population()
         print p
         print s1.population[bs]

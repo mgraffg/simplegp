@@ -195,3 +195,18 @@ def test_classification_gppde():
     gp = ClassificationPDE.run_cl(X, cl, generations=5)
     pr = gp.predict(X)
     assert (not np.any(np.isnan(pr))) and (not np.any(np.isinf(pr)))
+
+
+def test_BER():
+    a = np.zeros(10)
+    a[-1] = 1
+    b = np.zeros(10)
+    assert Classification.BER(a, b) == 50
+
+
+def test_success():
+    a = np.zeros(10)
+    a[-1] = 1
+    b = np.zeros(10)
+    assert Classification.success(a, b) == 0.9
+    
