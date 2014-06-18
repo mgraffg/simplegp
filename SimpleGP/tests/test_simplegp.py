@@ -148,10 +148,6 @@ class TestSimpleGP(object):
         fit = gp.fitness(gp.get_best())
         assert not np.isnan(fit) and not np.isinf(fit)
 
-    def test_max_time_per_eval(self):
-        t = GP.max_time_per_eval(self._x, self._y)
-        assert t < 0.1
-
     def test_save(self):
         import tempfile
         s = GP.run_cl(self._x, self._y, seed=0, generations=2)
@@ -206,14 +202,6 @@ class TestSimpleGP(object):
         print s1.population[bs]
         assert np.all(s1.population[bs] == p)
         assert np.all(s1._p_constants[bs] == cons)
-
-    def test_max_time(self):
-        import time
-        t = GP.max_time_per_eval(self._x, self._y)
-        init = time.time()
-        tot = t * 1000 * 5
-        self._gp.run()
-        assert (time.time() - init) < tot
 
     def test_predict(self):
         gp = self._gp
