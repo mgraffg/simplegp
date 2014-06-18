@@ -85,3 +85,4 @@ Version 0.4.*
 	rewritten
 	+ GPwRestart is rewritten. It uses the population generator on stats
 	+ New Exception that it is raised when the run ends with an unsuitable individual
+	+ Exception BestNotFound is raised on get_best if property best has not been set

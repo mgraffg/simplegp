@@ -311,13 +311,17 @@ population size is smaller or larger than the current one
             f = self._fitness[k]
         return f
 
-    def get_best(self):
+    @property
+    def best(self):
         """
         Get the position of the best individual
         """
         if self._best is None:
-            return self._fitness.argmax()
+            raise BestNotFound()
         return self._best
+
+    def get_best(self):
+        return self.best
 
     def pre_crossover(self, father1, father2):
         """
