@@ -19,6 +19,6 @@ gp = Classification(popsize=1000, generations=50, verbose=True,
 gp.train(X, cl)
 gp.run()
 pr = gp.predict(X)
-print gp.fitness(gp.get_best())
+print gp.fitness(gp.best)
 print (pr == cl).sum() / float(cl.shape[0])
 print gp.print_infix()

@@ -231,6 +231,19 @@ population size is smaller or larger than the current one
         """Number of function in the function set"""
         return self._nop.shape[0]
 
+    def new_best_comparison(self, k):
+        if self._best_fit is None:
+            return True
+        f = self._fitness[k]
+        if self._best_fit > f:
+            return False
+        if self._best_fit == f:
+            lbf = self.population[self.best].shape[0]
+            lk = self.population[k].shape[0]
+            if lbf < lk:
+                return False
+        return True
+
     def simplify(self, ind, constants=None):
         k = ind
         if isinstance(ind, types.IntType):
@@ -275,7 +288,7 @@ population size is smaller or larger than the current one
 
     def predict(self, X, ind=None):
         if ind is None:
-            ind = self.get_best()
+            ind = self.best
         x = self._x.copy()
         init, end = 0, None
         Xs = X.shape[0]
@@ -506,7 +519,7 @@ population size is smaller or larger than the current one
 
     def eval(self, ind=None, **kwargs):
         if ind is None:
-            ind = self.get_best()
+            ind = self.best
         self._computing_fitness = None
         if isinstance(ind, types.IntType):
             self._computing_fitness = ind
@@ -612,7 +625,7 @@ population size is smaller or larger than the current one
             return False
         self._last_call_to_stats = i
         if self._stats:
-            self.fit_per_gen[i/self._popsize] = self._fitness[self.get_best()]
+            self.fit_per_gen[i/self._popsize] = self._fitness[self.best]
             i_pop = i / self._popsize
             self.length_per_gen[i_pop] = np.asarray(map(lambda x: x.shape[0],
                                                         self._p)).mean()
@@ -636,7 +649,7 @@ population size is smaller or larger than the current one
 
     def print_infix(self, ind=None, pos=0, constants=None):
         if ind is None or isinstance(ind, types.IntType):
-            k = self.get_best() if ind is None else ind
+            k = self.best if ind is None else ind
             ind = self._p[k]
             if hasattr(self, '_p_constants'):
                 constants = self._p_constants[k]
@@ -677,7 +690,7 @@ population size is smaller or larger than the current one
                  var_names=None):
         import StringIO
         if ind is None or isinstance(ind, types.IntType):
-            k = self.get_best() if ind is None else ind
+            k = self.best if ind is None else ind
             ind = self._p[k]
             if hasattr(self, '_p_constants'):
                 constants = self._p_constants[k]
@@ -744,7 +757,7 @@ population size is smaller or larger than the current one
         """
         Save only best individual
         """
-        bs = self.get_best()
+        bs = self.best
         mask = np.ones(self.popsize, dtype=np.bool)
         mask[bs] = False
         self.population[mask] = None
@@ -872,7 +885,7 @@ class GPwRestart(GP):
             # print "*"*10, self.gens_ind
             self._ntimes += 1
             for i, ind, cons in self.create_population_generator(self.popsize):
-                if i == self.get_best():
+                if i == self.best:
                     continue
                 self._p[i] = ind
                 self._p_constants[i] = cons

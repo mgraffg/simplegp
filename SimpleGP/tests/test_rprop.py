@@ -17,7 +17,7 @@ import numpy as np
 
 class TestRprop(object):
     def __init__(self):
-        x = np.linspace(0, 1, 100)
+        x = np.linspace(-1, 1, 100)
         pol = np.array([0.2, -0.3, 0.2])
         self._pol = pol
         X = np.vstack((x**2, x, np.ones(x.shape[0])))
@@ -27,12 +27,32 @@ class TestRprop(object):
         self._gp.create_population()
 
     def test_rprop(self):
-        nvar = self._gp._func.shape[0]
-        self._gp._p[0] = np.array([0, 2, 14,
-                                   nvar, nvar+1, 0,
-                                   2, nvar, nvar+2, nvar+3])
-        self._gp._p_constants[0] = self._pol * -1
-        fit = self._gp.fitness(0)
-        self._gp.rprop(0)
-        fit2 = self._gp.fitness(0)
+        gp = self._gp
+        nvar = gp.nfunc
+        gp.population[0] = np.array([0, 2, 14,
+                                     nvar, nvar+1, 0,
+                                     2, nvar, nvar+2, nvar+3])
+        gp._p_constants[0] = self._pol * -1
+        fit = gp.fitness(0)
+        gp.rprop(0)
+        fit2 = gp.fitness(0)
         assert fit2 > fit
+        mudiff = np.fabs(self._pol - gp._p_constants[0]).mean()
+        assert mudiff < 0.05
+
+    def test_rprop_run(self):
+        gp = self._gp
+        nvar = gp.nfunc
+        for i in range(2):
+            gp.population[i] = np.array([0, 2, 14,
+                                         nvar, nvar+1, 0,
+                                         2, nvar, nvar+2, nvar+3])
+            gp._p_constants[i] = self._pol * -1
+        fit = gp.fitness(0)
+        assert gp.best == 0
+        gp._update_best_w_rprop = True
+        fit2 = gp.fitness(1)
+        mudiff = np.fabs(self._pol - gp._p_constants[1]).mean()
+        assert mudiff < 0.05
+        assert fit2 > fit
+        assert gp.best == 1

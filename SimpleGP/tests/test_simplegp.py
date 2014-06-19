@@ -27,6 +27,31 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
 
+    def test_best_length(self):
+        gp = self._gp
+        gp.create_population()
+        var = gp.nfunc
+        gp._p[0] = np.array([0, 0, 0, var, 1, var, var, var, var+1])
+        gp._p_constants[0][0] = 1
+        gp._p[1] = np.array([0, 0, var, var, var+1])
+        gp._p_constants[1][0] = 1
+        print gp.fitness(0)
+        print gp.fitness(1)
+        assert gp.best == 1
+
+    def test_best(self):
+        gp = self._gp
+        gp.create_population()
+        var = gp.nfunc
+        gp._p_constants[1][0] = 1
+        gp._p[1] = np.array([0, 0, var, var, var+1])
+        gp.fitness(1)
+        gp.best = 0
+        assert gp.best == 1
+        gp._fitness[0] = 0
+        gp.best = 0
+        assert gp.best == 0
+
     def test_new_best(self):
         gp = self._gp
         gp.set_test(np.array([[0]]))
@@ -41,8 +66,8 @@ class TestSimpleGP(object):
         gp._p[2] = np.array([0, var, 3, var, var])
         gp.fitness(2)
         # assert gp._best_fit is None
-        print gp._best_fit, gp._fitness[:3], gp.get_best()
-        assert gp.get_best() == 1
+        print gp._best_fit, gp._fitness[:3], gp.best
+        assert gp.best == 1
 
     def test_depth(self):
         gp = self._gp
@@ -145,7 +170,7 @@ class TestSimpleGP(object):
     def test_dosimplify(self):
         gp = GP.run_cl(self._x, self._y, generations=5,
                        seed=0, do_simplify=False)
-        fit = gp.fitness(gp.get_best())
+        fit = gp.fitness(gp.best)
         assert not np.isnan(fit) and not np.isinf(fit)
 
     def test_save(self):
@@ -190,7 +215,7 @@ class TestSimpleGP(object):
     def test_save_best(self):
         import tempfile
         s = GP.run_cl(self._x, self._y, seed=0, generations=2)
-        bs = s.get_best()
+        bs = s.best
         p = s.population[bs].copy()
         cons = s._p_constants[bs].copy()
         fname = tempfile.mktemp()
@@ -206,7 +231,7 @@ class TestSimpleGP(object):
     def test_predict(self):
         gp = self._gp
         gp.run()
-        best = gp.get_best()
+        best = gp.best
         x1 = np.linspace(-1, 1, 997)[:, np.newaxis]
         gp._x[:] = np.nan
         y = gp.predict(x1, ind=best)

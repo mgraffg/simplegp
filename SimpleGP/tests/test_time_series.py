@@ -30,6 +30,12 @@ class TestTimeSeries(object):
                           nsteps=vs.shape[0])
         assert time.time() - t < 1.1
 
+    def test_compute_nlags(self):
+        nlags = np.floor(np.log2(15))
+        assert nlags == TimeSeries.compute_nlags(15)
+        nlags = np.ceil(np.log2(16))
+        assert nlags == TimeSeries.compute_nlags(16)
+
     def test_nlags(self):
         gp = TimeSeries.run_cl(ts, generations=2,
                                nsteps=vs.shape[0])

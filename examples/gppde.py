@@ -14,6 +14,6 @@ gp = GPPDE(generations=30, verbose=True,
            # update_best_w_rprop=True,
            max_length=1000).train(x, y)
 gp.run()
-assert gp.fitness(gp.get_best()) >= -2.2399825722547702e-06
-print gp.fitness(gp.get_best())
+assert gp.fitness(gp.best) >= -2.2399825722547702e-06
+print gp.fitness(gp.best)
 print gp.print_infix()

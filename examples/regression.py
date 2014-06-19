@@ -11,6 +11,6 @@ y = (X.T * pol).sum(axis=1)
 x = x[:, np.newaxis]
 gp = GP(verbose=True, max_length=1000).train(x, y)
 gp.run()
-print gp.fitness(gp.get_best())
+print gp.fitness(gp.best)
 print gp.print_infix()
 

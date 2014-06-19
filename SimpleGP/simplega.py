@@ -46,7 +46,7 @@ class SimpleGA(object):
 
     The coefficients are:
 
-    >>> print s._p[s.get_best()]
+    >>> print s._p[s.best]
     [ 0.10430681 -0.18460194  0.17084382]
     """
     def __init__(self, popsize=1000, ppm=0.1, chromosome_length=3,
@@ -116,33 +116,6 @@ population size is smaller or larger than the current one
     @generations.setter
     def generations(self, v):
         self._gens = v
-
-    def test_f(self, x):
-        """This method test whether the prediction is valid. It is called from
-        new_best. Returns True when x is a valid prediction
-
-        """
-        return ((not np.any(np.isnan(x))) and
-                (not np.any(np.isinf(x))))
-
-    def new_best(self, k):
-        """
-        This method is called to test whether the best so far is beaten by k.
-        Here is verified that the best individual is capable of
-        predicting the test set, in the case it is given.
-        """
-        f = self._fitness[k]
-        if self._best_fit is None or self._best_fit < f:
-            if self._test_set is not None:
-                x = self._test_set
-                r = self.predict(x, k)
-                if not self.test_f(r):
-                    self._fitness[k] = -np.inf
-                    return False
-            self._best_fit = f
-            self._best = k
-            return True
-        return False
 
     def init(self):
         """
@@ -281,7 +254,7 @@ population size is smaller or larger than the current one
         features are X
         """
         if ind is None:
-            ind = self.get_best()
+            ind = self.best
         return (X * self._p[ind]).sum(axis=1)
 
     def distance(self, y, hy):
@@ -322,6 +295,47 @@ population size is smaller or larger than the current one
 
     def get_best(self):
         return self.best
+
+    def test_f(self, x):
+        """This method test whether the prediction is valid. It is called from
+        new_best. Returns True when x is a valid prediction
+
+        """
+        return ((not np.any(np.isnan(x))) and
+                (not np.any(np.isinf(x))))
+
+    @best.setter
+    def best(self, k):
+        """Returns the best so far (the position in the population). It raises
+        an exception if the best has not been set
+
+        """
+        return self.new_best(k)
+
+    def new_best_comparison(self, k):
+        """
+        This function is called from new_best
+        """
+        f = self._fitness[k]
+        return self._best_fit is None or self._best_fit < f
+
+    def new_best(self, k):
+        """
+        This method is called to test whether the best so far is beaten by k.
+        Here is verified that the best individual is capable of
+        predicting the test set, in the case it is given.
+        """
+        if self.new_best_comparison(k):
+            if self._test_set is not None:
+                x = self._test_set
+                r = self.predict(x, k)
+                if not self.test_f(r):
+                    self._fitness[k] = -np.inf
+                    return False
+            self._best_fit = self._fitness[k]
+            self._best = k
+            return True
+        return False
 
     def pre_crossover(self, father1, father2):
         """
@@ -367,10 +381,10 @@ population size is smaller or larger than the current one
             return False
         self._last_call_to_stats = i
         if self._stats:
-            self.fit_per_gen[i/self._popsize] = self._fitness[self.get_best()]
+            self.fit_per_gen[i/self._popsize] = self._fitness[self.best]
         if self._verbose:
             print "Gen: " + str(i) + "/" + str(self._gens * self._popsize) + \
-                " " + "%0.4f" % self._fitness[self.get_best()]
+                " " + "%0.4f" % self._fitness[self.best]
         return True
 
     def run(self, exit_call=True):

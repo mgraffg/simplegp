@@ -23,5 +23,5 @@ gp = GPRPropU(popsize=1000,
 x = x[:, np.newaxis]
 gp.train(x, y)
 gp.run()
-print gp.fitness(gp.get_best())
+print gp.fitness(gp.best)
 print gp.print_infix()

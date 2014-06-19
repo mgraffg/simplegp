@@ -64,7 +64,7 @@ class TimeSeries(GP):
     def predict_best(self, X=None):
         if X is None:
             X = np.atleast_2d(self._x[-1])
-        return self.predict(X, ind=self.get_best())
+        return self.predict(X, ind=self.best)
 
     @classmethod
     def run_cl(cls, serie, y=None, test=None, nlags=None, max_length=None,
@@ -76,8 +76,8 @@ class TimeSeries(GP):
             X, y = cls.create_W(serie, window=nlags)
             if max_length is None:
                 max_length = X.shape[0] // 2
-                if max_length < 16:
-                    max_length = X.shape[0]
+                if max_length < 8:
+                    max_length = 8
             if test is None:
                 test = np.atleast_2d(X[-1].copy())
             return super(TimeSeries, cls).run_cl(X, y, nlags=nlags,
@@ -87,8 +87,8 @@ class TimeSeries(GP):
         assert y is not None and nlags is not None
         if max_length is None:
             max_length = serie.shape[0] // 2
-            if max_length < 16:
-                max_length = serie.shape[0]
+            if max_length < 8:
+                max_length = 8
         if test is None:
             test = np.atleast_2d(serie[-1].copy())
         return super(TimeSeries, cls).run_cl(serie, y, nlags=nlags,
@@ -97,7 +97,9 @@ class TimeSeries(GP):
 
     @staticmethod
     def compute_nlags(size):
-        return int(np.ceil(np.log2(size)))
+        if size < 16:
+            return int(np.floor(np.log2(size)))
+        return int(np.floor(np.log2(size)))
 
     @staticmethod
     def create_W(serie, window=10):
@@ -122,7 +124,7 @@ class RTimeSeries(RecursiveGP, TimeSeries):
         if xreg is not None:
             xp[:, self._nlags:] = xreg[:, :]
         self.train(xp, np.zeros(self._nsteps, dtype=self._dtype))
-        pr = self.eval(self.get_best())
+        pr = self.eval(self.best)
         self.train(x, f)
         self._xp = xp
         return pr

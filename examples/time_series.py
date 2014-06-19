@@ -12,6 +12,8 @@ def rse(x, y):
 
 ts = np.array(map(float, open('data/A.txt').readlines()))
 nsteps = 100
-gp = TPDE.run_cl(ts, nsteps=nsteps, verbose=True)
+gp = TPDE.run_cl(ts, nsteps=nsteps, verbose=True,
+                 max_length=256,
+                 update_best_w_rprop=True)
 d = np.loadtxt('data/A.cont.txt')
 print rse(d[:100], gp.predict_best())
