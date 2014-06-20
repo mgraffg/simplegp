@@ -64,7 +64,7 @@ class TimeSeries(GP):
 
     def predict_best(self, X=None):
         if X is None:
-            X = np.atleast_2d(self._x[-self.nlags:].copy())
+            X = np.atleast_2d(self._y[-self.nlags:].copy())
         return self.predict(X, ind=self.best)
 
     @classmethod
