@@ -87,3 +87,5 @@ Version 0.4.*
 	+ New Exception that it is raised when the run ends with an unsuitable individual
 	+ Exception BestNotFound is raised on get_best if property best has not been set
 	+ The new_best takes into consideration the length of the individual
+	+ Simplifying time_series.run_cl
+	+ Bug in time_series predict best

@@ -89,6 +89,12 @@ class TestTimeSeries(object):
         assert gp._test_set is not None
 
     def test_max_length(self):
+        def max_length_func(a):
+            m = a // 2
+            if m > 256:
+                return 256
+            return m
+        ts = np.arange(1024)
         gp = TimeSeries.run_cl(ts, generations=2,
                                nsteps=6)
         max_length = gp._max_length
@@ -97,6 +103,13 @@ class TestTimeSeries(object):
         gp = TS.run_cl(x, y, generations=2, nlags=x.shape[1],
                        nsteps=6)
         assert gp._max_length == max_length
+        gp = TimeSeries.run_cl(ts, generations=2,
+                               max_length=max_length_func,
+                               nsteps=6)
+        ts = np.arange(8)
+        gp = TimeSeries.run_cl(ts, generations=2,
+                               nsteps=6)
+        assert gp._max_length == 8
 
     def test_test_f(self):
         gp = TimeSeries.run_cl(ts, generations=2,

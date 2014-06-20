@@ -18,7 +18,7 @@ from .simplegp import GP, GPwRestart, GPMAE
 from .gppde import GPPDE
 from .forest import GPForest, SubTreeXO, SubTreeXOPDE
 from .classification import Classification, ClassificationPDE
-from .time_series import TimeSeries, RTimeSeries
+from .time_series import TimeSeries
 from .recursiveGP import RecursiveGP, RGP
 from .eval import Eval
 from .Rprop_mod import RPROP
@@ -27,7 +27,7 @@ from utils import Pool, VerifyOutput
 
 __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            GPForest, SubTreeXO, SubTreeXOPDE, Classification,
-           RecursiveGP, RGP, RTimeSeries, GPwRestart, GPMAE,
+           RecursiveGP, RGP, GPwRestart, GPMAE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool, BestNotFound]
 
