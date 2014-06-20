@@ -82,8 +82,8 @@ class TimeSeries(GP):
             max_length = max_length(serie.shape[0])
         if max_length < 8:
             max_length = 8
-        if test is None:
-            test = np.atleast_2d(serie[-1].copy())
+        if test is None and nlags == serie.shape[1]:
+            test = np.atleast_2d(y[-nlags:][::-1].copy())
         return super(TimeSeries, cls).run_cl(serie, y, nlags=nlags,
                                              test=test,
                                              max_length=max_length, **kwargs)
