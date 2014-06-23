@@ -90,3 +90,4 @@ Version 0.4.*
 	+ Simplifying time_series.run_cl
 	+ Bug in time_series predict best
 	+ The method that test the best individual in the class time series can test for positive predictions
+	+ Bug in kill_ind, it was possible to kill the best so far

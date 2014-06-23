@@ -400,6 +400,8 @@ population size is smaller or larger than the current one
             try:
                 son = self.genetic_operators()
                 kill = self.tournament(neg=True)
+                while kill == self._best:
+                    kill = self.tournament(neg=True)
                 self._kill_ind = kill
                 self.kill_ind(kill, son)
                 self.stats()
