@@ -89,3 +89,4 @@ Version 0.4.*
 	+ The new_best takes into consideration the length of the individual
 	+ Simplifying time_series.run_cl
 	+ Bug in time_series predict best
+	+ The method that test the best individual in the class time series can test for positive predictions

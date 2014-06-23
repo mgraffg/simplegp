@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-from SimpleGP import TimeSeries
+from SimpleGP import TimeSeries, BestNotFound
 import time
 
 ts = np.array([3600.0, 7700.0, 12300.0, 30500.0, 47390.0, 57006.0,
@@ -33,8 +33,8 @@ class TestTimeSeries(object):
     def test_compute_nlags(self):
         nlags = np.floor(np.log2(15))
         assert nlags == TimeSeries.compute_nlags(15)
-        nlags = np.ceil(np.log2(16))
-        assert nlags == TimeSeries.compute_nlags(16)
+        nlags = np.ceil(np.log2(17))
+        assert nlags == TimeSeries.compute_nlags(17)
 
     def test_nlags(self):
         gp = TimeSeries.run_cl(ts, generations=2,
@@ -131,3 +131,25 @@ class TestTimeSeries(object):
         gp = TGP.run_cl(ts, generations=2, nsteps=6)
         pr = gp.predict_best()
         assert np.all(pr != base)
+
+    def test_positive(self):
+        def clean(gp):
+            gp._best = None
+            gp._best_fit = None
+            gp._fitness.fill(-np.inf)
+        gp = TimeSeries.run_cl(ts, generations=2, nsteps=6)
+        clean(gp)
+        nfunc = gp.nfunc
+        gp._p_constants[0][0] = -1
+        var = nfunc + gp._x.shape[1]
+        gp._p[0] = np.array([var])
+        gp.fitness(0)
+        assert gp.best == 0
+        clean(gp)
+        gp._positive = True
+        gp.fitness(0)
+        try:
+            gp.best
+        except BestNotFound:
+            return
+        assert False

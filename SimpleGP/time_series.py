@@ -19,10 +19,12 @@ import types
 
 
 class TimeSeries(GP):
-    def __init__(self, nsteps=2, nlags=1, **kwargs):
+    def __init__(self, nsteps=2, positive=False,
+                 nlags=1, **kwargs):
         super(TimeSeries, self).__init__(**kwargs)
         self._nsteps = nsteps
         self._nlags = nlags
+        self._positive = positive
         self._verify_output = VerifyOutput()
 
     @property
@@ -39,6 +41,8 @@ class TimeSeries(GP):
         flag = super(TimeSeries, self).test_f(r)
         if not flag:
             return flag
+        if self._positive and np.any(r < 0):
+            return False
         return self._verify_output.verify(self._f, r)
 
     def predict(self, X, ind=None):
@@ -92,7 +96,7 @@ class TimeSeries(GP):
     def compute_nlags(size):
         if size < 16:
             return int(np.floor(np.log2(size)))
-        return int(np.floor(np.log2(size)))
+        return int(np.ceil(np.log2(size)))
 
     @staticmethod
     def create_W(serie, window=10):

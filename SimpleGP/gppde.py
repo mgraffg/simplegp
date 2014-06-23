@@ -19,7 +19,7 @@ from SimpleGP.Rprop_mod import RPROP2
 
 
 class GPPDE(GP):
-    def __init__(self, max_mem=300.0,
+    def __init__(self, max_mem=500.0,
                  update_best_w_rprop=False,
                  **kwargs):
         super(GPPDE, self).__init__(**kwargs)
@@ -233,12 +233,12 @@ class GPPDE(GP):
         return ins
 
     @classmethod
-    def run_cl(cls, x, f, pgrow=0.0, training_size=None, **kwargs):
+    def run_cl(cls, x, f, training_size=None, **kwargs):
         """
         Returns a trained system that does not output nan or inf neither
         in the training set (i.e., x) or test set (i.e., test).
         """
         if training_size is None:
             training_size = x.shape[0]
-        return super(GPPDE, cls).run_cl(x, f, pgrow=pgrow,
+        return super(GPPDE, cls).run_cl(x, f,
                                         training_size=training_size, **kwargs)
