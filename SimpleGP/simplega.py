@@ -366,6 +366,8 @@ population size is smaller or larger than the current one
         """
         Replace the (kill)-th individual with son
         """
+        if self._best == kill:
+            raise BestNotFound("Killing the best so far!")
         self._p[kill] = son
         self._fitness[kill] = -np.inf
 

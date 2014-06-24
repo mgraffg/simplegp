@@ -31,9 +31,16 @@ class GPPDE(GP):
     def new_best(self, k):
         flag = super(GPPDE, self).new_best(k)
         if not self._update_best_w_rprop or not flag:
-            return False
+            return flag
+        cons = self._p_constants[k].copy()
+        fit = self._fitness[k]
         self.rprop(k)
-        return super(GPPDE, self).new_best(k)
+        flag = super(GPPDE, self).new_best(k)
+        if flag:
+            return flag
+        self._fitness[k] = fit
+        self._p_constants[k] = cons
+        return True
 
     def stats(self):
         flag = super(GPPDE, self).stats()

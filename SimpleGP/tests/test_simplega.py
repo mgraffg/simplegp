@@ -89,19 +89,15 @@ def test_save():
     assert np.all(p == s1.population)
 
 
-# def test_save_best():
-#     import tempfile
-#     np.random.RandomState(0)
-#     x = np.linspace(0, 1, 100)
-#     pol = np.array([0.2, -0.3, 0.2])
-#     X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
-#     f = (X * pol).sum(axis=1)
-#     s = SimpleGA.init_cl(popsize=10, generations=5).train(X, f)
-#     s.create_population()
-#     map(lambda x: s.fitness, range(s.popsize))
-#     fname = tempfile.mktemp()
-#     ind = s.population[s.get_best()]
-#     s.save_best(fname)
-#     with open(fname) as fpt:
-#         b = np.load(fpt)
-#         assert np.all(ind == b)
+def test_kill_ind_best():
+    np.random.RandomState(0)
+    x = np.linspace(0, 1, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    f = (X * pol).sum(axis=1)
+    s = SimpleGA.run_cl(X, f, popsize=10, generations=5)
+    try:
+        s.kill_ind(s.best, s._p[0])
+    except BestNotFound:
+        return
+    assert False
