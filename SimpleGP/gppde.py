@@ -103,7 +103,7 @@ class GPPDE(GP):
 
     def mutation(self, father1):
         kill = self.tournament(neg=True)
-        while kill == self._xo_father1:
+        while kill == self._xo_father1 or kill == self._best:
             kill = self.tournament(neg=True)
         d = np.random.randint(self._min_depth,
                               self._mutation_depth)

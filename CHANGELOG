@@ -93,3 +93,4 @@ Version 0.4.*
 	+ Bug in kill_ind, it was possible to kill the best so far
 	+ Raise an exception when the best so far is killed
 	+ Bug in new_best when the best is updated with rprop
+	+ Killing the best so far
