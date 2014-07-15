@@ -94,3 +94,4 @@ Version 0.4.*
 	+ Raise an exception when the best so far is killed
 	+ Bug in new_best when the best is updated with rprop
 	+ Killing the best so far
+	+ Bug in GPForest the ntrees param was ignored

@@ -19,7 +19,7 @@ from SimpleGP.tree import Tree, SubTree, PDEXOSubtree
 
 class GPForest(GP):
     def __init__(self, ntrees=None, **kwargs):
-        self._ntrees = None
+        self._ntrees = ntrees
         super(GPForest, self).__init__(**kwargs)
 
     def train(self, x, f):
