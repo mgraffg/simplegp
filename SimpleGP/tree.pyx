@@ -467,6 +467,31 @@ cdef class PDEXO(Tree):
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cdef unsigned int count_error_value(self,
+                                        FLOAT *error,
+                                        FLOAT *x,
+                                        FLOAT *s,
+                                        int j1):
+        cdef int c, j
+        cdef unsigned int flag=0
+        c = self._xo_c
+        for j in range(c):
+            # p2[m] = ((s[m] > x) == error).sum(axis=1)
+            if s[j1] == x[j]:
+                j1 += 1
+                continue
+            if s[j1] > x[j]:
+                if error[j] == -1:
+                    flag += 1
+            else:
+                if error[j] == 1:
+                    flag += 1
+            j1 += 1
+        return flag
+
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cpdef int father2_crossing_point(self,
                                      npc.ndarray[INT, ndim=1, mode="c"] father1,
                                      npc.ndarray[INT, ndim=1, mode="c"] father2,
@@ -486,18 +511,7 @@ cdef class PDEXO(Tree):
             if m[i] == 0:
                 continue
             j1 = i * c
-            flag = 0
-            for j in range(c):
-                # p2[m] = ((s[m] > x) == error).sum(axis=1)
-                if s[j1] == x[j]:
-                    continue
-                if s[j1] > x[j]:
-                    if error[j] == -1:
-                        flag += 1
-                else:
-                    if error[j] == 1:
-                        flag += 1
-                j1 += 1
+            flag = self.count_error_value(error, x, s, j1)
             if flag > bflag:
                 res = i
                 bflag = flag

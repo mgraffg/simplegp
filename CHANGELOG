@@ -95,3 +95,5 @@ Version 0.4.*
 	+ Bug in new_best when the best is updated with rprop
 	+ Killing the best so far
 	+ Bug in GPForest the ntrees param was ignored
+Version 0.5.*
+	+ New type of point-mutation
