@@ -307,9 +307,10 @@ def test_gppde_crossover_length():
                                                       gp._p[gp._xo_father2],
                                                       i)
                 assert gp._tree_mask[pos]
+            gp.fitness(gp._xo_father1)
+            gp.fitness(gp._xo_father2)
             ind = gp.crossover(gp._p[gp._xo_father1],
-                               gp._p[gp._xo_father2],
-                               force_xo=True)
+                               gp._p[gp._xo_father2])
             assert ind.shape[0] >= gp._min_length
 
 

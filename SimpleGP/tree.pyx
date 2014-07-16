@@ -490,6 +490,7 @@ cdef class PDEXO(Tree):
             for j in range(c):
                 # p2[m] = ((s[m] > x) == error).sum(axis=1)
                 if s[j1] == x[j]:
+                    j1 += 1
                     continue
                 if s[j1] > x[j]:
                     if error[j] == -1:
