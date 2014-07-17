@@ -29,7 +29,8 @@ cdef class Eval:
     cdef INT _max_nargs
     cdef FLOAT *_x
     cdef FLOAT *_cons
-
+    cdef FLOAT *_pmut_eval
+    cdef int _pmut_eval_flag
     cdef INT eval_ind_inner(self)
 
     cdef void one_args(self, INT func, INT a, INT pos)
@@ -105,6 +106,11 @@ cdef class Eval:
     cdef void variable_args(self, INT func, INT *a, INT nargs, INT pos)
 
     cdef void argmax(self, INT *a, INT nargs, INT pos)
+
+    cpdef pmutation_eval(self, int, npc.ndarray[FLOAT, ndim=2],
+                         npc.ndarray[INT, ndim=1])
+
+    cdef void pmutation_eval_inner(self, int, FLOAT *, INT *)
 
 
 

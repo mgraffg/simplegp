@@ -1,85 +1,6 @@
-Version 0.2.5
-	+ New files in the nosetests. These include test_classification.py and
-	test_forest.
-	+ Bugs fixed on classification and forest
-	+ New class tree.SubTree to select the crossover points based on the sub-tree.
-	This class made a significant change in forest.py
-	+ New parameter in tree.Tree (select_root) it is to decide whether the root
-	is admissible as crossover point
-	+ New class ClassificationPDE. This class selects the crossover point based on
-	the partial derivative error
-	+ New method SimpleGP.tree_params used to instantiate the tree module
-	+ New example, it shows how can be used SimpleGP to create prototypes for
-	classification. It addresses the iris dataset.
-Version 0.2.6
-	+ Minor bug in the classification. The dependent variable is now an integer
-	+ Setting a flag to indicate the timeout and then exit the evolution
-	+ GPwRestart goes an infinite cycle parameter ntimes is equal or less than 0
-	+ Minor bug in cl_argmax
-	+ The Classification class should be subclass of SubTreeXO to keep the output function in the root.
-	+ Setting to Classification class the predict method.
-Version 0.2.7
-	+ SimpleGP.predict receives an optimal parameter that indicates which individual is used in the prediction
-	+ SimpleGP.init_cl to create a new instance of the class
-	+ Bug in GPwRestart it requires to overwrite on_exit to set self._run to true
-	+ A new class SubTreeXOPDE is added this class uses PDE
-	+ The init_cl method is added to Classification and GPPDE
-	+ Some tricks in setup.py in order to compile in OSX
-	+ The method Classification.predict did not take care of nan or inf, now it returns a nan when it finds a nan or inf
-	+ SimpleGA.stats returns False if it is not call at the end of the generation otherwise returns true
-	+ SimpleGA.runs returns True if the run ended when the maximum number of evaluations is reached otherwise returns False
-Version 0.2.8
-	+ setup.py reads the VERSION file to set the version in itself and in the __init__.p
-	+ SimpleGA.init_cl is included
-	+ The method SimpleGA.run_cl creates a instance that does not output nan or inf neither in the training set nor a test set (in the case is given)
-	+ SimpleGA has a decent amount of documentation
-	+ GPwRestart has some minor modifications. The most important is that the argument ntimes in run now is pass at the constructor.
-Version 0.2.9
-	+ It is tested (in new_best) that the best individual found so far can predict without nan and inf the test set. The test set is given in the function set_test
-	+ SimpleGA has doctest
-Version 0.2.9.*
-	+ Bug in the method new_best on the classes GPForest and SubTreeXOPDE
-	+ Restructuring the package, GPPDE is moved to gppde.py
-	+ Minor bug in predict
-	+ SimpleGP has doctest
-	+ SimpleGP.load_prev_run has a default individual in case the population has None.
-	+ SimpleGA has a new class variable _kill_ind. This variable has the position of the individual replace
-	+ In fitness returns the _best_fit when a new best is found
-	+ Function pre_crossover is called before calling the crossover
-	+ free_mem is in stats
-Version 0.2.10.*
-	+ Crossover in GPPDE verifies the fitness and in the case it is -inf then it performs a traditional crossover.
-	+ The crossover probability (pxo) is not updated in GPPDE.run_cl
-	+ simplifying the parameters in init_cl
-	+ Calling rprop on GPPDE when a new best individual is found and the flag update_best_w_rprop is True
-	+ GPPDE.init_cl by default returns an instance that updates the constants of the best so far using RPROP.
-	+ Change the hierarchy in ClassificationPDE
-	+ Static functions added: Classification.BER and Classification.success
-	+ Bug fix in Classification.predict
-	+ ClassificationPDE is rewritten.
-	+ There is a new class PDEXOSubtree inherits from PDEXO
-	+ SubTreeXOPDE uses the new class aforementioned
-Version 0.3.0
-	+ New functions in tree.pyx:
-	++ get_pos_arg returs the position of the i-th argument in the node pos, where the first argument is represented by i=0
-	++ path_to_root computes the path to the root starting at node pos
-	++ compute_parents fill an array with the indexes of the parents
-	+ GPPDE.init_cl has new default parameters
-	+ There is a new class, PDE, that handles the computation of the partial derivative this class is used by GPPDE, by doing this one is able to remove the cache of the partial derivative and the complexity is improved
-Version 0.3.*
-	+ Making the tests simpler and faster
-	+ removing the computing_derivative from GP
-	+ Removing from eval.pyx the procedures that compute the derivative
-	+ Bug in PDEXO, it did not handle a zero
-	+ Missing 2 in compute_error_pr
-	+ Crossover does not verify whether the fitness is infinity
-	+ Merge with the master branch
-	+ Setting properties to the classes. These are generations and population size
-	+ Bug in predict
-	+ Method save uses with statement
-	+ New method save_best
-	+ Working on the time series class
-	+ The method test_f tests whether a prediction is valid
+Version 0.5.*
+	+ New type of point-mutation
+	+ pmutation_eval receives inputs and computes all the operations in the function_set with the cardinality indicated by the number of inputs
 Version 0.4.*
 	+ Select the crossing point according to the depth + new_best is
 	rewritten
@@ -96,5 +17,85 @@ Version 0.4.*
 	+ Killing the best so far
 	+ Bug in GPForest the ntrees param was ignored
 	+ Bug in GPPDE when the crossing point in the second parent is computed
-Version 0.5.*
-	+ New type of point-mutation
+Version 0.3.*
+	+ Making the tests simpler and faster
+	+ removing the computing_derivative from GP
+	+ Removing from eval.pyx the procedures that compute the derivative
+	+ Bug in PDEXO, it did not handle a zero
+	+ Missing 2 in compute_error_pr
+	+ Crossover does not verify whether the fitness is infinity
+	+ Merge with the master branch
+	+ Setting properties to the classes. These are generations and population size
+	+ Bug in predict
+	+ Method save uses with statement
+	+ New method save_best
+	+ Working on the time series class
+	+ The method test_f tests whether a prediction is valid
+Version 0.3.0
+	+ New functions in tree.pyx:
+	++ get_pos_arg returs the position of the i-th argument in the node pos, where the first argument is represented by i=0
+	++ path_to_root computes the path to the root starting at node pos
+	++ compute_parents fill an array with the indexes of the parents
+	+ GPPDE.init_cl has new default parameters
+	+ There is a new class, PDE, that handles the computation of the partial derivative this class is used by GPPDE, by doing this one is able to remove the cache of the partial derivative and the complexity is improved
+Version 0.2.10.*
+	+ Crossover in GPPDE verifies the fitness and in the case it is -inf then it performs a traditional crossover.
+	+ The crossover probability (pxo) is not updated in GPPDE.run_cl
+	+ simplifying the parameters in init_cl
+	+ Calling rprop on GPPDE when a new best individual is found and the flag update_best_w_rprop is True
+	+ GPPDE.init_cl by default returns an instance that updates the constants of the best so far using RPROP.
+	+ Change the hierarchy in ClassificationPDE
+	+ Static functions added: Classification.BER and Classification.success
+	+ Bug fix in Classification.predict
+	+ ClassificationPDE is rewritten.
+	+ There is a new class PDEXOSubtree inherits from PDEXO
+	+ SubTreeXOPDE uses the new class aforementioned
+Version 0.2.9.*
+	+ Bug in the method new_best on the classes GPForest and SubTreeXOPDE
+	+ Restructuring the package, GPPDE is moved to gppde.py
+	+ Minor bug in predict
+	+ SimpleGP has doctest
+	+ SimpleGP.load_prev_run has a default individual in case the population has None.
+	+ SimpleGA has a new class variable _kill_ind. This variable has the position of the individual replace
+	+ In fitness returns the _best_fit when a new best is found
+	+ Function pre_crossover is called before calling the crossover
+	+ free_mem is in stats
+Version 0.2.9
+	+ It is tested (in new_best) that the best individual found so far can predict without nan and inf the test set. The test set is given in the function set_test
+	+ SimpleGA has doctest
+Version 0.2.8
+	+ setup.py reads the VERSION file to set the version in itself and in the __init__.p
+	+ SimpleGA.init_cl is included
+	+ The method SimpleGA.run_cl creates a instance that does not output nan or inf neither in the training set nor a test set (in the case is given)
+	+ SimpleGA has a decent amount of documentation
+	+ GPwRestart has some minor modifications. The most important is that the argument ntimes in run now is pass at the constructor.
+Version 0.2.7
+	+ SimpleGP.predict receives an optimal parameter that indicates which individual is used in the prediction
+	+ SimpleGP.init_cl to create a new instance of the class
+	+ Bug in GPwRestart it requires to overwrite on_exit to set self._run to true
+	+ A new class SubTreeXOPDE is added this class uses PDE
+	+ The init_cl method is added to Classification and GPPDE
+	+ Some tricks in setup.py in order to compile in OSX
+	+ The method Classification.predict did not take care of nan or inf, now it returns a nan when it finds a nan or inf
+	+ SimpleGA.stats returns False if it is not call at the end of the generation otherwise returns true
+	+ SimpleGA.runs returns True if the run ended when the maximum number of evaluations is reached otherwise returns False
+Version 0.2.6
+	+ Minor bug in the classification. The dependent variable is now an integer
+	+ Setting a flag to indicate the timeout and then exit the evolution
+	+ GPwRestart goes an infinite cycle parameter ntimes is equal or less than 0
+	+ Minor bug in cl_argmax
+	+ The Classification class should be subclass of SubTreeXO to keep the output function in the root.
+	+ Setting to Classification class the predict method.
+Version 0.2.5
+	+ New files in the nosetests. These include test_classification.py and
+	test_forest.
+	+ Bugs fixed on classification and forest
+	+ New class tree.SubTree to select the crossover points based on the sub-tree.
+	This class made a significant change in forest.py
+	+ New parameter in tree.Tree (select_root) it is to decide whether the root
+	is admissible as crossover point
+	+ New class ClassificationPDE. This class selects the crossover point based on
+	the partial derivative error
+	+ New method SimpleGP.tree_params used to instantiate the tree module
+	+ New example, it shows how can be used SimpleGP to create prototypes for
+	classification. It addresses the iris dataset.

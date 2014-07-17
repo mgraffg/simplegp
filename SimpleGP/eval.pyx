@@ -17,6 +17,9 @@ cimport cython
 cimport libc
 cimport libc.math as math
 cimport libc.stdlib as stdlib
+cdef extern from "math.h":
+    int isinf(double)
+    int isnan(double)
 
 np.seterr(all='ignore')
 
@@ -35,6 +38,8 @@ cdef class Eval:
         self._nvar = nvar
         # setting the maximum number of arguments
         self._max_nargs = max_nargs
+        # 
+        self._pmut_eval_flag = 0
  
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -470,4 +475,66 @@ cdef class Eval:
                 sdown += down
                 sup += up
             st[o_i + i] = sup / sdown
+
+    def __dealloc__(self):
+        if self._pmut_eval_flag == 1:
+            stdlib.free(self._pmut_eval)
     
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef pmutation_eval(self, int nop, npc.ndarray[FLOAT, ndim=2] st,
+                         npc.ndarray[INT, ndim=1] index):
+        self.pmutation_eval_inner(nop, <FLOAT *> st.data, <INT *> index.data)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void pmutation_eval_inner(self, int nop, FLOAT *stC, INT *indexC):
+        cdef int c=0, i, j, l_st=self._l_st, skip, nfunc=self._nfunc, nvar=self._nvar
+        cdef INT *_nop=self._nop
+        cdef FLOAT *pmut_eval
+        self._nvar = nop
+        if self._pmut_eval_flag == 0:
+            self._pmut_eval = <FLOAT *>stdlib.malloc(sizeof(FLOAT) * l_st * nfunc)
+            self._pmut_eval_flag = 1
+        pmut_eval = self._pmut_eval
+        self._x = <FLOAT *>stdlib.malloc(sizeof(FLOAT) * l_st * self._max_nargs)
+        self._st = <FLOAT *>stdlib.malloc(sizeof(FLOAT) * l_st * (self._max_nargs + 1))
+        self._ind = <INT *>stdlib.malloc(sizeof(INT) * (self._max_nargs + 1))
+        for i in range(nop):
+            self._ind[i + 1] = nfunc + i
+            skip = indexC[i] * l_st
+            for j in range(l_st):
+                self._x[j*self._nvar + i] = stC[skip + j]
+                c += 1
+        c = 0
+        stC = self._st
+        for i in range(nfunc):
+            if _nop[i] == nop:
+                self._ind[0] = i
+                self._pos = 0
+                self.eval_ind_inner()
+                for j in range(l_st):
+                    pmut_eval[c] = stC[j]
+                    c += 1
+        self._nvar = nvar
+        stdlib.free(self._x)
+        stdlib.free(self._st)
+        stdlib.free(self._ind)
+
+    def pmutation_eval_test(self, int nop, npc.ndarray[FLOAT, ndim=2] st):
+        cdef int i, j, c=0
+        cdef FLOAT *stC = <FLOAT*>st.data, *pmut_eval=self._pmut_eval
+        for i in range(self._nfunc):
+            if self._nop[i] == nop:
+                for j in range(self._l_st):
+                    if isinf(pmut_eval[c]) and isinf(stC[c]):
+                        c += 1
+                        continue
+                    if isnan(pmut_eval[c]) and isnan(stC[c]):
+                        c += 1
+                        continue
+                    if (pmut_eval[c] - stC[c]) != 0:
+                        print i, c, pmut_eval[c], stC[c]
+                        return False
+                    c += 1
+        return True

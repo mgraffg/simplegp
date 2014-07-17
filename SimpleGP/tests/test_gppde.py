@@ -28,6 +28,42 @@ class TestSimpleGPPDE(object):
                                  seed=0)
         self._gp.train(self._x, self._y)
 
+    def test_pmutation_eval(self):
+        def if_func(x, y, z):
+            s = 1 / (1 + np.exp(-100 * x))
+            return s * (y - z) + z
+
+        def argmax(x, y):
+            x = np.exp(2.*x)
+            y = np.exp(2.*y)
+            xi = x + y
+            return x*0 + y / xi
+        gp = self._gp
+        gp.create_population()
+        map(gp.fitness, range(gp.popsize))
+        np.random.seed(0)
+        x = np.linspace(-10, 10, 100)
+        args = np.vstack((x, x*np.random.random(100),
+                          x*np.random.random(100)))
+        func = np.array([np.add, np.subtract, np.multiply, np.divide,
+                         np.absolute, np.exp, np.sqrt, np.sin, np.cos,
+                         lambda x: 1 / (1 + np.exp(-x)), if_func,
+                         lambda x, y: if_func(x-y, x, y),
+                         lambda x, y: if_func(x-y, y, x),
+                         lambda x: np.log(np.absolute(x)),
+                         np.square, None, argmax])
+        for nop in np.unique(gp._nop):
+            if nop < 1:
+                continue
+            gp._eval.pmutation_eval(nop, args, np.arange(nop))
+            if nop == 1:
+                inputs = (args[0],)
+            else:
+                inputs = args[:nop]
+            m = gp._nop == nop
+            r = np.array(map(lambda x: x(*inputs), func[m]))
+            assert gp._eval.pmutation_eval_test(nop, r)
+
     def test_type_xpoint_selection(self):
         gp = GPPDE.run_cl(self._x, self._y, type_xpoint_selection=1,
                           generations=5)
