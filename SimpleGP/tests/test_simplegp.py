@@ -27,6 +27,23 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
 
+    def test_get_sons(self):
+        gp = self._gp
+        gp.create_population()
+        var = gp.nfunc
+        cons = var + 1
+        gp.population[0] = np.array([0, 0, 2, 2, var, var, cons,
+                                     2, var, cons+1, cons+2])
+        gp._p_constants[0] = self._pol
+        sons = np.empty(2, dtype=np.int)
+        gp._tree.get_sons_test(gp.population[0],
+                               2, sons)
+        assert np.all(sons == np.array([3, 6]))
+        gp._tree.get_sons_test(gp.population[0],
+                               7, sons)
+        print sons
+        assert np.all(sons == np.array([8, 9]))
+
     def test_best_length(self):
         gp = self._gp
         gp.create_population()

@@ -1,6 +1,7 @@
 Version 0.5.*
 	+ New type of point-mutation
 	+ pmutation_eval receives inputs and computes all the operations in the function_set with the cardinality indicated by the number of inputs
+	+ GPPDE has a new point mutation that uses the derivative of the error. It does not consider the allow functions
 Version 0.4.*
 	+ Select the crossing point according to the depth + new_best is
 	rewritten

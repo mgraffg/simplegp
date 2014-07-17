@@ -194,6 +194,12 @@ cdef class Tree:
             p1 = np.random.randint(s - 1) + 1
         return p1
 
+    def set_type_xpoint_selection(self, int t):
+        self._type_xpoint_selection = t
+
+    def get_type_xpoint_selection(self):
+        return self._type_xpoint_selection
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cpdef int father1_crossing_point(self, npc.ndarray[INT, ndim=1, mode="c"] ind):
@@ -388,6 +394,29 @@ cdef class Tree:
         self._length[opos] = l
         return l
 
+    def get_sons_test(self, npc.ndarray[INT, ndim=1, mode="c"] ind, int pos,
+                 npc.ndarray[INT, ndim=1, mode="c"] sons):
+        cdef INT *sonsC, *indC, i
+        sonsC = self.get_sons_inner(<INT *>ind.data, pos)
+        for i in range(sons.shape[0]):
+            sons[i] = sonsC[i]
+        stdlib.free(sonsC)
+
+    cdef INT * get_sons_inner(self, INT *indC, int pos):
+        cdef int nop=self._nop[indC[pos]]
+        cdef INT *sonsC = <INT*> stdlib.malloc(sizeof(INT) * nop)
+        sonsC[0] = pos+1
+        for i in range(1, nop):
+            sonsC[i] = self.traverse_inner(indC, sonsC[i-1])
+        return sonsC
+
+    cdef int count_func_cardinality(self, int nop):
+        cdef int r=0, i
+        for i in range(self._nfunc):
+            if self._nop[i] == nop:
+                r += 1
+        return r
+
 cdef class SubTree(Tree):
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -467,13 +496,13 @@ cdef class PDEXO(Tree):
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef unsigned int count_error_value(self,
-                                        FLOAT *error,
-                                        FLOAT *x,
-                                        FLOAT *s,
-                                        int j1):
+    cdef int count_error_value(self,
+                               FLOAT *error,
+                               FLOAT *x,
+                               FLOAT *s,
+                               int j1):
         cdef int c, j
-        cdef unsigned int flag=0
+        cdef int flag=0
         c = self._xo_c
         for j in range(c):
             # p2[m] = ((s[m] > x) == error).sum(axis=1)
@@ -497,7 +526,7 @@ cdef class PDEXO(Tree):
                                      npc.ndarray[INT, ndim=1, mode="c"] father2,
                                      int p1):
         cdef int f2_end = father2.shape[0], i, j, j1, c
-        cdef unsigned int flag, bflag=0, res=0
+        cdef int flag, bflag=0, res=0
         cdef INT *m, *_length
         cdef FLOAT *x, *s, *error
         self.crossover_mask(father1, father2, p1)
@@ -528,6 +557,39 @@ cdef class PDEXO(Tree):
         return super(PDEXO, self).father2_crossing_point(father1,
                                                          father2,
                                                          p1)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def pmutation_func_change(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                              int p1,
+                              npc.ndarray[FLOAT, ndim=2, mode="c"] st,
+                              npc.ndarray[FLOAT, ndim=1, mode="c"] e,
+                              Eval eval):
+        cdef FLOAT *stC, *eC, *pmut_eval, *x
+        cdef INT *indC = <INT *> ind.data, *index
+        cdef int nop = self._nop[indC[p1]], i=0, c=st.shape[1], _i
+        cdef int bflag=-1, res=-1, flag=-1
+        self._xo_c = c
+        stC = <FLOAT *> st.data
+        x = stC + p1*c
+        eC = <FLOAT *> e.data
+        index = self.get_sons_inner(indC, p1)
+        eval.pmutation_eval_inner(nop, stC, index)
+        pmut_eval = eval._pmut_eval
+        for _i in range(self._nfunc):
+            if nop != self._nop[_i]:
+                continue
+            j1 = i * c
+            i += 1
+            flag = self.count_error_value(eC, x, pmut_eval, j1)
+            if flag > bflag:
+                res = _i
+                bflag = flag
+        # print nop, self._nop[res]
+        if res < 0:
+            print res, flag, bflag
+        stdlib.free(index)
+        return res
 
 
 cdef class PDEXOSubtree(PDEXO):

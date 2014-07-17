@@ -21,12 +21,56 @@ class TestSimpleGPPDE(object):
     def __init__(self):
         x = np.linspace(-10, 10, 100)
         pol = np.array([0.2, -0.3, 0.2])
+        self._pol = pol
         X = np.vstack((x**2, x, np.ones(x.shape[0])))
         self._y = (X.T * pol).sum(axis=1)
         self._x = x[:, np.newaxis]
         self._gp = GPPDE.init_cl(training_size=self._x.shape[0],
                                  seed=0)
         self._gp.train(self._x, self._y)
+
+    def test_pmutation_run(self):
+        gp = GPPDE.run_cl(self._x, self._y, seed=0, verbose=True,
+                          generations=5, ppm=1, pxo=0.5)
+        fit = gp.fitness(gp.best)
+        gp = GPPDE.run_cl(self._x, self._y, seed=0, verbose=True,
+                          generations=5, ppm=0, pxo=0.5)
+        assert fit != gp.fitness(gp.best)
+
+    def test_pmutation(self):
+        gp = self._gp
+        gp._do_simplify = False
+        gp.create_population()
+        gp.fitness(0)
+        gp._ppm = 1.0
+        var = gp.nfunc
+        cons = var + 1
+        gp.population[0] = np.array([0, 0, 1, 2, var, var, cons,
+                                     2, var, cons+1, cons+2])
+        gp._p_constants[0] = self._pol
+        gp._xo_father1 = 0
+        for i in range(100):
+            ind = gp.mutation(gp.population[gp._xo_father1])
+            print gp.population[0], ind
+            assert (ind.shape[0] - np.sum(ind == gp.population[0])) <= 1
+
+    def test_pmutation_func_change(self):
+        gp = self._gp
+        gp.create_population()
+        var = gp.nfunc
+        cons = var + 1
+        gp.population[0] = np.array([0, 0, 1, 2, var, var, cons,
+                                     2, var, cons+1, cons+2])
+        gp._p_constants[0] = self._pol
+        gp._xo_father1 = 0
+        gp.fitness(0)
+        p1 = 2
+        e = gp.get_error(p1)
+        st = gp._p_st[gp._xo_father1]
+        func = gp._tree.pmutation_func_change(gp.population[0],
+                                              p1, st, e, gp._eval)
+        print func
+        assert func == 2
 
     def test_pmutation_eval(self):
         def if_func(x, y, z):
@@ -55,7 +99,11 @@ class TestSimpleGPPDE(object):
         for nop in np.unique(gp._nop):
             if nop < 1:
                 continue
-            gp._eval.pmutation_eval(nop, args, np.arange(nop))
+            if nop == 3:
+                a = np.vstack((args[0], args[1], np.zeros(100), args[2]))
+                gp._eval.pmutation_eval(nop, a, np.array([0, 1, 3]))
+            else:
+                gp._eval.pmutation_eval(nop, args, np.arange(nop))
             if nop == 1:
                 inputs = (args[0],)
             else:

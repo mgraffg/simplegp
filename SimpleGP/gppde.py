@@ -101,7 +101,27 @@ class GPPDE(GP):
             if hasattr(self, '_fitness'):
                 self._fitness[i] = -np.inf
 
+    def point_mutation(self, father1):
+        sel_type = self._tree.get_type_xpoint_selection()
+        self._tree.set_type_xpoint_selection(1)
+        p1 = self._tree.father1_crossing_point(father1)
+        while father1[p1] >= self.nfunc:
+            p1 = self._tree.father1_crossing_point(father1)
+        self._tree.set_type_xpoint_selection(sel_type)
+        ind = father1.copy()
+        st = self._p_st[self._xo_father1]
+        e = self.get_error(p1)
+        func = self._tree.pmutation_func_change(father1,
+                                                p1, st, e, self._eval)
+        ind[p1] = func
+        # print self._func[father1[p1]], self._func[func]
+        ind = self.simplify(ind,
+                            self._p_constants[self._xo_father1].copy())
+        return ind
+
     def mutation(self, father1):
+        if father1.shape[0] > 1 and np.random.rand() < self._ppm:
+            return self.point_mutation(father1)
         kill = self.tournament(neg=True)
         while kill == self._xo_father1 or kill == self._best:
             kill = self.tournament(neg=True)

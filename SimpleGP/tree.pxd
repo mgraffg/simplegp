@@ -20,6 +20,8 @@ ctypedef npc.int8_t INT8
 cimport libc
 cimport libc.math as math
 cimport libc.stdlib as stdlib
+from .eval import Eval
+from .eval cimport Eval
 
 cdef class Tree:
     cdef INT *_father1
@@ -128,6 +130,11 @@ cdef class Tree:
     
     cdef int compute_length(self)
 
+    cdef INT * get_sons_inner(self, INT *, int)
+
+    cdef int count_func_cardinality(self, int)
+
+
 cdef class SubTree(Tree):
     cpdef int get_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] father1,
                           int p1)
@@ -137,11 +144,11 @@ cdef class PDEXO(Tree):
     cdef FLOAT *_xo_x, *_xo_s, *_xo_error
     cdef int _xo_c
 
-    cdef unsigned int count_error_value(self,
-                                        FLOAT *error,
-                                        FLOAT *x,
-                                        FLOAT *s,
-                                        int j1)
+    cdef int count_error_value(self,
+                               FLOAT *error,
+                               FLOAT *x,
+                               FLOAT *s,
+                               int j1)
 
     cpdef int father2_xo_point_super(self,
                                      npc.ndarray[INT, ndim=1, mode="c"] father1,
