@@ -27,6 +27,14 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
 
+    def test_nop_only_func_allow(self):
+        x = self._x
+        y = self._y
+        gp = GP.init_cl(seed=0, generations=5, func=['+', '-']).train(x, y)
+        print gp._nop
+        assert len(filter(lambda x: x != -1, gp._nop[2:])) == 0
+        assert len(filter(lambda x: x != -1, gp._nop[:2])) == 2
+
     def test_get_sons(self):
         gp = self._gp
         gp.create_population()

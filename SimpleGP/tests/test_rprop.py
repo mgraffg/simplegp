@@ -23,7 +23,7 @@ class TestRprop(object):
         X = np.vstack((x**2, x, np.ones(x.shape[0])))
         y = (X.T * pol).sum(axis=1)
         x = x[:, np.newaxis]
-        self._gp = GPPDE().train(x, y)
+        self._gp = GPPDE.init_cl().train(x, y)
         self._gp.create_population()
 
     def test_rprop(self):
@@ -36,6 +36,7 @@ class TestRprop(object):
         fit = gp.fitness(0)
         gp.rprop(0)
         fit2 = gp.fitness(0)
+        print fit, fit2, gp._nop[14], gp._func[14]
         assert fit2 > fit
         mudiff = np.fabs(self._pol - gp._p_constants[0]).mean()
         assert mudiff < 0.05

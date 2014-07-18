@@ -144,6 +144,9 @@ class GP(SimpleGA):
         _func = filter(lambda x: x != 'output', _func)
         self._func_allow = np.array(map(lambda x: key[x], _func),
                                     dtype=np.int)
+        m = np.ones(self._nop.shape[0], dtype=np.bool)
+        m[self._func_allow] = False
+        self._nop[m] = -1
         self._max_nargs = self._nop[self._func_allow].max()
         if (self._func_allow == 16).sum() and self._nop[16] == -1:
             raise Exception("It is not specified the number\
