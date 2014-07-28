@@ -54,7 +54,7 @@ class GP(SimpleGA):
     """
     def __init__(self,
                  func=['+', '-', '*', '/'],
-                 mutation_depth=5, min_length=2,
+                 mutation_depth=5, min_length=1,
                  nrandom=100, max_length=262143, verbose=False,
                  max_depth=7, max_length_subtree=np.inf,
                  min_depth=1, pgrow=0.5, pleaf=None,
@@ -504,6 +504,8 @@ population size is smaller or larger than the current one
                 ind[i] = a[0]
             else:
                 ind[i] = self.random_leaf()
+        ind = self.simplify(ind,
+                            self._p_constants[self._xo_father1].copy())
         return ind
 
     def mutation(self, father1):
