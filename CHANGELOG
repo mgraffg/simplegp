@@ -6,6 +6,7 @@ Version 0.5.*
 	+ Bug in point_mutation
 	+ min_length is set to one
 	+ Bug un run_cl it does not consider the seed
+	+ SimpleGP raise an exception on point mutation, this mutation has a bug
 Version 0.4.*
 	+ Select the crossing point according to the depth + new_best is
 	rewritten

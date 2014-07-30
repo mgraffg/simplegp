@@ -27,6 +27,13 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
 
+    def test_point_mutation(self):
+        try:
+            GP.run_cl(self._x, self._y, ppm=1, pxo=0)
+        except NotImplementedError:
+            return
+        raise False
+
     def test_seed(self):
         gp1 = GP.run_cl(self._x, self._y, generations=3, seed=0)
         gp2 = GP.run_cl(self._x, self._y, generations=3, seed=2)
@@ -40,7 +47,6 @@ class TestSimpleGP(object):
                 range(gp1.popsize))
         print gp1.population[1], gp2.population[1]
         assert np.all(r)
-
 
     def test_nop_only_func_allow(self):
         x = self._x

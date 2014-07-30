@@ -484,6 +484,7 @@ population size is smaller or larger than the current one
         return ind
 
     def point_mutation(self, father1):
+        raise NotImplementedError("Point mutation has a bug")
         try:
             cl_nop = self._cl_nop
         except AttributeError:

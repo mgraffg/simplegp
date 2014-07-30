@@ -126,10 +126,11 @@ class TestTimeSeries(object):
 
         class TGP(TimeSeries, GPPDE):
             pass
-        gp = TimeSeries.run_cl(ts, generations=2, nsteps=6)
+        gp = TimeSeries.run_cl(ts, generations=3, seed=1, nsteps=6)
         base = gp.predict_best()
-        gp = TGP.run_cl(ts, generations=2, nsteps=6)
+        gp = TGP.run_cl(ts, generations=3, seed=1, nsteps=6)
         pr = gp.predict_best()
+        print pr, base
         assert np.all(pr != base)
 
     def test_positive(self):
