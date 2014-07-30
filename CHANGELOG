@@ -5,6 +5,7 @@ Version 0.5.*
 	+ The cardinality of the functions that are not used during the evolution is set to -1, i.e., self._nop[not allow functions] = -1
 	+ Bug in point_mutation
 	+ min_length is set to one
+	+ Bug un run_cl it does not consider the seed
 Version 0.4.*
 	+ Select the crossing point according to the depth + new_best is
 	rewritten

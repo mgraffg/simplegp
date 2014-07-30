@@ -27,6 +27,21 @@ class TestSimpleGP(object):
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
 
+    def test_seed(self):
+        gp1 = GP.run_cl(self._x, self._y, generations=3, seed=0)
+        gp2 = GP.run_cl(self._x, self._y, generations=3, seed=2)
+        r = map(lambda x: np.all(gp1.population[x] == gp2.population[x]),
+                range(gp1.popsize))
+        print gp1.population[1], gp2.population[1]
+        assert not np.all(r)
+        gp1 = GP.run_cl(self._x, self._y, generations=3, seed=1)
+        gp2 = GP.run_cl(self._x, self._y, generations=3, seed=1)
+        r = map(lambda x: np.all(gp1.population[x] == gp2.population[x]),
+                range(gp1.popsize))
+        print gp1.population[1], gp2.population[1]
+        assert np.all(r)
+
+
     def test_nop_only_func_allow(self):
         x = self._x
         y = self._y
@@ -342,7 +357,7 @@ n0 -> n5;
         X = np.vstack((x**2, x, np.ones(x.shape[0])))
         y = (X.T * pol).sum(axis=1)
         x = x[:, np.newaxis]
-        gp = GP(seed=0).train(x, y)
+        gp = GP(seed=0, min_length=2).train(x, y)
         gp.create_population()
         lst = [np.array([3,2,2,3,1,0,20,0,17,21,0,0,22,17,1,17,23,0,24,3,25,17,3,2,3,1,26,17,0,27,17,3,2,17,28,1,29,17,0,30,0,1,31,17,1,32,17,2,0,3,33,1,0,17,17,2,17,17,0,2,0,34,17,0,17,35,1,36,1,37,17,1,2,38,1,2,39,17,1,40,17,1,2,41,0,17,42,2,43,3,17,44,3,0,3,3,1,2,17,45,3,17,46,2,2,17,47,3,48,17,1,1,0,17,17,49,0,2,50,17,2,17,17,1,2,3,51,2,17,52,2,53,17,2,3,0,54,17,2,17,55,2,1,56,17,0,17,57,0,0,0,58,3,59,17,0,1,0,17,60,1,17,61,1,62,17,3,3,3,3,17,63,64,1,0,65,17,1,66,17,0,0,17,17,1,3,17,2,2,67,17,3,17,68,69]),
 np.array([3,0,1,3,3,2,17,20,0,17,21,2,1,22,17,0,17,23,1,24,1,25,2,26,17,2,3,2,2,27,17,3,17,28,3,29,2,17,30,1,2,31,2,32,17,2,0,17,17,2,17,33,1,0,2,34,1,0,17,35,36,2,0,37,2,38,17,0,2,17,17,3,17,39,2,1,1,40,2,41,17,0,2,42,17,0,17,43,3,2,17,17,3,44,17]),

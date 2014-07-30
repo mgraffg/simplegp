@@ -449,7 +449,7 @@ population size is smaller or larger than the current one
         return ins
 
     @classmethod
-    def run_cl(cls, x, f, test=None, seed=0,
+    def run_cl(cls, x, f, test=None,
                **kwargs):
         """
         Returns a trained system that does not output nan or inf neither
