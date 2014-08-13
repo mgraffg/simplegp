@@ -36,6 +36,32 @@ cdef class PDE:
         stdlib.free(self._parent)
         stdlib.free(self._path)
 
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int compute_pdepm(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                            npc.ndarray[FLOAT, ndim=2, mode="c"] _st,
+                            npc.ndarray[INT, ndim=1, mode="c"] index,
+                            float ppm):
+        cdef int pos=0, end=ind.shape[0], i, c=0
+        cdef INT *indC = <INT *>ind.data, *indexC = <INT *> index.data
+        self._l_st = _st.shape[1]
+        self._ind = indC
+        self._st = <FLOAT *>_st.data
+        self._tree.set_pos(0)
+        self._tree.compute_parents_inner(self._ind, self._parent, -1)
+        while pos < end:
+            if np.random.rand() >= ppm:
+                pos += 1
+                continue
+            self._end = self._tree.path_to_root_inner(self._parent, self._path,
+                                                      pos)
+            self.compute_inner()
+            index[c] = pos
+            c += 1
+            pos = self._tree.traverse_inner(indC, pos)
+        return c
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cpdef int compute_constants(self, npc.ndarray[INT, ndim=1, mode="c"] ind,

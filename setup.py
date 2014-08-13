@@ -78,7 +78,8 @@ setup(
     cmdclass={"build_ext": build_ext},
     ext_modules=ext_modules,
     packages=['SimpleGP'],
-    install_requires=['cython >= 0.19.2', 'numpy >= 1.6.2']
+    install_requires=['cython >= 0.19.2', 'numpy >= 1.6.2',
+                      'pymock >= 1.0.5']
 )
 
 

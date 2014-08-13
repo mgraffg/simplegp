@@ -147,10 +147,13 @@ class GPPDE(GP):
                            self._max_length,
                            type_xpoint_selection=type_xpoint_selection)
 
-    def get_error(self, p1):
+    def set_error_p_der(self):
         self._computing_fitness = self._xo_father1
         e, g = self.compute_error_pr(None)
         self._p_der[self._output] = e.T
+
+    def get_error(self, p1):
+        self.set_error_p_der()
         self._pde.compute(self._p[self._xo_father1], p1,
                           self._p_st[self._xo_father1])
         e = np.sign(self._p_der[p1])

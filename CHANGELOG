@@ -1,5 +1,5 @@
 Version 0.5.*
-	+ New type of point-mutation
+	+ New type of point-mutation, namely PDEPM
 	+ pmutation_eval receives inputs and computes all the operations in the function_set with the cardinality indicated by the number of inputs
 	+ GPPDE has a new point mutation that uses the derivative of the error. It does not consider the allow functions
 	+ The cardinality of the functions that are not used during the evolution is set to -1, i.e., self._nop[not allow functions] = -1
@@ -7,6 +7,7 @@ Version 0.5.*
 	+ min_length is set to one
 	+ Bug un run_cl it does not consider the seed
 	+ SimpleGP raise an exception on point mutation, this mutation has a bug
+	+ PDEPM uses p_pm
 Version 0.4.*
 	+ Select the crossing point according to the depth + new_best is
 	rewritten

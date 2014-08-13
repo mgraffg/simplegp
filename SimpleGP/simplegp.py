@@ -234,6 +234,11 @@ population size is smaller or larger than the current one
         """Number of function in the function set"""
         return self._nop.shape[0]
 
+    @property
+    def nvar(self):
+        """Number of independent variables"""
+        return self._x.shape[1]
+
     def new_best_comparison(self, k):
         if self._best_fit is None:
             return True

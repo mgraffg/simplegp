@@ -143,6 +143,7 @@ cdef class SubTree(Tree):
 cdef class PDEXO(Tree):
     cdef FLOAT *_xo_x, *_xo_s, *_xo_error
     cdef int _xo_c
+    cdef int _number_var_pm
 
     cdef int count_error_value(self,
                                FLOAT *error,
@@ -155,6 +156,12 @@ cdef class PDEXO(Tree):
                                      npc.ndarray[INT, ndim=1, mode="c"] father2,
                                      int p1)
 
+    cpdef float pmutation_constant(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                                   int p1,
+                                   npc.ndarray[FLOAT, ndim=2, mode="c"] st,
+                                   npc.ndarray[FLOAT, ndim=1, mode="c"] cons,
+                                   int kind,
+                                   npc.ndarray[FLOAT, ndim=1, mode="c"] e)
 
 cdef class PDEXOSubtree(PDEXO):
     cpdef int get_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] father1,

@@ -15,6 +15,8 @@ import time
 
 import numpy as np
 from SimpleGP import GPPDE, GPMAE, GPwRestart
+from pymock import use_pymock, override, returns, replay, verify
+from nose.tools import assert_almost_equals
 
 
 class TestSimpleGPPDE(object):
@@ -41,18 +43,153 @@ class TestSimpleGPPDE(object):
         gp = self._gp
         gp._do_simplify = False
         gp.create_population()
-        gp.fitness(0)
         gp._ppm = 1.0
         var = gp.nfunc
         cons = var + 1
         gp.population[0] = np.array([0, 0, 1, 2, var, var, cons,
                                      2, var, cons+1, cons+2])
-        gp._p_constants[0] = self._pol
+        gp._p_constants[0] = self._pol * -1
+        gp.fitness(0)
         gp._xo_father1 = 0
         for i in range(100):
             ind = gp.mutation(gp.population[gp._xo_father1])
             print gp.population[0], ind
             assert (ind.shape[0] - np.sum(ind == gp.population[0])) <= 1
+
+    def problem_three_variables(self):
+        np.random.seed(0)
+        nt = 100
+        x = np.arange(nt)
+        x = np.vstack((x, x[::-1], x+np.random.uniform(-1, 1, nt))).T
+        # x = np.random.uniform(-1, 1, (100, 3))
+        X = np.vstack((x[:, 0] * x[:, 1], x[:, 0], x[:, 2])).T
+        coef = [0.2, -0.3, 0.2]
+        y = (X * coef).sum(axis=1)
+        return x, y
+
+    @use_pymock
+    def test_pmutation_constant(self):
+        x, y = self.problem_three_variables()
+        gp = GPPDE.run_cl(x, y, generations=2, seed=0)
+        gp._fitness.fill(-np.inf)
+        gp._ppm = 1.0
+        var = gp.nfunc
+        cons = var + 3
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
+                                     2, var, cons+1,
+                                     2, var+2, cons+2])
+        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
+        gp.fitness(0)
+        gp._xo_father1 = 0
+        gp._p_der.fill(0)
+        ind = gp.population[0].copy()
+        constants = gp._p_constants[0].copy()
+        index = np.zeros_like(ind)
+        gp.set_error_p_der()
+        override(np.random, 'rand')
+        for i in [1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0]:
+            np.random.rand()
+            returns(i)
+        replay()
+        c = gp._pde.compute_pdepm(ind, gp._p_st[0], index, 0.1)
+        verify()
+        st = gp._p_st[0]
+        for i in index[:c]:
+            e = np.sign(gp._p_der[i])
+            de = gp._tree.pmutation_constant(ind, i, st, constants, 1, e)
+            inc = gp._tree.pmutation_constant(ind, i, st, constants, -1, e)
+            if gp.isconstant(ind[i]):
+                index = ind[i] - gp.nfunc - gp._x.shape[1]
+                assert_almost_equals((constants[index] - de) - 0.1, 0)
+                assert_almost_equals((inc - constants[index]) - 0.1, 0)
+            else:
+                print de, inc
+                m = e == 1
+                assert_almost_equals((st[i, m].min() - de), 0)
+                m = e == -1
+                assert_almost_equals((st[i, m].max() - inc), 0)
+
+    @use_pymock
+    def test_pmutation_terminal_change(self):
+        x, y = self.problem_three_variables()
+        gp = GPPDE.run_cl(x, y, generations=2)
+        gp._fitness.fill(-np.inf)
+        gp._ppm = 1.0
+        var = gp.nfunc
+        cons = var + 3
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var+2,
+                                     2, var, cons+1,
+                                     2, var+2, cons+2])
+        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
+        gp.fitness(0)
+        gp._xo_father1 = 0
+        gp._p_der.fill(0)
+        ind = gp.population[0].copy()
+        constants = gp._p_constants[0].copy()
+        index = np.zeros_like(ind)
+        gp.set_error_p_der()
+        override(np.random, 'rand')
+        for i in [1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0]:
+            np.random.rand()
+            returns(i)
+        replay()
+        c = gp._pde.compute_pdepm(ind, gp._p_st[0], index, 0.1)
+        verify()
+        st = gp._p_st[0]
+        # print index[:c]
+        assert gp._tree.get_number_var_pm() == 10
+        gp._tree.set_number_var_pm(3)
+        for i in index[:c]:
+            e = np.sign(gp._p_der[i])
+            # print e, map(lambda x: (e == x).sum(), [-1, 0, 1])
+            gp._tree.pmutation_terminal_change(ind,
+                                               i, st,
+                                               e,
+                                               gp._x,
+                                               constants,
+                                               gp._eval)
+            # l = map(lambda x: ((np.where(gp._x[:, x] > st[i],
+            #                              -1, 1) * e) == 1).sum(), range(3))
+            # print l, "*"
+            print gp.isconstant(gp.population[0][i]), gp.population[0][i]
+            if gp.isconstant(gp.population[0][i]):
+                assert gp.population[0][i] == ind[i]
+                print gp.population[0][i], ind[i], "cons",\
+                    map(lambda x: (e == x).sum(), [-1, 0, 1])
+            else:
+                assert gp.population[0][i] != ind[i]
+                print gp.population[0][i], ind[i], "var",\
+                    map(lambda x: (e == x).sum(), [-1, 0, 1])
+        assert False
+
+    @use_pymock
+    def test_pde_pm(self):
+        gp = self._gp
+        gp.create_population()
+        gp._ppm = 1.0
+        var = gp.nfunc
+        cons = var + 1
+        gp.population[0] = np.array([0, 0, 1, 2, var, var, cons,
+                                     2, var, cons+1, cons+2])
+        gp._p_constants[0] = self._pol * -1
+        gp.fitness(0)
+        gp._xo_father1 = 0
+        gp._p_der.fill(0)
+        ind = gp.population[0]
+        index = np.zeros_like(ind)
+        gp.set_error_p_der()
+        override(np.random, 'rand')
+        for i in [1, 0.2, 0.2]:
+            np.random.rand()
+            returns(i)
+        replay()
+        c = gp._pde.compute_pdepm(ind, gp._p_st[0], index, 0.3)
+        verify()
+        m = np.zeros(ind.shape, dtype=np.bool)
+        m[index[:c]] = True
+        assert np.all(gp._p_der[index] != 0)
+        assert index[0] == 1 and index[1] == ind.shape[0]-1
+        assert c == 2
 
     def test_pmutation_func_change(self):
         gp = self._gp

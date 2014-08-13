@@ -483,6 +483,10 @@ cdef class SubTree(Tree):
 
 
 cdef class PDEXO(Tree):
+    def __init__(self, *args, **kwargs):
+        super(PDEXO, self).__init__(*args, **kwargs)
+        self._number_var_pm = 10
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def father2_xp_extras(self,
@@ -558,6 +562,12 @@ cdef class PDEXO(Tree):
                                                          father2,
                                                          p1)
 
+    def set_number_var_pm(self, int v):
+        self._number_var_pm = v
+
+    def get_number_var_pm(self):
+        return self._number_var_pm
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def pmutation_func_change(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
@@ -591,6 +601,101 @@ cdef class PDEXO(Tree):
         stdlib.free(index)
         return res
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef float pmutation_constant(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                                   int p1,
+                                   npc.ndarray[FLOAT, ndim=2, mode="c"] st,
+                                   npc.ndarray[FLOAT, ndim=1, mode="c"] cons,
+                                   int kind,
+                                   npc.ndarray[FLOAT, ndim=1, mode="c"] e):
+        cdef INT *indC = <INT *> ind.data
+        cdef int i, j, end=e.shape[0]
+        cdef float v
+        cdef FLOAT *stC = <FLOAT *> st.data, *eC = <FLOAT *> e.data
+        cdef FLOAT *consC = <FLOAT *> cons.data
+        if self.isconstant(indC[p1]):
+            i = indC[p1] - self._nfunc - self._nvar
+            if kind == -1:
+                return consC[i] + 0.1
+            else:
+                return consC[i] - 0.1
+        else:
+            j = end * p1            
+            if kind == -1:
+                v = -np.inf
+                for i in range(end):
+                    if eC[i] == -1 and stC[j] > v:
+                        v = stC[j]
+                    j += 1
+                return v
+            else:
+                v = np.inf
+                for i in range(end):
+                    if eC[i] == 1 and stC[j] < v:
+                        v = stC[j]
+                    j += 1
+                return v
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def pmutation_terminal_change(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                                  int p1,
+                                  npc.ndarray[FLOAT, ndim=2, mode="c"] st,
+                                  npc.ndarray[FLOAT, ndim=1, mode="c"] error,
+                                  npc.ndarray[FLOAT, ndim=2, mode="c"] x,
+                                  npc.ndarray[FLOAT, ndim=1, mode="c"] cons,
+                                  Eval eval):
+        cdef int *flag = <int *> stdlib.malloc(sizeof(int)*self._number_var_pm)
+        cdef int i, j, k, kk, end = st.shape[1], argmax, maxv, nvar = self._nvar
+        cdef INT *var, *indC = <INT *> ind.data
+        cdef FLOAT *errorC = <FLOAT *> error.data, *consC = <FLOAT *> cons.data
+        cdef FLOAT *xC = <FLOAT *> x.data, *stC = <FLOAT *> st.data
+        cdef npc.ndarray d = np.arange(self._number_var_pm)
+        for i in range(self._number_var_pm):
+            flag[i] = 0
+        np.random.shuffle(d)
+        var = <INT *> d.data
+        l = p1 * end
+        for i in range(end):
+            k = i * nvar
+            for j in range(self._number_var_pm):
+                kk = k + var[j]
+                if stC[l] == xC[kk]:
+                    continue
+                if xC[kk] > stC[l] and errorC[i] == -1:
+                    flag[j] += 1
+                if xC[kk] < stC[l] and errorC[i] == 1:
+                    flag[j] += 1
+            l += 1
+        argmax = 0
+        maxv = flag[0]
+        for i in range(1, self._number_var_pm):
+            if flag[i] > maxv:
+                maxv = flag[i]
+                argmax = i
+        stdlib.free(flag)
+        # c = map(lambda x: (error == x).sum(), [-1, 0, 1])
+        if self.isconstant(indC[p1]):
+            j = 0
+            k = 0
+            for i in range(end):
+                if errorC[i] == -1:
+                    j += 1
+                elif errorC[i] == 1:
+                    k += 1 
+            # print "-", maxv, j, k, argmax, d
+            if maxv <= j or maxv <= k :
+                if j > k:
+                    j = -1
+                elif j < k:
+                    j = 1
+                else:
+                    return
+                i = indC[p1] - self._nfunc - self._nvar
+                consC[i] = self.pmutation_constant(ind, p1, st, cons, j, error)
+                return
+        indC[p1] = var[argmax] + self._nfunc
 
 cdef class PDEXOSubtree(PDEXO):
     @cython.boundscheck(False)
