@@ -44,26 +44,27 @@ class TestSimpleGPPDE(object):
         gp._do_simplify = False
         gp.create_population()
         gp._ppm = 1.0
-        var = gp.nfunc
-        cons = var + 1
-        gp.population[0] = np.array([0, 0, 1, 2, var, var, cons,
-                                     2, var, cons+1, cons+2])
-        gp._p_constants[0] = self._pol * -1
-        gp.fitness(0)
-        gp._xo_father1 = 0
-        for i in range(100):
-            ind = gp.mutation(gp.population[gp._xo_father1])
-            print gp.population[0], ind
-            assert (ind.shape[0] - np.sum(ind == gp.population[0])) <= 1
+        for i in range(gp.popsize):
+            gp.fitness(i)
+            gp._xo_father1 = i
+            m = gp.population[i] < gp.nvar + gp.nfunc
+            print gp.population[i]
+            ind = gp.mutation(gp.population[i])
+            # print gp.population[0], ind
+            print ind
+            npmut = gp._npmutation
+            print "*", (ind.shape[0] - np.sum(ind == gp.population[i])), npmut
+            assert (ind[m].shape[0] -
+                    np.sum(ind[m] == gp.population[i][m])) <= npmut
 
     def problem_three_variables(self):
         np.random.seed(0)
         nt = 100
-        x = np.arange(nt)
-        x = np.vstack((x, x[::-1], x+np.random.uniform(-1, 1, nt))).T
+        x = np.linspace(-1, 1, nt)
+        x = np.vstack((x, x[::-1], 0.2*x**3+x)).T
         # x = np.random.uniform(-1, 1, (100, 3))
         X = np.vstack((x[:, 0] * x[:, 1], x[:, 0], x[:, 2])).T
-        coef = [0.2, -0.3, 0.2]
+        coef = np.array([0.5, -1.5, 0.9])
         y = (X * coef).sum(axis=1)
         return x, y
 
@@ -107,7 +108,8 @@ class TestSimpleGPPDE(object):
                 m = e == 1
                 assert_almost_equals((st[i, m].min() - de), 0)
                 m = e == -1
-                assert_almost_equals((st[i, m].max() - inc), 0)
+                if m.sum() > 0:
+                    assert_almost_equals((st[i, m].max() - inc), 0)
 
     @use_pymock
     def test_pmutation_terminal_change(self):
@@ -117,15 +119,14 @@ class TestSimpleGPPDE(object):
         gp._ppm = 1.0
         var = gp.nfunc
         cons = var + 3
-        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var+2,
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
                                      2, var, cons+1,
-                                     2, var+2, cons+2])
-        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
+                                     2, var+2, var])
+        gp._p_constants[0] = np.array([0.5, -1.5, 0.9]) * -1
         gp.fitness(0)
         gp._xo_father1 = 0
         gp._p_der.fill(0)
         ind = gp.population[0].copy()
-        constants = gp._p_constants[0].copy()
         index = np.zeros_like(ind)
         gp.set_error_p_der()
         override(np.random, 'rand')
@@ -134,33 +135,26 @@ class TestSimpleGPPDE(object):
             returns(i)
         replay()
         c = gp._pde.compute_pdepm(ind, gp._p_st[0], index, 0.1)
+        constants = np.concatenate((gp._p_constants[0], np.empty(c)))
+        ncons = gp._p_constants[0].shape[0]
         verify()
         st = gp._p_st[0]
         # print index[:c]
-        assert gp._tree.get_number_var_pm() == 10
+        assert gp._tree.get_number_var_pm() == gp.nvar
         gp._tree.set_number_var_pm(3)
+        # r = [1, 0, 1, 1]
         for i in index[:c]:
             e = np.sign(gp._p_der[i])
             # print e, map(lambda x: (e == x).sum(), [-1, 0, 1])
-            gp._tree.pmutation_terminal_change(ind,
-                                               i, st,
-                                               e,
-                                               gp._x,
-                                               constants,
-                                               gp._eval)
-            # l = map(lambda x: ((np.where(gp._x[:, x] > st[i],
-            #                              -1, 1) * e) == 1).sum(), range(3))
-            # print l, "*"
-            print gp.isconstant(gp.population[0][i]), gp.population[0][i]
-            if gp.isconstant(gp.population[0][i]):
-                assert gp.population[0][i] == ind[i]
-                print gp.population[0][i], ind[i], "cons",\
-                    map(lambda x: (e == x).sum(), [-1, 0, 1])
-            else:
-                assert gp.population[0][i] != ind[i]
-                print gp.population[0][i], ind[i], "var",\
-                    map(lambda x: (e == x).sum(), [-1, 0, 1])
-        assert False
+            ncons += gp._tree.pmutation_terminal_change(ind,
+                                                        i, st,
+                                                        e,
+                                                        gp._x,
+                                                        constants,
+                                                        ncons,
+                                                        gp._eval)
+            assert gp.isconstant(ind[i]) or gp.isvar(ind[i])
+        # assert False
 
     @use_pymock
     def test_pde_pm(self):

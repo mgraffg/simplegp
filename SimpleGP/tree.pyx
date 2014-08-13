@@ -645,6 +645,7 @@ cdef class PDEXO(Tree):
                                   npc.ndarray[FLOAT, ndim=1, mode="c"] error,
                                   npc.ndarray[FLOAT, ndim=2, mode="c"] x,
                                   npc.ndarray[FLOAT, ndim=1, mode="c"] cons,
+                                  int ncons,
                                   Eval eval):
         cdef int *flag = <int *> stdlib.malloc(sizeof(int)*self._number_var_pm)
         cdef int i, j, k, kk, end = st.shape[1], argmax, maxv, nvar = self._nvar
@@ -676,26 +677,30 @@ cdef class PDEXO(Tree):
                 argmax = i
         stdlib.free(flag)
         # c = map(lambda x: (error == x).sum(), [-1, 0, 1])
-        if self.isconstant(indC[p1]):
-            j = 0
-            k = 0
-            for i in range(end):
-                if errorC[i] == -1:
-                    j += 1
-                elif errorC[i] == 1:
-                    k += 1 
-            # print "-", maxv, j, k, argmax, d
-            if maxv <= j or maxv <= k :
-                if j > k:
-                    j = -1
-                elif j < k:
-                    j = 1
-                else:
-                    return
+        j = 0
+        k = 0
+        for i in range(end):
+            if errorC[i] == -1:
+                j += 1
+            elif errorC[i] == 1:
+                k += 1 
+        # print "-", maxv, j, k
+        if maxv <= j or maxv <= k :
+            if j > k:
+                j = -1
+            elif j < k:
+                j = 1
+            else:
+                return 0
+            if self.isconstant(indC[p1]):
                 i = indC[p1] - self._nfunc - self._nvar
                 consC[i] = self.pmutation_constant(ind, p1, st, cons, j, error)
-                return
+            else:
+                consC[ncons] = self.pmutation_constant(ind, p1, st, cons, j, error)
+                indC[p1] = self._nfunc + self._nvar + ncons
+            return 1
         indC[p1] = var[argmax] + self._nfunc
+        return 0
 
 cdef class PDEXOSubtree(PDEXO):
     @cython.boundscheck(False)

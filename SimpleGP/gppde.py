@@ -21,12 +21,14 @@ from SimpleGP.Rprop_mod import RPROP2
 class GPPDE(GP):
     def __init__(self, max_mem=500.0,
                  update_best_w_rprop=False,
+                 ppm2=0.1,
                  **kwargs):
         super(GPPDE, self).__init__(**kwargs)
         self._max_mem = max_mem
         self._update_best_w_rprop = update_best_w_rprop
         self._p_st = np.empty(self._popsize, dtype=np.object)
         self._used_mem = 0
+        self._ppm2 = ppm2
 
     def new_best(self, k):
         flag = super(GPPDE, self).new_best(k)
@@ -70,6 +72,8 @@ class GPPDE(GP):
         self._p_der = np.empty((self._max_length, self._x.shape[0]),
                                dtype=self._dtype)
         self._pde = PDE(self._tree, self._p_der)
+        if x.shape[1] < 10:
+            self._tree.set_number_var_pm(3)
         return self
 
     def load_prev_run(self):
@@ -102,6 +106,41 @@ class GPPDE(GP):
                 self._fitness[i] = -np.inf
 
     def point_mutation(self, father1):
+        ind = father1.copy()
+        index = np.zeros_like(ind)
+        self.set_error_p_der()
+        c = self._pde.compute_pdepm(ind,
+                                    self._p_st[self._xo_father1],
+                                    index, self._ppm2)
+        # print c, index
+        self._npmutation = c
+        if c == 0:
+            self._npmutation = 1
+            return self.one_point_mutation(father1)
+        constants = np.concatenate((self._p_constants[self._xo_father1],
+                                    np.empty(c, dtype=self._dtype)))
+        ncons = self._p_constants[self._xo_father1].shape[0]
+        st = self._p_st[self._xo_father1]
+        for i in index[:c]:
+            e = np.sign(self._p_der[i])
+            if ind[i] < self.nfunc:
+                func = self._tree.pmutation_func_change(ind, i, st,
+                                                        e, self._eval)
+                ind[i] = func
+            else:
+                ncons += self._tree.pmutation_terminal_change(ind,
+                                                              i, st,
+                                                              e,
+                                                              self._x,
+                                                              constants,
+                                                              ncons,
+                                                              self._eval)
+        # print ind, "*", index[:c]
+        ind = self.simplify(ind, constants)
+        # print ind, "-", index[:c]
+        return ind
+
+    def one_point_mutation(self, father1):
         sel_type = self._tree.get_type_xpoint_selection()
         self._tree.set_type_xpoint_selection(1)
         p1 = self._tree.father1_crossing_point(father1)
