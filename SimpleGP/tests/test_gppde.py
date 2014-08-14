@@ -70,29 +70,8 @@ class TestSimpleGPPDE(object):
     @use_pymock
     def test_one_point_pmutation_func(self):
         x, y = self.problem_three_variables()
-        gp = GPPDE.run_cl(x, y, generations=2, seed=0, ppm2=0, ppm=1)
-        gp._fitness.fill(-np.inf)
-        var = gp.nfunc
-        cons = var + 3
-        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
-                                     2, var, cons+1,
-                                     2, var+2, cons+2])
-        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
-        gp._xo_father1 = 0
-        override(np.random, 'randint')
-        np.random.randint(5)
-        returns(2)
-        np.random.randint(4)
-        returns(1)
-        replay()
-        ind = gp.point_mutation(gp.population[0])
-        verify()
-        assert gp.isfunc(ind[7])
-
-    @use_pymock
-    def test_one_point_pmutation_terminal(self):
-        x, y = self.problem_three_variables()
-        gp = GPPDE.run_cl(x, y, generations=2, seed=0, ppm2=0, ppm=1)
+        gp = GPPDE.run_cl(x, y, generations=2, seed=0, ppm2=0, ppm=1,
+                          do_simplify=False)
         gp._fitness.fill(-np.inf)
         var = gp.nfunc
         cons = var + 3
@@ -107,9 +86,65 @@ class TestSimpleGPPDE(object):
         np.random.randint(4)
         returns(1)
         replay()
+        print gp.population[0], gp.nfunc, gp.nvar
         ind = gp.point_mutation(gp.population[0])
+        print ind
         verify()
-        assert not gp.isfunc(ind[8])
+        # assert False
+        assert gp.isfunc(ind[4])
+
+    @use_pymock
+    def test_one_point_pmutation_bug(self):
+        x = np.linspace(-10, 10, 100)
+        pol = np.array([0.2, -0.3, 0.2])
+        X = np.vstack((x**2, x, np.ones(x.shape[0])))
+        y = (X.T * pol).sum(axis=1)
+        x = x[:, np.newaxis]
+        gp = GPPDE.run_cl(x, y, generations=2,
+                          ppm=1, ppm2=0.2)
+        gp._do_simplify = False
+        gp.population[0] = np.array([4, 13, 13, 17])
+        gp._fitness.fill(-np.inf)
+        gp.fitness(0)
+        gp._xo_father1 = 0
+        override(np.random, 'rand')
+        np.random.rand()
+        returns(0)
+        for i in [1, 1, 1, 0]:
+            np.random.rand()
+            returns(i)
+        print gp.population[0]
+        replay()
+        ind = gp.mutation(gp.population[0])
+        verify()
+        print ind, gp._tree.get_number_var_pm(), "-"
+        assert gp.isvar(ind[3])
+
+    @use_pymock
+    def test_one_point_pmutation_terminal(self):
+        x, y = self.problem_three_variables()
+        gp = GPPDE.run_cl(x, y, generations=2, seed=0, ppm2=0, ppm=1)
+        gp._do_simplify = False
+        gp._fitness.fill(-np.inf)
+        var = gp.nfunc
+        cons = var + 3
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
+                                     2, var, cons+1,
+                                     2, var+2, cons+2])
+        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
+        gp._xo_father1 = 0
+        override(np.random, 'randint')
+        np.random.randint(5)
+        returns(2)
+        np.random.randint(4)
+        returns(1)
+        replay()
+        print gp.population[0]
+        ind = gp.point_mutation(gp.population[0])
+        print ind
+        verify()
+        assert not gp.isfunc(ind[3])
+        # assert False
 
     @use_pymock
     def test_pmutation_constant(self):
@@ -189,6 +224,7 @@ class TestSimpleGPPDE(object):
         for i in index[:c]:
             e = np.sign(gp._p_der[i])
             # print e, map(lambda x: (e == x).sum(), [-1, 0, 1])
+            print gp.population[0], gp.nvar, gp.nfunc
             ncons += gp._tree.pmutation_terminal_change(ind,
                                                         i, st,
                                                         e,
@@ -196,7 +232,11 @@ class TestSimpleGPPDE(object):
                                                         constants,
                                                         ncons,
                                                         gp._eval)
-            assert gp.isconstant(ind[i]) or gp.isvar(ind[i])
+            print ind
+            if gp.isconstant(gp.population[0][i]):
+                assert gp.isconstant(ind[i])
+            else:
+                assert gp.isvar(ind[i])
         # assert False
 
     @use_pymock

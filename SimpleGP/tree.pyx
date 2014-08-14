@@ -58,8 +58,9 @@ cdef class Tree:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef INT isvar(self, INT a):
-        if a < self._nfunc: return 0
-        return 1
+        if a >= self._nfunc and a < (self._nfunc + self._nvar):
+            return 1
+        return 0
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -647,59 +648,53 @@ cdef class PDEXO(Tree):
                                   npc.ndarray[FLOAT, ndim=1, mode="c"] cons,
                                   int ncons,
                                   Eval eval):
-        cdef int *flag = <int *> stdlib.malloc(sizeof(int)*self._number_var_pm)
-        cdef int i, j, k, kk, end = st.shape[1], argmax, maxv, nvar = self._nvar
+        cdef int *flag
+        cdef int i, j=0, k=0, kk, end = st.shape[1], argmax, maxv, nvar = self._nvar
         cdef INT *var, *indC = <INT *> ind.data
         cdef FLOAT *errorC = <FLOAT *> error.data, *consC = <FLOAT *> cons.data
         cdef FLOAT *xC = <FLOAT *> x.data, *stC = <FLOAT *> st.data
         cdef npc.ndarray d = np.arange(self._number_var_pm)
-        for i in range(self._number_var_pm):
-            flag[i] = 0
-        np.random.shuffle(d)
-        var = <INT *> d.data
-        l = p1 * end
-        for i in range(end):
-            k = i * nvar
-            for j in range(self._number_var_pm):
-                kk = k + var[j]
-                if stC[l] == xC[kk]:
-                    continue
-                if xC[kk] > stC[l] and errorC[i] == -1:
-                    flag[j] += 1
-                if xC[kk] < stC[l] and errorC[i] == 1:
-                    flag[j] += 1
-            l += 1
-        argmax = 0
-        maxv = flag[0]
-        for i in range(1, self._number_var_pm):
-            if flag[i] > maxv:
-                maxv = flag[i]
-                argmax = i
-        stdlib.free(flag)
-        # c = map(lambda x: (error == x).sum(), [-1, 0, 1])
-        j = 0
-        k = 0
+        if self.isvar(indC[p1]):
+            flag = <int *> stdlib.malloc(sizeof(int)*self._number_var_pm)
+            for i in range(self._number_var_pm):
+                flag[i] = 0
+            np.random.shuffle(d)
+            var = <INT *> d.data
+            l = p1 * end
+            for i in range(end):
+                k = i * nvar
+                for j in range(self._number_var_pm):
+                    kk = k + var[j]
+                    if stC[l] == xC[kk]:
+                        continue
+                    if xC[kk] > stC[l] and errorC[i] == -1:
+                        flag[j] += 1
+                    if xC[kk] < stC[l] and errorC[i] == 1:
+                        flag[j] += 1
+                l += 1
+            argmax = 0
+            maxv = flag[0]
+            for i in range(1, self._number_var_pm):
+                if flag[i] > maxv:
+                    maxv = flag[i]
+                    argmax = i
+            stdlib.free(flag)
+            # print ind, d, var[argmax], var[argmax] + self._nfunc
+            indC[p1] = var[argmax] + self._nfunc
+            return 0
         for i in range(end):
             if errorC[i] == -1:
                 j += 1
             elif errorC[i] == 1:
                 k += 1 
-        # print "-", maxv, j, k
-        if maxv <= j or maxv <= k :
-            if j > k:
-                j = -1
-            elif j < k:
-                j = 1
-            else:
-                return 0
-            if self.isconstant(indC[p1]):
-                i = indC[p1] - self._nfunc - self._nvar
-                consC[i] = self.pmutation_constant(ind, p1, st, cons, j, error)
-            else:
-                consC[ncons] = self.pmutation_constant(ind, p1, st, cons, j, error)
-                indC[p1] = self._nfunc + self._nvar + ncons
-            return 1
-        indC[p1] = var[argmax] + self._nfunc
+        if j > k:
+            j = -1
+        elif j < k:
+            j = 1
+        else:
+            return 0
+        i = indC[p1] - self._nfunc - self._nvar
+        consC[i] = self.pmutation_constant(ind, p1, st, cons, j, error)
         return 0
 
 cdef class PDEXOSubtree(PDEXO):

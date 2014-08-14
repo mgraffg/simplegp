@@ -1,4 +1,5 @@
 Version 0.5.*
+	+ Bug in the number of variables
 	+ One point mutation in PDEPM now mutates also terminals
 	+ PDEPM is more similar to point mutation it uses ppm2 to decide whether to mutate a particular node
 	+ New type of point-mutation, namely PDEPM

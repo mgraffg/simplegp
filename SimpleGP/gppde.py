@@ -72,8 +72,8 @@ class GPPDE(GP):
         self._p_der = np.empty((self._max_length, self._x.shape[0]),
                                dtype=self._dtype)
         self._pde = PDE(self._tree, self._p_der)
-        if x.shape[1] < 10:
-            self._tree.set_number_var_pm(3)
+        if self._x.shape[1] < 10:
+            self._tree.set_number_var_pm(self._x.shape[1])
         return self
 
     def load_prev_run(self):
