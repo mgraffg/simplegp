@@ -445,6 +445,7 @@ population size is smaller or larger than the current one
                   popsize=popsize,
                   seed=seed,
                   pxo=pxo,
+                  pm=pm,
                   **kwargs)
         return ins
 

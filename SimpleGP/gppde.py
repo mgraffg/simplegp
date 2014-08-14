@@ -144,18 +144,31 @@ class GPPDE(GP):
         sel_type = self._tree.get_type_xpoint_selection()
         self._tree.set_type_xpoint_selection(1)
         p1 = self._tree.father1_crossing_point(father1)
-        while father1[p1] >= self.nfunc:
-            p1 = self._tree.father1_crossing_point(father1)
+        # while father1[p1] >= self.nfunc:
+        #     p1 = self._tree.father1_crossing_point(father1)
         self._tree.set_type_xpoint_selection(sel_type)
         ind = father1.copy()
         st = self._p_st[self._xo_father1]
         e = self.get_error(p1)
-        func = self._tree.pmutation_func_change(father1,
-                                                p1, st, e, self._eval)
-        ind[p1] = func
+        if self.isfunc(ind[p1]):
+            func = self._tree.pmutation_func_change(father1,
+                                                    p1, st, e, self._eval)
+            ind[p1] = func
+            constants = self._p_constants[self._xo_father1].copy()
+        else:
+            constants = np.concatenate((self._p_constants[self._xo_father1],
+                                        np.empty(1, dtype=self._dtype)))
+            ncons = self._p_constants[self._xo_father1].shape[0]
+            ncons += self._tree.pmutation_terminal_change(ind,
+                                                          p1, st,
+                                                          e,
+                                                          self._x,
+                                                          constants,
+                                                          ncons,
+                                                          self._eval)
         # print self._func[father1[p1]], self._func[func]
         ind = self.simplify(ind,
-                            self._p_constants[self._xo_father1].copy())
+                            constants)
         return ind
 
     def mutation(self, father1):

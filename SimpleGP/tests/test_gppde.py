@@ -40,10 +40,9 @@ class TestSimpleGPPDE(object):
         assert fit != gp.fitness(gp.best)
 
     def test_pmutation(self):
-        gp = self._gp
+        gp = GPPDE.run_cl(self._x, self._y, generations=2, ppm=1, ppm2=0.2)
+        # gp.create_population()
         gp._do_simplify = False
-        gp.create_population()
-        gp._ppm = 1.0
         for i in range(gp.popsize):
             gp.fitness(i)
             gp._xo_father1 = i
@@ -67,6 +66,50 @@ class TestSimpleGPPDE(object):
         coef = np.array([0.5, -1.5, 0.9])
         y = (X * coef).sum(axis=1)
         return x, y
+
+    @use_pymock
+    def test_one_point_pmutation_func(self):
+        x, y = self.problem_three_variables()
+        gp = GPPDE.run_cl(x, y, generations=2, seed=0, ppm2=0, ppm=1)
+        gp._fitness.fill(-np.inf)
+        var = gp.nfunc
+        cons = var + 3
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
+                                     2, var, cons+1,
+                                     2, var+2, cons+2])
+        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
+        gp._xo_father1 = 0
+        override(np.random, 'randint')
+        np.random.randint(5)
+        returns(2)
+        np.random.randint(4)
+        returns(1)
+        replay()
+        ind = gp.point_mutation(gp.population[0])
+        verify()
+        assert gp.isfunc(ind[7])
+
+    @use_pymock
+    def test_one_point_pmutation_terminal(self):
+        x, y = self.problem_three_variables()
+        gp = GPPDE.run_cl(x, y, generations=2, seed=0, ppm2=0, ppm=1)
+        gp._fitness.fill(-np.inf)
+        var = gp.nfunc
+        cons = var + 3
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
+                                     2, var, cons+1,
+                                     2, var+2, cons+2])
+        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
+        gp._xo_father1 = 0
+        override(np.random, 'randint')
+        np.random.randint(5)
+        returns(3)
+        np.random.randint(4)
+        returns(1)
+        replay()
+        ind = gp.point_mutation(gp.population[0])
+        verify()
+        assert not gp.isfunc(ind[8])
 
     @use_pymock
     def test_pmutation_constant(self):
