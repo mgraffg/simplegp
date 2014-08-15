@@ -42,7 +42,8 @@ cdef class PDE:
     cpdef int compute_pdepm(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                             npc.ndarray[FLOAT, ndim=2, mode="c"] _st,
                             npc.ndarray[INT, ndim=1, mode="c"] index,
-                            float ppm):
+                            float ppm,
+                            int only_functions=0):
         cdef int pos=0, end=ind.shape[0], i, c=0
         cdef INT *indC = <INT *>ind.data, *indexC = <INT *> index.data
         self._l_st = _st.shape[1]
@@ -51,7 +52,8 @@ cdef class PDE:
         self._tree.set_pos(0)
         self._tree.compute_parents_inner(self._ind, self._parent, -1)
         while pos < end:
-            if np.random.rand() >= ppm:
+            if (1 == only_functions and indC[pos] >= self._tree._nfunc)\
+               or np.random.rand() >= ppm:
                 pos += 1
                 continue
             self._end = self._tree.path_to_root_inner(self._parent, self._path,

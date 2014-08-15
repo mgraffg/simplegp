@@ -34,7 +34,8 @@ cdef class PDE:
     cpdef int compute_pdepm(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                             npc.ndarray[FLOAT, ndim=2, mode="c"] _st,
                             npc.ndarray[INT, ndim=1, mode="c"] index,
-                            float ppm)
+                            float ppm,
+                            int only_functions=?)
 
     cpdef int compute(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
                       int pos,

@@ -9,3 +9,9 @@ $ sudo python setup.py install
 for the case you only want to compile cython
 
 $ python setup.py build_ext --inplace
+
+To measure the coverage of the package
+
+$ cd simplegp
+$ python setup.py build_ext --inplace
+$ nosetests --with-coverage --cover-package=SimpleGP

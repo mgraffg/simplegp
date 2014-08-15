@@ -22,6 +22,7 @@ class GPPDE(GP):
     def __init__(self, max_mem=500.0,
                  update_best_w_rprop=False,
                  ppm2=0.1,
+                 pm_only_functions=0,
                  **kwargs):
         super(GPPDE, self).__init__(**kwargs)
         self._max_mem = max_mem
@@ -29,6 +30,7 @@ class GPPDE(GP):
         self._p_st = np.empty(self._popsize, dtype=np.object)
         self._used_mem = 0
         self._ppm2 = ppm2
+        self._pm_only_functions = pm_only_functions
 
     def new_best(self, k):
         flag = super(GPPDE, self).new_best(k)
@@ -111,7 +113,8 @@ class GPPDE(GP):
         self.set_error_p_der()
         c = self._pde.compute_pdepm(ind,
                                     self._p_st[self._xo_father1],
-                                    index, self._ppm2)
+                                    index, self._ppm2,
+                                    self._pm_only_functions)
         # print c, index
         self._npmutation = c
         if c == 0:
@@ -144,8 +147,9 @@ class GPPDE(GP):
         sel_type = self._tree.get_type_xpoint_selection()
         self._tree.set_type_xpoint_selection(1)
         p1 = self._tree.father1_crossing_point(father1)
-        # while father1[p1] >= self.nfunc:
-        #     p1 = self._tree.father1_crossing_point(father1)
+        if self._pm_only_functions:
+            while father1[p1] >= self.nfunc:
+                p1 = self._tree.father1_crossing_point(father1)
         self._tree.set_type_xpoint_selection(sel_type)
         ind = father1.copy()
         st = self._p_st[self._xo_father1]

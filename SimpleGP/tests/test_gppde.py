@@ -68,6 +68,50 @@ class TestSimpleGPPDE(object):
         return x, y
 
     @use_pymock
+    def test_one_point_mutation_only_functions(self):
+        gp = GPPDE.run_cl(self._x, self._y, generations=2, ppm=1,
+                          do_simplify=False,
+                          pm_only_functions=1)
+        gp.population[0] = np.array([0, gp.nfunc, 0, gp.nfunc, gp.nfunc])
+        # gp.one_point_mutation = lambda x: y
+        gp._fitness.fill(-np.inf)
+        gp.fitness(0)
+        gp._xo_father1 = 0
+        override(np.random, 'rand')
+        for i in [0, 1, 1]:
+            np.random.rand()
+            returns(i)
+        override(np.random, 'randint')
+        for i, j in zip([3, 2, 3, 2], [1, 0, 1, 1]):
+            np.random.randint(i)
+            returns(j)
+        print gp.population[0]
+        replay()
+        ind = gp.mutation(gp.population[0])
+        verify()
+        print ind
+
+    @use_pymock
+    def test_point_mutation_only_functions(self):
+        gp = GPPDE.run_cl(self._x, self._y, generations=2, ppm=1,
+                          do_simplify=False,
+                          pm_only_functions=1)
+        gp.population[0] = np.array([0, gp.nfunc, 0, gp.nfunc, gp.nfunc])
+        gp._fitness.fill(-np.inf)
+        gp.fitness(0)
+        gp._xo_father1 = 0
+        override(np.random, 'rand')
+        for i in [0, 1, 0]:
+            np.random.rand()
+            returns(i)
+        print gp.population[0]
+        replay()
+        ind = gp.mutation(gp.population[0])
+        verify()
+        print ind
+        assert gp.isfunc(ind[2])
+
+    @use_pymock
     def test_one_point_pmutation_func(self):
         x, y = self.problem_three_variables()
         gp = GPPDE.run_cl(x, y, generations=2, seed=0, ppm2=0, ppm=1,
