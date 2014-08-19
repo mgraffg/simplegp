@@ -1,4 +1,5 @@
 Version 0.5.*
+	+ when ppm2 is 0 then automatically it is called one_point_mutation
 	+ New option, point mutation is capable of selecting only the functions
 	+ Bug in the number of variables
 	+ One point mutation in PDEPM now mutates also terminals

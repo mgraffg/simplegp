@@ -108,6 +108,9 @@ class GPPDE(GP):
                 self._fitness[i] = -np.inf
 
     def point_mutation(self, father1):
+        if self._ppm2 == 0:
+            self._npmutation = 1
+            return self.one_point_mutation(father1)
         ind = father1.copy()
         index = np.zeros_like(ind)
         self.set_error_p_der()
