@@ -144,6 +144,8 @@ class GPPDE(GP):
         # print ind, "*", index[:c]
         ind = self.simplify(ind, constants)
         # print ind, "-", index[:c]
+        if ind.shape[0] > self._max_length or ind.shape[0] < self._min_length:
+            return self.create_random_ind()
         return ind
 
     def one_point_mutation(self, father1):
@@ -176,6 +178,8 @@ class GPPDE(GP):
         # print self._func[father1[p1]], self._func[func]
         ind = self.simplify(ind,
                             constants)
+        if ind.shape[0] > self._max_length or ind.shape[0] < self._min_length:
+            return self.create_random_ind()
         return ind
 
     def mutation(self, father1):
