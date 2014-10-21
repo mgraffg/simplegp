@@ -17,9 +17,9 @@ cimport cython
 cimport libc
 cimport libc.math as math
 cimport libc.stdlib as stdlib
-cdef extern from "math.h":
-    int isinf(double)
-    int isnan(double)
+cdef extern from "numpy/npy_math.h":
+    bint npy_isinf(double)
+    bint npy_isnan(double)
 
 np.seterr(all='ignore')
 
@@ -527,10 +527,10 @@ cdef class Eval:
         for i in range(self._nfunc):
             if self._nop[i] == nop:
                 for j in range(self._l_st):
-                    if isinf(pmut_eval[c]) and isinf(stC[c]):
+                    if npy_isinf(pmut_eval[c]) and npy_isinf(stC[c]):
                         c += 1
                         continue
-                    if isnan(pmut_eval[c]) and isnan(stC[c]):
+                    if npy_isnan(pmut_eval[c]) and npy_isnan(stC[c]):
                         c += 1
                         continue
                     if (pmut_eval[c] - stC[c]) != 0:

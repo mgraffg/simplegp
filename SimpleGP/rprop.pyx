@@ -23,8 +23,6 @@ cimport libc.math as math
 from .tree import Tree
 from .tree cimport Tree
 cdef extern from "math.h":
-    int isinf(double)
-    int isnan(double)
     float sqrt(double)
 
 np.seterr(all='ignore')

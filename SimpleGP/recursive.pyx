@@ -20,11 +20,13 @@ cimport libc
 cimport libc.stdlib as stdlib
 cimport libc.math as math
 cdef extern from "math.h":
-    int isinf(double)
-    int isnan(double)
     float sqrt(double)
     float sin(double)
     float cos(double)
+cdef extern from "numpy/npy_math.h":
+    bint npy_isinf(double)
+    bint npy_isnan(double)
+
 
 np.seterr(all='ignore')
 
@@ -150,11 +152,11 @@ cdef class Recursive:
         elif func == 14:
             return a * a
         elif func == 15:
-            if isinf(a) or isnan(a):
+            if npy_isinf(a) or npy_isnan(a):
                 return a
             return self.memC[int(a) % self.nmem]
         elif func == 16:
-            if not (isinf(a) or isnan(a)) :
+            if not (npy_isinf(a) or npy_isnan(a)) :
                 self.memC[int(a) % self.nmem] = b
             return b
 

@@ -22,8 +22,6 @@ cimport libc.stdlib as stdlib
 from libc.string cimport memcpy
 cimport libc.math as math
 cdef extern from "math.h":
-    int isinf(double)
-    int isnan(double)
     float sqrt(double)
 
 np.seterr(all='ignore')
