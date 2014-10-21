@@ -69,9 +69,9 @@ cdef class PDE:
 
     cdef void if_func(self, int _i)
 
-    cdef void max(self, int _i)
+    cdef void max_func(self, int _i)
 
-    cdef void min(self, int _i)
+    cdef void min_func(self, int _i)
 
     cdef void ln(self, int _i)
 
