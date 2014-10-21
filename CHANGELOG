@@ -1,4 +1,6 @@
 Version 0.5.*
+	+ setup.py clean --all removes all the c-code and modules
+	+ New function in tree (i.e., gp._tree.get_xo_nmatch()) that counts the number of coincidence between the mask of the derivative and the output 
 	+ bug the min_length parameter was not verified in point_mutation
 	+ when ppm2 is 0 then automatically it is called one_point_mutation
 	+ New option, point mutation is capable of selecting only the functions

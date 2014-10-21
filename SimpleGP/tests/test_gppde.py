@@ -67,6 +67,30 @@ class TestSimpleGPPDE(object):
         y = (X * coef).sum(axis=1)
         return x, y
 
+    def test_xo_nmatch(self):
+        gp = GPPDE.run_cl(self._x, self._y, generations=2, ppm=1,
+                          do_simplify=False,
+                          pm_only_functions=1)
+        # + * sq x a + * x b c
+        gp._fitness.fill(-np.inf)
+        gp.population[0] = np.array([0, 2, 14, gp.nfunc, gp.nfunc + 1,
+                                     0, 2, gp.nfunc, gp.nfunc + 2,
+                                     gp.nfunc + 3])
+        gp.population[1] = gp.population[0].copy()
+        gp._p_constants[1] = self._pol.copy()
+        p = self._pol.copy()
+        p[1] *= -1
+        gp._p_constants[0] = p
+        gp._xo_father1 = 0
+        gp._xo_father2 = 1
+        print gp.fitness(0)
+        gp.crossover(gp.population[gp._xo_father1],
+                     gp.population[gp._xo_father2], p1=8)
+        assert gp._tree.get_xo_nmatch() == 100
+        # print gp._p_der[8]
+        # print gp.fitness(1)
+        # assert False
+
     @use_pymock
     def test_one_point_mutation_only_functions(self):
         gp = GPPDE.run_cl(self._x, self._y, generations=2, ppm=1,

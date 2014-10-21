@@ -551,7 +551,11 @@ cdef class PDEXO(Tree):
                 bflag = flag
             elif flag == bflag and _length[i] < _length[res]:
                 res = i
+        self._bflag = bflag
         return res
+
+    def get_xo_nmatch(self):
+        return self._bflag
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -600,6 +604,7 @@ cdef class PDEXO(Tree):
         if res < 0:
             print res, flag, bflag
         stdlib.free(index)
+        self._bflag = bflag
         return res
 
     @cython.boundscheck(False)
@@ -678,6 +683,7 @@ cdef class PDEXO(Tree):
                 if flag[i] > maxv:
                     maxv = flag[i]
                     argmax = i
+            self._bflag = maxv
             stdlib.free(flag)
             # print ind, d, var[argmax], var[argmax] + self._nfunc
             indC[p1] = var[argmax] + self._nfunc
@@ -689,9 +695,12 @@ cdef class PDEXO(Tree):
                 k += 1 
         if j > k:
             j = -1
+            self._bflag = j
         elif j < k:
             j = 1
+            self._bflag = k
         else:
+            self._bflag = j
             return 0
         i = indC[p1] - self._nfunc - self._nvar
         consC[i] = self.pmutation_constant(ind, p1, st, cons, j, error)

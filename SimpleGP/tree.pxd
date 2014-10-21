@@ -36,6 +36,7 @@ cdef class Tree:
     cdef INT _ncons
     cdef INT _nfunc
     cdef INT _nvar
+    cdef int _bflag
     cdef int _pos
     cdef int _min_length
     cdef int _max_length

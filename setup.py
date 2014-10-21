@@ -16,8 +16,22 @@ from setuptools import setup
 from setuptools import Extension
 from Cython.Distutils import build_ext
 from distutils import sysconfig
+from distutils.command.clean import clean
 import os
 from os.path import join
+
+
+class Clean(clean):
+    def run(self):
+        clean.run(self)
+        if self.all:
+            for dir, dirs, files in os.walk('SimpleGP'):
+                abspath = os.path.abspath(dir)
+                for f in files:
+                    ext = f.split('.')[-1]
+                    if ext in ['c', 'so']:
+                        os.unlink(os.path.join(abspath, f))
+
 
 # -mno-fused-madd
 
@@ -75,7 +89,7 @@ setup(
     url='http://dep.fie.umich.mx/~mgraffg',
     author="Mario Graff",
     author_email="mgraffg@dep.fie.umich.mx",
-    cmdclass={"build_ext": build_ext},
+    cmdclass={"build_ext": build_ext, "clean": Clean},
     ext_modules=ext_modules,
     packages=['SimpleGP'],
     install_requires=['cython >= 0.19.2', 'numpy >= 1.6.2',
