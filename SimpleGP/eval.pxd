@@ -89,15 +89,15 @@ cdef class Eval:
                     INT b,
                     INT pos)
 
-    cdef INT max(self, 
-                 INT a,
-                 INT b,
-                 INT pos)
+    cdef INT max_func(self, 
+                      INT a,
+                      INT b,
+                      INT pos)
 
-    cdef INT min(self, 
-                 INT a,
-                 INT b,
-                 INT pos)
+    cdef INT min_func(self, 
+                      INT a,
+                      INT b,
+                      INT pos)
 
     cdef void three_args(self, INT func, INT a, INT b, INT c, INT pos)
 

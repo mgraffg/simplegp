@@ -285,9 +285,9 @@ cdef class Eval:
         elif func == 3:
             self.divide(a, b, pos)
         elif func == 11:
-            self.max(a, b, pos)
+            self.max_func(a, b, pos)
         elif func == 12:
-            self.min(a, b, pos)
+            self.min_func(a, b, pos)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -361,10 +361,10 @@ cdef class Eval:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef INT max(self, 
-                 INT a,
-                 INT b,
-                 INT pos):
+    cdef INT max_func(self, 
+                      INT a,
+                      INT b,
+                      INT pos):
         cdef INT l = self._l_st
         cdef INT a_i = l * a
         cdef INT b_i = l * b
@@ -383,10 +383,10 @@ cdef class Eval:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef INT min(self, 
-                 INT a,
-                 INT b,
-                 INT pos):
+    cdef INT min_func(self, 
+                      INT a,
+                      INT b,
+                      INT pos):
         cdef INT l = self._l_st
         cdef INT a_i = l * a
         cdef INT b_i = l * b
