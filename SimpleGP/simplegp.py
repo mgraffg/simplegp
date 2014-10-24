@@ -330,6 +330,8 @@ population size is smaller or larger than the current one
            os.path.isfile(self._fname_best)\
            and self.load_prev_run():
             return
+        if self._p is not None:
+            return
         self._p_constants = np.empty(self._popsize, dtype=np.object)
         self._p = np.empty(self._popsize, dtype=np.object)
         self._fitness = np.zeros(self._popsize)

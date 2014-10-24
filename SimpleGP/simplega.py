@@ -74,6 +74,7 @@ class SimpleGA(object):
         self._fname_best = fname_best
         self._run = True
         self._last_call_to_stats = 0
+        self._p = None
         self._test_set = None
         signal.signal(signal.SIGTERM, self.on_exit)
         if walltime is not None:
@@ -235,6 +236,8 @@ population size is smaller or larger than the current one
         if self._fname_best is not None \
            and os.path.isfile(self._fname_best) \
            and self.load_prev_run():
+            return
+        if self._p is not None:
             return
         self._p = self.random_ind(size=(self._popsize,
                                         self._chromosome_length))

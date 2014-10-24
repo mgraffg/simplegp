@@ -1,4 +1,5 @@
 Version 0.5.*
+	+ Create population method verifies whether there is already a population 
 	+ setup.py clean --all removes all the c-code and modules
 	+ New function in tree (i.e., gp._tree.get_xo_nmatch()) that counts the number of coincidence between the mask of the derivative and the output 
 	+ bug the min_length parameter was not verified in point_mutation

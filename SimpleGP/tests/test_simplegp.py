@@ -196,7 +196,15 @@ class TestSimpleGP(object):
         assert np.all(a == 0)
 
     def test_create_population(self):
-        self._gp.create_population()
+        gp = GP()
+        gp.train(self._x, self._y)
+        gp.create_population()
+        p = gp.population.copy()
+        gp.create_population()
+        print p[0]
+        print gp.population[0]
+        assert np.all(map(lambda x: np.all(p[x] == gp.population[x]),
+                          range(gp.popsize)))
 
     def test_popsize(self):
         gp = self._gp
