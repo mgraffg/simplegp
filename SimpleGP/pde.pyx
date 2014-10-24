@@ -264,7 +264,7 @@ cdef class PDE:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void max(self, int _i):
+    cdef void max_func(self, int _i):
         cdef int i, ii, oi, l_st = self._l_st, a_i, b_i
         cdef INT *path = self._path
         cdef FLOAT *p_st = self._p_st, *st = self._st, x, y, s
@@ -288,7 +288,7 @@ cdef class PDE:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void min(self, int _i):
+    cdef void min_func(self, int _i):
         cdef int i, ii, oi, l_st = self._l_st, a_i, b_i
         cdef INT *path = self._path
         cdef FLOAT *p_st = self._p_st, *st = self._st, x, y, s
@@ -403,9 +403,9 @@ cdef class PDE:
             elif node == 10:
                 self.if_func(_i)
             elif node == 11:
-                self.max(_i)
+                self.max_func(_i)
             elif node == 12:
-                self.min(_i)
+                self.min_func(_i)
             elif node == 13:
                 self.ln(_i)
             elif node == 14:

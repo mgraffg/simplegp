@@ -19,9 +19,9 @@ ctypedef npc.int_t INT
 cimport libc
 cimport libc.stdlib as stdlib
 cimport libc.math as math
-cdef extern from "math.h":
-    int isinf(double)
-    int isnan(double)
+cdef extern from "numpy/npy_math.h":
+    bint npy_isinf(double)
+    bint npy_isnan(double)
 from .eval import Eval
 from .eval cimport Eval
 
@@ -141,7 +141,7 @@ cdef class Simplify:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef INT generate_constant(self, FLOAT c):
-        if isnan(c) or isinf(c): return self._nfunc + self._nvar  
+        if npy_isnan(c) or npy_isinf(c): return self._nfunc + self._nvar  
         cdef int cntC = self._cntC
         self._cntC += 1
         self._constants2[cntC] = c

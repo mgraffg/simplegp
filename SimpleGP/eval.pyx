@@ -17,9 +17,9 @@ cimport cython
 cimport libc
 cimport libc.math as math
 cimport libc.stdlib as stdlib
-cdef extern from "math.h":
-    int isinf(double)
-    int isnan(double)
+cdef extern from "numpy/npy_math.h":
+    bint npy_isinf(double)
+    bint npy_isnan(double)
 
 np.seterr(all='ignore')
 
@@ -285,9 +285,9 @@ cdef class Eval:
         elif func == 3:
             self.divide(a, b, pos)
         elif func == 11:
-            self.max(a, b, pos)
+            self.max_func(a, b, pos)
         elif func == 12:
-            self.min(a, b, pos)
+            self.min_func(a, b, pos)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -361,10 +361,10 @@ cdef class Eval:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef INT max(self, 
-                 INT a,
-                 INT b,
-                 INT pos):
+    cdef INT max_func(self, 
+                      INT a,
+                      INT b,
+                      INT pos):
         cdef INT l = self._l_st
         cdef INT a_i = l * a
         cdef INT b_i = l * b
@@ -383,10 +383,10 @@ cdef class Eval:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef INT min(self, 
-                 INT a,
-                 INT b,
-                 INT pos):
+    cdef INT min_func(self, 
+                      INT a,
+                      INT b,
+                      INT pos):
         cdef INT l = self._l_st
         cdef INT a_i = l * a
         cdef INT b_i = l * b
@@ -527,10 +527,10 @@ cdef class Eval:
         for i in range(self._nfunc):
             if self._nop[i] == nop:
                 for j in range(self._l_st):
-                    if isinf(pmut_eval[c]) and isinf(stC[c]):
+                    if npy_isinf(pmut_eval[c]) and npy_isinf(stC[c]):
                         c += 1
                         continue
-                    if isnan(pmut_eval[c]) and isnan(stC[c]):
+                    if npy_isnan(pmut_eval[c]) and npy_isnan(stC[c]):
                         c += 1
                         continue
                     if (pmut_eval[c] - stC[c]) != 0:
