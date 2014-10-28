@@ -1,3 +1,5 @@
+Version 0.6.*
+	+ GP has one point mutation equivalent to the one in GPPDE 
 Version 0.5.*
 	+ Create population method verifies whether there is already a population 
 	+ Changing all isnan and isinf to numpy versions 

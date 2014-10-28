@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from SimpleGP import GP
+from pymock import use_pymock, override, returns, replay, verify
 import numpy as np
 
 
@@ -26,6 +27,81 @@ class TestSimpleGP(object):
         self._x = x
         self._y = y
         self._gp = GP.init_cl(seed=0, generations=5).train(x, y)
+
+    def problem_three_variables(self):
+        np.random.seed(0)
+        nt = 100
+        x = np.linspace(-1, 1, nt)
+        x = np.vstack((x, x[::-1], 0.2*x**3+x)).T
+        # x = np.random.uniform(-1, 1, (100, 3))
+        X = np.vstack((x[:, 0] * x[:, 1], x[:, 0], x[:, 2])).T
+        coef = np.array([0.5, -1.5, 0.9])
+        y = (X * coef).sum(axis=1)
+        return x, y
+
+    def test_one_point_mutation(self):
+        x, y = self.problem_three_variables()
+        GP.run_cl(x, y, ppm=1, ppm2=0, generations=2)
+
+    @use_pymock
+    def test_tree_pmutation_terminal_change(self):
+        x, y = self.problem_three_variables()
+        gp = GP()
+        gp.train(x, y)
+        gp.create_population()
+        gp._do_simplify = False
+        gp._fitness.fill(-np.inf)
+        var = gp.nfunc
+        cons = var + 3
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
+                                     2, var, cons+1,
+                                     2, var+2, cons+2])
+        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
+        gp._xo_father1 = 0
+        ind = gp.population[0]
+        override(np.random, 'randint')
+        for i, o in zip([gp._constants.shape[0],
+                         gp.nvar], [50, 1]):
+            np.random.randint(i)
+            returns(o)
+        replay()
+        i = cons - gp.nfunc - gp.nvar
+        assert gp._constants[50] != gp._p_constants[0][i]
+        gp._tree.pmutation_terminal_change(ind, 3,
+                                           gp._p_constants[0],
+                                           gp._constants)
+        assert gp._constants[50] == gp._p_constants[0][i]
+        gp._tree.pmutation_terminal_change(ind, 5,
+                                           gp._p_constants[0],
+                                           gp._constants)
+        assert ind[5] == 1 + gp.nfunc
+        verify()
+
+    @use_pymock
+    def test_tree_pmutation_func_change(self):
+        x, y = self.problem_three_variables()
+        gp = GP(func=['+', '*', '/', 'sin', 'cos'])
+        print gp._func_allow
+        print gp._nop
+        gp.train(x, y)
+        gp.create_population()
+        gp._do_simplify = False
+        gp._fitness.fill(-np.inf)
+        var = gp.nfunc
+        cons = var + 3
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
+                                     2, var, cons+1,
+                                     2, var+2, cons+2])
+        gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
+        gp._xo_father1 = 0
+        ind = gp.population[0]
+        override(np.random, 'randint')
+        np.random.randint(3)
+        returns(2)
+        replay()
+        gp._tree.pmutation_func_change(ind, 2)
+        assert ind[2] == 3
+        verify()
 
     def test_point_mutation(self):
         try:

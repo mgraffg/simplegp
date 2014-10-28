@@ -61,6 +61,8 @@ class GP(SimpleGA):
                  verbose_nind=None, argmax_nargs=None,
                  do_simplify=True, max_n_worst_epochs=3, ppm=0.0,
                  type_xpoint_selection=0,
+                 ppm2=0.1,
+                 pm_only_functions=0,
                  **kwargs):
         super(GP, self).__init__(**kwargs)
         self.individuals_params(do_simplify, min_depth,
@@ -76,6 +78,8 @@ class GP(SimpleGA):
         self.eval_params(max_n_worst_epochs)
         self.min_max_length_params()
         self.tree_params(type_xpoint_selection)
+        self._ppm2 = ppm2
+        self._pm_only_functions = pm_only_functions
 
     def individuals_params(self, do_simplify, min_depth,
                            max_depth, max_length, min_length,
@@ -490,7 +494,31 @@ population size is smaller or larger than the current one
             return self.create_random_ind()
         return ind
 
+    def one_point_mutation(self, father1):
+        sel_type = self._tree.get_type_xpoint_selection()
+        self._tree.set_type_xpoint_selection(1)
+        p1 = self._tree.father1_crossing_point(father1)
+        if self._pm_only_functions:
+            while father1[p1] >= self.nfunc:
+                p1 = self._tree.father1_crossing_point(father1)
+        self._tree.set_type_xpoint_selection(sel_type)
+        ind = father1.copy()
+        constants = self._p_constants[self._xo_father1].copy()
+        if self.isfunc(ind[p1]):
+            self._tree.pmutation_func_change(father1, p1)
+        else:
+            self._tree.pmutation_terminal_change(ind, p1,
+                                                 constants,
+                                                 self._constants)
+        ind = self.simplify(ind, constants)
+        if ind.shape[0] > self._max_length or ind.shape[0] < self._min_length:
+            return self.create_random_ind()
+        return ind
+
     def point_mutation(self, father1):
+        if self._ppm2 == 0:
+            self._npmutation = 1
+            return self.one_point_mutation(father1)
         raise NotImplementedError("Point mutation has a bug")
         try:
             cl_nop = self._cl_nop
@@ -517,7 +545,7 @@ population size is smaller or larger than the current one
         return ind
 
     def mutation(self, father1):
-        if np.random.rand() < self._ppm:
+        if father1.shape[0] > 1 and np.random.rand() < self._ppm:
             return self.point_mutation(father1)
         d = np.random.randint(self._min_depth,
                               self._mutation_depth)

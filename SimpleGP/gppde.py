@@ -21,16 +21,12 @@ from SimpleGP.Rprop_mod import RPROP2
 class GPPDE(GP):
     def __init__(self, max_mem=500.0,
                  update_best_w_rprop=False,
-                 ppm2=0.1,
-                 pm_only_functions=0,
                  **kwargs):
         super(GPPDE, self).__init__(**kwargs)
         self._max_mem = max_mem
         self._update_best_w_rprop = update_best_w_rprop
         self._p_st = np.empty(self._popsize, dtype=np.object)
         self._used_mem = 0
-        self._ppm2 = ppm2
-        self._pm_only_functions = pm_only_functions
 
     def new_best(self, k):
         flag = super(GPPDE, self).new_best(k)

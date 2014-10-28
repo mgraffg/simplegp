@@ -418,6 +418,41 @@ cdef class Tree:
                 r += 1
         return r
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def pmutation_terminal_change(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                                  int p1,
+                                  npc.ndarray[FLOAT, ndim=1, mode="c"] ind_cons,
+                                  npc.ndarray[FLOAT, ndim=1, mode="c"] cons):
+        cdef INT *indC = <INT*>ind.data
+        cdef FLOAT *ind_consC = <FLOAT*>ind_cons.data
+        cdef FLOAT *consC = <FLOAT*>cons.data
+        cdef int ncons = cons.shape[0], i
+        if self.isvar(indC[p1]):
+            indC[p1] = self._nfunc + np.random.randint(self._nvar)
+        else:
+            i = indC[p1] - self._nfunc - self._nvar
+            ind_consC[i] = consC[np.random.randint(ncons)]
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def pmutation_func_change(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                              int p1):
+        cdef INT *indC = <INT *> ind.data
+        cdef int nop = self._nop[indC[p1]], 
+        cdef int afunc=0
+        for i in range(self._nfunc):
+            if nop == self._nop[i]:
+                afunc += 1
+        # print "*"*10, afunc, nop
+        afunc = np.random.randint(afunc) + 1
+        i = -1
+        while afunc:
+            i += 1
+            if nop == self._nop[i]:
+                afunc -= 1
+        indC[p1] = i
+
 cdef class SubTree(Tree):
     @cython.boundscheck(False)
     @cython.wraparound(False)
