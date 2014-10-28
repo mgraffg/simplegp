@@ -39,9 +39,44 @@ class TestSimpleGP(object):
         y = (X * coef).sum(axis=1)
         return x, y
 
+    @use_pymock
+    def test_tree_select_pm(self):
+        x, y = self.problem_three_variables()
+        gp = GP(pm_only_functions=1, ppm=1, ppm2=0.2)
+        gp.train(x, y)
+        gp.create_population()
+        gp._do_simplify = False
+        gp._fitness.fill(-np.inf)
+        var = gp.nfunc
+        cons = var + 3
+        gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
+                                     2, var, cons+1,
+                                     2, var+2, cons+2])
+        ind = gp.population[0]
+        index = np.zeros_like(ind)
+        override(np.random, "rand")
+        for i in range((ind < gp.nfunc).sum()):
+            np.random.rand()
+            returns(0.8)
+        for i in range(ind.shape[0]):
+            np.random.rand()
+            returns(0.8)
+        np.random.rand()
+        returns(0.1)
+        replay()
+        assert gp._tree.select_pm(ind, index,
+                                  gp._pm_only_functions, gp._ppm2) == 0
+        assert gp._tree.select_pm(ind, index, 0, gp._ppm2) == 0
+        assert gp._tree.select_pm(ind, index, 0, gp._ppm2) == 1
+        verify()
+
     def test_one_point_mutation(self):
         x, y = self.problem_three_variables()
         GP.run_cl(x, y, ppm=1, ppm2=0, generations=2)
+
+    def test_point_mutation(self):
+        x, y = self.problem_three_variables()
+        GP.run_cl(x, y, ppm=1, ppm2=0.8, generations=2)
 
     @use_pymock
     def test_tree_pmutation_terminal_change(self):
@@ -102,13 +137,6 @@ class TestSimpleGP(object):
         gp._tree.pmutation_func_change(ind, 2)
         assert ind[2] == 3
         verify()
-
-    def test_point_mutation(self):
-        try:
-            GP.run_cl(self._x, self._y, ppm=1, pxo=0)
-        except NotImplementedError:
-            return
-        raise False
 
     def test_seed(self):
         gp1 = GP.run_cl(self._x, self._y, generations=3, seed=0)

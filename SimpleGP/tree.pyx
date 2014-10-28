@@ -453,6 +453,24 @@ cdef class Tree:
                 afunc -= 1
         indC[p1] = i
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def select_pm(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
+                  npc.ndarray[INT, ndim=1, mode="c"] index, int only_func,
+                  float ppm):
+        cdef INT *indC = <INT*> ind.data
+        cdef int end=ind.shape[0], pos=0, c=0
+        while pos < end:
+            if (1 == only_func and indC[pos] >= self._nfunc)\
+               or np.random.rand() >= ppm:
+                pos += 1
+                continue
+            index[c] = pos
+            c += 1
+            pos = self.traverse_inner(indC, pos)
+        return c
+
+
 cdef class SubTree(Tree):
     @cython.boundscheck(False)
     @cython.wraparound(False)

@@ -505,7 +505,7 @@ population size is smaller or larger than the current one
         ind = father1.copy()
         constants = self._p_constants[self._xo_father1].copy()
         if self.isfunc(ind[p1]):
-            self._tree.pmutation_func_change(father1, p1)
+            self._tree.pmutation_func_change(ind, p1)
         else:
             self._tree.pmutation_terminal_change(ind, p1,
                                                  constants,
@@ -519,29 +519,25 @@ population size is smaller or larger than the current one
         if self._ppm2 == 0:
             self._npmutation = 1
             return self.one_point_mutation(father1)
-        raise NotImplementedError("Point mutation has a bug")
-        try:
-            cl_nop = self._cl_nop
-        except AttributeError:
-            cl_nop = {}
-            for id in np.unique(self._nop):
-                cl_nop[id] = np.where(self._nop == id)[0]
-            self._cl_nop = cl_nop
+        index = np.zeros_like(father1)
+        c = self._tree.select_pm(father1, index, self._pm_only_functions,
+                                 self._ppm2)
+        if c == 0:
+            self._npmutation = 1
+            return self.one_point_mutation(father1)
         ind = father1.copy()
-        ele = int(np.ceil(ind.shape[0] / 10.))
-        index = np.arange(ind.shape[0])
-        np.random.shuffle(index)
-        index = index[:ele]
-        for i in index:
-            op = ind[i]
-            if op < self._nop.shape[0]:
-                a = cl_nop[self._nop[op]]
-                np.random.shuffle(a)
-                ind[i] = a[0]
+        constants = self._p_constants[self._xo_father1].copy()
+        for i in range(c):
+            p1 = index[i]
+            if ind[p1] < self.nfunc:
+                self._tree.pmutation_func_change(ind, p1)
             else:
-                ind[i] = self.random_leaf()
-        ind = self.simplify(ind,
-                            self._p_constants[self._xo_father1].copy())
+                self._tree.pmutation_terminal_change(ind, p1,
+                                                     constants,
+                                                     self._constants)
+        ind = self.simplify(ind, constants)
+        if ind.shape[0] > self._max_length or ind.shape[0] < self._min_length:
+            return self.create_random_ind()
         return ind
 
     def mutation(self, father1):
