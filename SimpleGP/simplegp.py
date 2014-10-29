@@ -139,7 +139,7 @@ class GP(SimpleGA):
                 'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
                 'ln', 'sq', 'output', 'argmax']
         self._nop = np.array([2, 2, 2, 2, 1, 1, 1, 1, 1, 1,
-                              3, 2, 2, 1, 1, -1, -1])
+                              3, 2, 2, 1, 1, -1, -1], dtype=self._ind_dtype)
         self._func = np.asarray(func)
         self.__set_narg_to_argmax(argmax_nargs)
         key = {}
@@ -147,7 +147,7 @@ class GP(SimpleGA):
         _func = filter(lambda x: x in key, _func)
         _func = filter(lambda x: x != 'output', _func)
         self._func_allow = np.array(map(lambda x: key[x], _func),
-                                    dtype=np.int)
+                                    dtype=self._ind_dtype)
         m = np.ones(self._nop.shape[0], dtype=np.bool)
         m[self._func_allow] = False
         self._nop[m] = -1
@@ -194,9 +194,9 @@ class GP(SimpleGA):
 
     def tree_params(self, type_xpoint_selection=0):
         self._tree_length = np.empty(self._max_length,
-                                     dtype=np.int)
+                                     dtype=self._ind_dtype)
         self._tree_mask = np.empty(self._max_length,
-                                   dtype=np.int)
+                                   dtype=self._ind_dtype)
         self._tree = Tree(self._nop,
                           self._tree_length,
                           self._tree_mask,
@@ -377,9 +377,9 @@ population size is smaller or larger than the current one
         res = self.create_random_ind_full_inner(depth=depth,
                                                 first_call=first_call)
         if isinstance(res, types.ListType):
-            res = np.asarray(res)
+            res = np.asarray(res, dtype=self._ind_dtype)
         else:
-            res = np.asarray([res])
+            res = np.asarray([res], dtype=self._ind_dtype)
         ind = res
         ind = self.simplify(ind)
         return ind
@@ -409,9 +409,9 @@ population size is smaller or larger than the current one
         res = self.create_random_ind_grow_inner(depth=depth,
                                                 first_call=first_call)
         if isinstance(res, types.ListType):
-            res = np.asarray(res)
+            res = np.asarray(res, dtype=self._ind_dtype)
         else:
-            res = np.asarray([res])
+            res = np.asarray([res], dtype=self._ind_dtype)
         ind = res
         ind = self.simplify(ind)
         return ind

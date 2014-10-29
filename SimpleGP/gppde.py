@@ -196,9 +196,9 @@ class GPPDE(GP):
 
     def tree_params(self, type_xpoint_selection=0):
         self._tree_length = np.empty(self._max_length,
-                                     dtype=np.int)
+                                     dtype=self._ind_dtype)
         self._tree_mask = np.empty(self._max_length,
-                                   dtype=np.int)
+                                   dtype=self._ind_dtype)
         self._tree = PDEXO(self._nop,
                            self._tree_length,
                            self._tree_mask,

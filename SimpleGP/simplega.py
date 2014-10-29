@@ -53,7 +53,8 @@ class SimpleGA(object):
                  tournament_size=2, generations=50, seed=None, verbose=False,
                  pxo=0.9, pm=0.2, stats=False, fname_best=None,
                  walltime=None,
-                 dtype=np.float):
+                 dtype=np.float,
+                 ind_dtype=np.int):
         self._popsize = popsize
         self._ppm = 1 - ppm
         self._tsize = tournament_size
@@ -64,6 +65,7 @@ class SimpleGA(object):
         self._chromosome_length = chromosome_length
         self.gens_ind = popsize
         self._dtype = dtype
+        self._ind_dtype = ind_dtype
         self._timeout = False
         self._stats = stats
         if stats:
