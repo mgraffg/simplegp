@@ -142,7 +142,9 @@ cdef class SubTree(Tree):
 
 
 cdef class PDEXO(Tree):
-    cdef FLOAT *_xo_x, *_xo_s, *_xo_error
+    cdef FLOAT *_xo_x
+    cdef FLOAT *_xo_s
+    cdef FLOAT *_xo_error
     cdef int _xo_c
     cdef int _number_var_pm
 

@@ -15,7 +15,7 @@ import os
 import types
 
 import numpy as np
-from SimpleGP.Simplify_mod import Simplify
+from SimpleGP.Simplify import Simplify
 from SimpleGP.eval import Eval
 from SimpleGP.tree import Tree
 

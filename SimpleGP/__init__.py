@@ -21,7 +21,7 @@ from .classification import Classification, ClassificationPDE
 from .time_series import TimeSeries
 from .recursiveGP import RecursiveGP, RGP
 from .eval import Eval
-from .Rprop_mod import RPROP
+from .Rprop import RPROP
 from utils import Pool, VerifyOutput
 
 

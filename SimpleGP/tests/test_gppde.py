@@ -414,6 +414,7 @@ class TestSimpleGPPDE(object):
         gp._gens = 10
         gp._verbose = True
         gp.run()
+        print "Time", time.time() - t
         assert (time.time() - t) < 1
 
     def test_parent(self):
@@ -595,7 +596,7 @@ class TestSimpleGPPDE(object):
 
     def test_pde_constants(self):
         from SimpleGP.pde import PDE
-        from SimpleGP.Rprop_mod import RPROP2
+        from SimpleGP.Rprop import RPROP2
         gp = GPPDE.init_cl(training_size=self._x.shape[0], argmax_nargs=3,
                            update_best_w_rprop=False,
                            seed=0).train(self._x, self._y)

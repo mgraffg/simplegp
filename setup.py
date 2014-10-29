@@ -41,19 +41,15 @@ for k, v in zip(lst, sysconfig.get_config_vars(*lst)):
         continue
     v = v.replace('-mno-fused-madd', '')
     os.environ[k] = v
-ext_modules = [Extension("SimpleGP.EA_aux_functions",
-                         [join("SimpleGP", "aux_functions.pyx")],
-                         # libraries=["m"],
-                         include_dirs=[numpy.get_include()]),
-               Extension("SimpleGP.Simplify_mod",
+ext_modules = [Extension("SimpleGP.Simplify",
                          [join("SimpleGP", "simplify.pyx")],
                          # libraries=["m"],
                          include_dirs=[numpy.get_include()]),
-               Extension("SimpleGP.Rprop_mod",
+               Extension("SimpleGP.Rprop",
                          [join("SimpleGP", "rprop.pyx")],
                          # libraries=["m"],
                          include_dirs=[numpy.get_include()]),
-               Extension("SimpleGP.RecursiveGP_mod",
+               Extension("SimpleGP.RecursiveGP",
                          [join("SimpleGP", "recursive.pyx")],
                          # libraries=["m"],
                          include_dirs=[numpy.get_include()]),

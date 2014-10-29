@@ -226,8 +226,8 @@ cdef class Eval:
     @cython.wraparound(False)
     @cython.cdivision(True)
     cdef INT sigmoid(self, 
-                 INT a,
-                 INT pos):
+                     INT a,
+                     INT pos):
         cdef INT l = self._l_st
         cdef INT a_i = l * a
         cdef INT o_i = l * pos

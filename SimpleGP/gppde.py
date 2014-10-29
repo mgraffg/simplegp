@@ -15,7 +15,7 @@ import numpy as np
 from SimpleGP.simplegp import GP
 from SimpleGP.pde import PDE
 from SimpleGP.tree import PDEXO
-from SimpleGP.Rprop_mod import RPROP2
+from SimpleGP.Rprop import RPROP2
 
 
 class GPPDE(GP):
