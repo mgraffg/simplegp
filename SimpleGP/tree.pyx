@@ -747,8 +747,8 @@ cdef class PDEXO(Tree):
             elif errorC[i] == 1:
                 k += 1 
         if j > k:
-            j = -1
             self._bflag = j
+            j = -1
         elif j < k:
             j = 1
             self._bflag = k
