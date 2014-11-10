@@ -30,19 +30,19 @@ class TestEval(object):
         self._nvar = self._nfunc + self._gp._x.shape[1]
 
     def test_sum(self):
-        self._gp._p[0] = np.array([0, self._nfunc, self._nvar])
+        self._gp._p[0] = np.array([0, self._nfunc, self._nvar], dtype=np.int)
         y = self._gp._x.flatten() + self._cons
         yh = self._gp.eval(0)
         assert np.fabs(y - yh).sum() == 0
 
     def test_subtract(self):
-        self._gp._p[0] = np.array([1, self._nfunc, self._nvar])
+        self._gp._p[0] = np.array([1, self._nfunc, self._nvar], dtype=np.int)
         y = self._gp._x.flatten() - self._cons
         yh = self._gp.eval(0)
         assert np.fabs(y - yh).sum() == 0
 
     def test_multiply(self):
-        self._gp._p[0] = np.array([2, self._nfunc, self._nvar])
+        self._gp._p[0] = np.array([2, self._nfunc, self._nvar], dtype=np.int)
         y = self._gp._x.flatten() * self._cons
         yh = self._gp.eval(0)
         assert np.fabs(y - yh).sum() == 0
