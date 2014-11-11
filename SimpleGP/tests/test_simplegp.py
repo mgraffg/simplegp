@@ -51,7 +51,7 @@ class TestSimpleGP(object):
         cons = var + 3
         gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
                                      2, var, cons+1,
-                                     2, var+2, cons+2])
+                                     2, var+2, cons+2], dtype=np.int)
         ind = gp.population[0]
         index = np.zeros_like(ind)
         override(np.random, "rand")
@@ -90,7 +90,7 @@ class TestSimpleGP(object):
         cons = var + 3
         gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
                                      2, var, cons+1,
-                                     2, var+2, cons+2])
+                                     2, var+2, cons+2], dtype=np.int)
         gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
         gp._xo_father1 = 0
         ind = gp.population[0]
@@ -126,7 +126,7 @@ class TestSimpleGP(object):
         cons = var + 3
         gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
                                      2, var, cons+1,
-                                     2, var+2, cons+2])
+                                     2, var+2, cons+2], dtype=np.int)
         gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
         gp._xo_father1 = 0
         ind = gp.population[0]
@@ -166,7 +166,7 @@ class TestSimpleGP(object):
         var = gp.nfunc
         cons = var + 1
         gp.population[0] = np.array([0, 0, 2, 2, var, var, cons,
-                                     2, var, cons+1, cons+2])
+                                     2, var, cons+1, cons+2], dtype=np.int)
         gp._p_constants[0] = self._pol
         sons = np.empty(2, dtype=np.int)
         gp._tree.get_sons_test(gp.population[0],
@@ -181,9 +181,10 @@ class TestSimpleGP(object):
         gp = self._gp
         gp.create_population()
         var = gp.nfunc
-        gp._p[0] = np.array([0, 0, 0, var, 1, var, var, var, var+1])
+        gp._p[0] = np.array([0, 0, 0, var, 1, var, var, var, var+1],
+                            dtype=np.int)
         gp._p_constants[0][0] = 1
-        gp._p[1] = np.array([0, 0, var, var, var+1])
+        gp._p[1] = np.array([0, 0, var, var, var+1], dtype=np.int)
         gp._p_constants[1][0] = 1
         print gp.fitness(0)
         print gp.fitness(1)
@@ -194,7 +195,7 @@ class TestSimpleGP(object):
         gp.create_population()
         var = gp.nfunc
         gp._p_constants[1][0] = 1
-        gp._p[1] = np.array([0, 0, var, var, var+1])
+        gp._p[1] = np.array([0, 0, var, var, var+1], dtype=np.int)
         gp.fitness(1)
         gp.best = 0
         assert gp.best == 1
@@ -208,12 +209,12 @@ class TestSimpleGP(object):
         gp.create_population()
         var = gp.nfunc
         gp._p_constants[1][0] = 1
-        gp._p[1] = np.array([0, 0, var, var, var+1])
+        gp._p[1] = np.array([0, 0, var, var, var+1], dtype=np.int)
         gp.fitness(1)
         # The following ind is invalid for the test set
-        gp._p[0] = np.array([0, 0, var, var, 3, var, var])
+        gp._p[0] = np.array([0, 0, var, var, 3, var, var], dtype=np.int)
         gp.fitness(0)
-        gp._p[2] = np.array([0, var, 3, var, var])
+        gp._p[2] = np.array([0, var, 3, var, var], dtype=np.int)
         gp.fitness(2)
         # assert gp._best_fit is None
         print gp._best_fit, gp._fitness[:3], gp.best
@@ -222,7 +223,7 @@ class TestSimpleGP(object):
     def test_depth(self):
         gp = self._gp
         var = gp.nfunc
-        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var], dtype=np.int)
         depth = np.empty_like(ind)
         end = gp._tree.compute_depth(ind, depth)
         assert end == ind.shape[0]
@@ -231,7 +232,7 @@ class TestSimpleGP(object):
     def test_depth_histogram(self):
         gp = self._gp
         var = gp.nfunc
-        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var], dtype=np.int)
         depth = np.empty_like(ind)
         end = gp._tree.compute_depth(ind, depth)
         hist = np.zeros_like(ind)
@@ -245,7 +246,7 @@ class TestSimpleGP(object):
     def test_select_xpoint_depth(self):
         gp = self._gp
         var = gp.nfunc
-        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var], dtype=np.int)
         a = np.ones_like(ind, dtype=np.bool)
         while np.any(a):
             pos = gp._tree.select_xpoint_depth(ind)
@@ -255,7 +256,7 @@ class TestSimpleGP(object):
     def test_select_xpoint_uniform(self):
         gp = self._gp
         var = gp.nfunc
-        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var], dtype=np.int)
         a = np.ones_like(ind, dtype=np.bool)
         while np.any(a):
             pos = gp._tree.select_xpoint_uniform(ind)
@@ -265,7 +266,7 @@ class TestSimpleGP(object):
     def test_father1_crossing_point(self):
         gp = self._gp
         var = gp.nfunc
-        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var], dtype=np.int)
         a = np.ones_like(ind, dtype=np.bool)
         while np.any(a):
             pos = gp._tree.father1_crossing_point(ind)
@@ -278,7 +279,7 @@ class TestSimpleGP(object):
                                                                   self._y)
         gp = ins(0)
         var = gp.nfunc
-        ind = np.array([0, 0, var, var, 0, var, 1, var, var])
+        ind = np.array([0, 0, var, var, 0, var, 1, var, var], dtype=np.int)
         a = np.zeros_like(ind)
         cnt = 100
         for i in range(cnt):
@@ -421,7 +422,8 @@ class TestSimpleGP(object):
         self._gp.create_population()
         self._gp._p[0] = np.array([0, 2, 14,
                                    nvar, nvar+1, 0,
-                                   2, nvar, nvar+2, nvar+3])
+                                   2, nvar, nvar+2, nvar+3],
+                                  dtype=np.int)
         self._gp._p_constants[0] = self._pol * -1
         cdn = """digraph SimpleGP {
 edge [dir="none"];

@@ -31,7 +31,8 @@ class TestRprop(object):
         nvar = gp.nfunc
         gp.population[0] = np.array([0, 2, 14,
                                      nvar, nvar+1, 0,
-                                     2, nvar, nvar+2, nvar+3])
+                                     2, nvar, nvar+2, nvar+3],
+                                    dtype=np.int)
         gp._p_constants[0] = self._pol * -1
         fit = gp.fitness(0)
         gp.rprop(0)
@@ -47,7 +48,8 @@ class TestRprop(object):
         for i in range(2):
             gp.population[i] = np.array([0, 2, 14,
                                          nvar, nvar+1, 0,
-                                         2, nvar, nvar+2, nvar+3])
+                                         2, nvar, nvar+2, nvar+3],
+                                        dtype=np.int)
             gp._p_constants[i] = self._pol * -1
         fit = gp.fitness(0)
         assert gp.best == 0

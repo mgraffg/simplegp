@@ -75,7 +75,7 @@ class TestSimpleGPPDE(object):
         gp._fitness.fill(-np.inf)
         gp.population[0] = np.array([0, 2, 14, gp.nfunc, gp.nfunc + 1,
                                      0, 2, gp.nfunc, gp.nfunc + 2,
-                                     gp.nfunc + 3])
+                                     gp.nfunc + 3], dtype=np.int)
         gp.population[1] = gp.population[0].copy()
         gp._p_constants[1] = self._pol.copy()
         p = self._pol.copy()
@@ -96,7 +96,8 @@ class TestSimpleGPPDE(object):
         gp = GPPDE.run_cl(self._x, self._y, generations=2, ppm=1,
                           do_simplify=False,
                           pm_only_functions=1)
-        gp.population[0] = np.array([0, gp.nfunc, 0, gp.nfunc, gp.nfunc])
+        gp.population[0] = np.array([0, gp.nfunc, 0, gp.nfunc, gp.nfunc],
+                                    dtype=np.int)
         # gp.one_point_mutation = lambda x: y
         gp._fitness.fill(-np.inf)
         gp.fitness(0)
@@ -120,7 +121,8 @@ class TestSimpleGPPDE(object):
         gp = GPPDE.run_cl(self._x, self._y, generations=2, ppm=1,
                           do_simplify=False,
                           pm_only_functions=1)
-        gp.population[0] = np.array([0, gp.nfunc, 0, gp.nfunc, gp.nfunc])
+        gp.population[0] = np.array([0, gp.nfunc, 0, gp.nfunc, gp.nfunc],
+                                    dtype=np.int)
         gp._fitness.fill(-np.inf)
         gp.fitness(0)
         gp._xo_father1 = 0
@@ -145,7 +147,7 @@ class TestSimpleGPPDE(object):
         cons = var + 3
         gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
                                      2, var, cons+1,
-                                     2, var+2, cons+2])
+                                     2, var+2, cons+2], dtype=np.int)
         gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
         gp._xo_father1 = 0
         override(np.random, 'randint')
@@ -171,7 +173,7 @@ class TestSimpleGPPDE(object):
         gp = GPPDE.run_cl(x, y, generations=2,
                           ppm=1, ppm2=0.2)
         gp._do_simplify = False
-        gp.population[0] = np.array([4, 13, 13, 17])
+        gp.population[0] = np.array([4, 13, 13, 17], dtype=np.int)
         gp._fitness.fill(-np.inf)
         gp.fitness(0)
         gp._xo_father1 = 0
@@ -198,7 +200,7 @@ class TestSimpleGPPDE(object):
         cons = var + 3
         gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
                                      2, var, cons+1,
-                                     2, var+2, cons+2])
+                                     2, var+2, cons+2], dtype=np.int)
         gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
         gp._xo_father1 = 0
         override(np.random, 'randint')
@@ -224,7 +226,7 @@ class TestSimpleGPPDE(object):
         cons = var + 3
         gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
                                      2, var, cons+1,
-                                     2, var+2, cons+2])
+                                     2, var+2, cons+2], dtype=np.int)
         gp._p_constants[0] = np.array([0.2, -0.1, 0.9]) * -1
         gp.fitness(0)
         gp._xo_father1 = 0
@@ -267,7 +269,7 @@ class TestSimpleGPPDE(object):
         cons = var + 3
         gp.population[0] = np.array([0, 0, 2, cons, 2, var, var,
                                      2, var, cons+1,
-                                     2, var+2, var])
+                                     2, var+2, var], dtype=np.int)
         gp._p_constants[0] = np.array([0.5, -1.5, 0.9]) * -1
         gp.fitness(0)
         gp._xo_father1 = 0
@@ -315,7 +317,7 @@ class TestSimpleGPPDE(object):
         var = gp.nfunc
         cons = var + 1
         gp.population[0] = np.array([0, 0, 1, 2, var, var, cons,
-                                     2, var, cons+1, cons+2])
+                                     2, var, cons+1, cons+2], dtype=np.int)
         gp._p_constants[0] = self._pol * -1
         gp.fitness(0)
         gp._xo_father1 = 0
@@ -342,7 +344,7 @@ class TestSimpleGPPDE(object):
         var = gp.nfunc
         cons = var + 1
         gp.population[0] = np.array([0, 0, 1, 2, var, var, cons,
-                                     2, var, cons+1, cons+2])
+                                     2, var, cons+1, cons+2], dtype=np.int)
         gp._p_constants[0] = self._pol
         gp._xo_father1 = 0
         gp.fitness(0)
@@ -383,7 +385,7 @@ class TestSimpleGPPDE(object):
                 continue
             if nop == 3:
                 a = np.vstack((args[0], args[1], np.zeros(100), args[2]))
-                gp._eval.pmutation_eval(nop, a, np.array([0, 1, 3]))
+                gp._eval.pmutation_eval(nop, a, np.array([0, 1, 3], dtype=np.int))
             else:
                 gp._eval.pmutation_eval(nop, args, np.arange(nop))
             if nop == 1:
@@ -480,7 +482,7 @@ class TestSimpleGPPDE(object):
                            seed=0).train(self._x, self._y)
         gp.create_population()
         nfunc = gp._nop.shape[0]
-        gp._p[0] = np.array([0, nfunc, nfunc])
+        gp._p[0] = np.array([0, nfunc, nfunc], dtype=np.int)
         gp.fitness(0)
         print gp.print_infix(0)
         p_der = np.ones_like(gp._p_st[0])
@@ -500,7 +502,7 @@ class TestSimpleGPPDE(object):
                            seed=0).train(self._x, self._y)
         gp.create_population()
         nfunc = gp._nop.shape[0]
-        gp._p[0] = np.array([1, nfunc, nfunc])
+        gp._p[0] = np.array([1, nfunc, nfunc], dtype=np.int)
         gp.fitness(0)
         print gp.print_infix(0)
         p_der = np.ones_like(gp._p_st[0])
@@ -521,7 +523,7 @@ class TestSimpleGPPDE(object):
                            seed=0).train(self._x, self._y)
         gp.create_population()
         nfunc = gp._nop.shape[0]
-        gp._p[0] = np.array([2, nfunc, nfunc+1])
+        gp._p[0] = np.array([2, nfunc, nfunc+1], dtype=np.int)
         gp._p_constants[0].fill(-1)
         gp.fitness(0)
         print gp.print_infix(0)
@@ -543,7 +545,7 @@ class TestSimpleGPPDE(object):
                            seed=0).train(self._x, self._y)
         gp.create_population()
         nfunc = gp._nop.shape[0]
-        gp._p[0] = np.array([3, nfunc, nfunc+1])
+        gp._p[0] = np.array([3, nfunc, nfunc+1], dtype=np.int)
         gp._p_constants[0].fill(-2)
         gp.fitness(0)
         print gp.print_infix(0)
@@ -566,7 +568,7 @@ class TestSimpleGPPDE(object):
                            seed=0).train(self._x, self._y)
         gp.create_population()
         nfunc = gp._nop.shape[0]
-        gp._p[0] = np.array([4, nfunc])
+        gp._p[0] = np.array([4, nfunc], dtype=np.int)
         gp.fitness(0)
         print gp.print_infix(0)
         p_der = np.ones_like(gp._p_st[0])
@@ -583,7 +585,7 @@ class TestSimpleGPPDE(object):
                            seed=0).train(self._x, self._y)
         gp.create_population()
         nfunc = gp._nop.shape[0]
-        gp._p[0] = np.array([5, nfunc])
+        gp._p[0] = np.array([5, nfunc], dtype=np.int)
         gp.fitness(0)
         print gp.print_infix(0)
         p_der = np.ones_like(gp._p_st[0])

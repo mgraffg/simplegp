@@ -71,21 +71,22 @@ class TestTimeSeries(object):
         gp = TimeSeries.run_cl(ts, generations=2,
                                nsteps=6)
         nfunc = gp._nop.shape[0]
-        gp.population[0] = np.array([0, nfunc, nfunc+1])
+        gp.population[0] = np.array([0, nfunc, nfunc+1], dtype=np.int)
         x = np.ones(gp.nlags)
         pr = gp.predict(np.atleast_2d(x), ind=0)
-        output = np.array([2, 3, 5, 8, 13, 21])
+        output = np.array([2, 3, 5, 8, 13, 21], dtype=np.int)
         assert np.all(pr == output)
         TS = TimeSeries
         x, y = TS.create_W(ts, TS.compute_nlags(ts.shape[0]))
         gp = TS.run_cl(x, y, nlags=x.shape[1] - 1, generations=2,
                        test=np.atleast_2d(x),
                        nsteps=6)
-        gp.population[0] = np.array([0, nfunc, nfunc+gp.nlags])
+        gp.population[0] = np.array([0, nfunc, nfunc+gp.nlags],
+                                    dtype=np.int)
         x = np.ones((6, x.shape[1]))
         x[-1, -1] = 10
         pr = gp.predict(np.atleast_2d(x), ind=0)
-        output = np.array([2, 3, 4, 5, 6, 16])
+        output = np.array([2, 3, 4, 5, 6, 16], dtype=np.int)
         assert np.all(pr == output)
         assert gp._test_set is not None
 
@@ -143,7 +144,7 @@ class TestTimeSeries(object):
         nfunc = gp.nfunc
         gp._p_constants[0][0] = -1
         var = nfunc + gp._x.shape[1]
-        gp._p[0] = np.array([var])
+        gp._p[0] = np.array([var], dtype=np.int)
         gp.fitness(0)
         assert gp.best == 0
         clean(gp)

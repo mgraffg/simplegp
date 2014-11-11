@@ -26,7 +26,8 @@ def test_get_subtree():
     gp = SubTreeXO(generations=30,
                    max_length=1000).train(x, y)
     nvar = gp._nop.shape[0]
-    ind = np.array([0, 1, nvar, 1, nvar+1, nvar, 2, nvar, nvar])
+    ind = np.array([0, 1, nvar, 1, nvar+1, nvar, 2, nvar, nvar],
+                   dtype=np.int)
     t = [0, 0, 0, 0, 0, 1, 1, 1]
     for k, v in enumerate(t):
         assert gp._tree.get_subtree(ind, k+1) == v
@@ -43,8 +44,9 @@ def test_subtree_mask():
     gp = SubTreeXO(generations=30,
                    max_length=1000).train(x, y)
     nvar = gp._nop.shape[0]
-    ind = np.array([0, 1, nvar, 1, nvar+1, nvar, 2, nvar, nvar])
-    ind2 = np.array([0, 1, nvar, nvar+1, nvar])
+    ind = np.array([0, 1, nvar, 1, nvar+1, nvar, 2, nvar, nvar],
+                   dtype=np.int)
+    ind2 = np.array([0, 1, nvar, nvar+1, nvar], dtype=np.int)
     m = np.array([[0, 1, 1, 1, 0],
                   [0, 0, 0, 0, 1]])
     for k in range(1, ind.shape[0]):
