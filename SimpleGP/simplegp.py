@@ -779,7 +779,7 @@ population size is smaller or larger than the current one
         fname = fname if fname is not None else self._fname_best
         if fname is None:
             return False
-        with open(fname, 'w') as fpt:
+        with open(fname, 'wb') as fpt:
             np.save(fpt, self._p)
             np.save(fpt, self._p_constants)
             np.save(fpt, self._fitness)
@@ -811,7 +811,7 @@ population size is smaller or larger than the current one
 
     def load_prev_run(self):
         try:
-            with open(self._fname_best) as fpt:
+            with open(self._fname_best, 'rb') as fpt:
                 self._p = np.load(fpt)
                 self._p_constants = np.load(fpt)
                 arr = filter(lambda x: self._p[x] is None,

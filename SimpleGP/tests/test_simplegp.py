@@ -343,7 +343,7 @@ class TestSimpleGP(object):
         cons = s._p_constants.copy()
         fname = tempfile.mktemp()
         s.save(fname)
-        with open(fname, 'r') as fpt:
+        with open(fname, 'rb') as fpt:
             p1 = np.load(fpt)
             assert np.all(map(lambda x: np.all(p[x] == p1[x]),
                               range(s.popsize)))

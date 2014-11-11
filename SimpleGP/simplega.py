@@ -218,7 +218,7 @@ population size is smaller or larger than the current one
         Method used to load a previous run. It returns False if fails
         """
         try:
-            fpt = open(self._fname_best)
+            fpt = open(self._fname_best, 'rb')
             self._p = np.load(fpt)
             self._fitness = np.load(fpt)
             self.gens_ind = np.load(fpt)
@@ -432,7 +432,7 @@ population size is smaller or larger than the current one
         fname = fname if fname is not None else self._fname_best
         if fname is None:
             return
-        with open(fname, 'w') as fpt:
+        with open(fname, 'wb') as fpt:
             np.save(fpt, self._p)
             np.save(fpt, self._fitness)
             np.save(fpt, self.gens_ind)
