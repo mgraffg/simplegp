@@ -9,7 +9,7 @@ class Cl2(GPPDE):
             return 16
         return super(Cl2, self).random_func(first_call=first_call)
 
-fpt = open('data/iris.npy')
+fpt = open('data/iris.npy', 'r')
 X = np.load(fpt)
 cl = np.load(fpt)
 fpt.close()

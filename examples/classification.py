@@ -2,7 +2,7 @@ from SimpleGP import Classification
 import numpy as np
 
 
-fpt = open('data/iris.npy')
+fpt = open('data/iris.npy', 'r')
 X = np.load(fpt)
 cl = np.load(fpt)
 fpt.close()

@@ -12,7 +12,7 @@ class GP2(RGP):
 
 if __name__ == '__main__':
     seed = 1  # if len(sys.argv) == 1 else int(sys.argv[1])
-    ts = np.array(map(float, open('data/A.txt').readlines()))
+    ts = np.array(map(float, open('data/A.txt', 'r').readlines()))
     nlags = int(np.ceil(np.log2(ts.shape[0])))
     gp = GP2(popsize=10, generations=5000, verbose=True, verbose_nind=1000,
              func=[np.add, np.subtract, np.multiply, np.divide, np.fabs,

@@ -5,7 +5,7 @@ import time
 
 x = np.arange(-1, 1.1, 0.1)[:, np.newaxis]
 l = np.array(map(lambda x: map(float, x.split()),
-                 open('data/rational-problems.txt').readlines()))
+                 open('data/rational-problems.txt', 'r').readlines()))
 
 
 def run(pr, seed):

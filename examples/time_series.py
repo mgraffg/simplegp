@@ -10,7 +10,7 @@ def rse(x, y):
     return ((x - y)**2).sum() / ((x - x.sum()/x.size)**2).sum()
 
 
-ts = np.array(map(float, open('data/A.txt').readlines()))
+ts = np.array(map(float, open('data/A.txt', 'r').readlines()))
 nsteps = 100
 gp = TPDE.run_cl(ts, nsteps=nsteps, verbose=True,
                  max_length=256,
