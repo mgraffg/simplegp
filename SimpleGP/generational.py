@@ -14,6 +14,7 @@
 import numpy as np
 
 from SimpleGP.simplegp import GP
+from SimpleGP.gppde import GPPDE
 
 
 class Generational(GP):
@@ -44,3 +45,21 @@ class Generational(GP):
         for k, v in enumerate(np.where(m)[0]):
             self._p[v] = self._sons_p[k].copy()
             self._p_constants[v] = self._sons_p_constants[k].copy()
+
+
+class GenerationalPDE(Generational, GPPDE):
+    def __init__(self, **kwargs):
+        super(GenerationalPDE, self).__init__(**kwargs)
+        self._doing_mutation = False
+
+    def kill_ind(self, *args):
+        if self._doing_mutation:
+            GPPDE.kill_ind(self, *args)
+        else:
+            super(GenerationalPDE, self).kill_ind(*args)
+
+    def mutation(self, *args):
+        self._doing_mutation = True
+        r = super(GenerationalPDE, self).mutation(*args)
+        self._doing_mutation = False
+        return r
