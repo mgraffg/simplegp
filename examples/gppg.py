@@ -63,7 +63,7 @@ class GPPG2(GPPG):
 
 
 def run():
-    fpt = open('data/iris.npy', 'r')
+    fpt = open('data/iris.npy', 'rb')
     X = np.load(fpt)
     cl = np.load(fpt)
     fpt.close()
