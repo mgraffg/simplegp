@@ -218,11 +218,10 @@ population size is smaller or larger than the current one
         Method used to load a previous run. It returns False if fails
         """
         try:
-            fpt = open(self._fname_best, 'rb')
-            self._p = np.load(fpt)
-            self._fitness = np.load(fpt)
-            self.gens_ind = np.load(fpt)
-            fpt.close()
+            with open(self._fname_best, 'rb') as fpt:
+                self._p = np.load(fpt)
+                self._fitness = np.load(fpt)
+                self.gens_ind = np.load(fpt)
             if self._p.ndim == 2 and self._p.shape[0] == self._popsize \
                and self._p.shape[1] == self._chromosome_length:
                 return True

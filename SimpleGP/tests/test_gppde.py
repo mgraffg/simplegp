@@ -385,7 +385,9 @@ class TestSimpleGPPDE(object):
                 continue
             if nop == 3:
                 a = np.vstack((args[0], args[1], np.zeros(100), args[2]))
-                gp._eval.pmutation_eval(nop, a, np.array([0, 1, 3], dtype=np.int))
+                gp._eval.pmutation_eval(nop, a,
+                                        np.array([0, 1, 3],
+                                                 dtype=np.int))
             else:
                 gp._eval.pmutation_eval(nop, args, np.arange(nop))
             if nop == 1:
