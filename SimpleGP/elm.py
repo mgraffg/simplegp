@@ -22,11 +22,11 @@ class ELM(GPForest):
         self._elm_constants = None
 
     def create_population(self):
-        super(ELM, self).create_population()
         if self._elm_constants is None or\
            self._elm_constants.shape[0] != self._popsize:
             self._elm_constants = np.empty(self._popsize,
                                            dtype=np.object)
+        super(ELM, self).create_population()
 
     def eval_ind(self, *args, **kwargs):
         r = super(ELM, self).eval_ind(*args, **kwargs)

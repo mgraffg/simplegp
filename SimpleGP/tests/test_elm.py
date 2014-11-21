@@ -57,3 +57,13 @@ class TestELM(object):
         elmpde = ELMPDE.run_cl(x, y, ntrees=3, generations=2)
         elm = ELM.run_cl(x, y, ntrees=3, generations=2)
         assert elm.fitness(elm.best) != elmpde.fitness(elmpde.best)
+
+    def test_load_elm(self):
+        import tempfile
+        x, y = self.create_problem()
+        elm = ELM.run_cl(x, y, ntrees=3, generations=2)
+        yh = elm.predict(elm._x)
+        fname = tempfile.mktemp()
+        elm.save_best(fname)
+        elm = ELM.run_cl(x, y, ntrees=3, generations=2, fname_best=fname)
+        assert np.all(elm.predict(elm._x) == yh)
