@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .forest import SubTreeXOPDE, GPForest
+from .forest import GPForest, GPForestPDE
 import numpy as np
 
 
@@ -45,7 +45,7 @@ class ELM(GPForest):
         return np.dot(r, coef)
 
 
-class ELMPDE(SubTreeXOPDE, ELM):
+class ELMPDE(GPForestPDE, ELM):
     def compute_error_pr(self, ind, pos=0, constants=None, epoch=0):
         if epoch == 0:
             g = self._p_st[self._computing_fitness][self._output].T

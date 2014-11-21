@@ -17,7 +17,7 @@ from .simplega import SimpleGA, BestNotFound
 from .simplegp import GP, GPwRestart, GPMAE
 from .generational import Generational, GenerationalPDE
 from .gppde import GPPDE
-from .forest import GPForest, SubTreeXO, SubTreeXOPDE
+from .forest import GPForest, GPForestPDE, SubTreeXO, SubTreeXOPDE
 from .classification import Classification, ClassificationPDE
 from .time_series import TimeSeries
 from .recursiveGP import RecursiveGP, RGP
@@ -32,7 +32,7 @@ __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            RecursiveGP, RGP, GPwRestart, GPMAE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool, BestNotFound, Generational, GenerationalPDE,
-           ELM, ELMPDE]
+           ELM, ELMPDE, GPForestPDE]
 
 
 

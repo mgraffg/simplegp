@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from SimpleGP import SubTreeXO
+from SimpleGP import SubTreeXO, GPForestPDE, SubTreeXOPDE
 import numpy as np
 
 
@@ -54,3 +54,29 @@ def test_subtree_mask():
         gp._tree.crossover_mask(ind, ind2, k)
         diff = gp._tree_mask[:ind2.shape[0]] - m[j]
         assert np.fabs(diff).sum() == 0
+
+
+def test_GPForestPDE():
+    from SimpleGP.tree import PDEXO
+    x = np.linspace(-10, 10, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    pol1 = np.array([-0.2, 0.3, -0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0])))
+    y = np.vstack(((X.T * pol).sum(axis=1),
+                   (X.T * pol1).sum(axis=1))).T
+    x = x[:, np.newaxis]
+    gp = GPForestPDE.run_cl(x, y, generations=2)
+    assert isinstance(gp._tree, PDEXO)
+
+
+def test_SubTreeXOPDE():
+    from SimpleGP.tree import PDEXOSubtree
+    x = np.linspace(-10, 10, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    pol1 = np.array([-0.2, 0.3, -0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0])))
+    y = np.vstack(((X.T * pol).sum(axis=1),
+                   (X.T * pol1).sum(axis=1))).T
+    x = x[:, np.newaxis]
+    gp = SubTreeXOPDE.run_cl(x, y, generations=2)
+    assert isinstance(gp._tree, PDEXOSubtree)

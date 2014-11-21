@@ -14,7 +14,7 @@
 import numpy as np
 from SimpleGP.simplegp import GP
 from SimpleGP.gppde import GPPDE
-from SimpleGP.tree import Tree, SubTree, PDEXOSubtree
+from SimpleGP.tree import Tree, SubTree, PDEXOSubtree, PDEXO
 
 
 class GPForest(GP):
@@ -78,9 +78,9 @@ class SubTreeXO(GPForest):
                              type_xpoint_selection=type_xpoint_selection)
 
 
-class SubTreeXOPDE(GPPDE, GPForest):
+class GPForestPDE(GPPDE, GPForest):
     def train(self, x, f):
-        super(SubTreeXOPDE, self).train(x, f)
+        super(GPForestPDE, self).train(x, f)
         if self._ntrees is not None:
             self._output = np.empty(self._ntrees, dtype=np.int)
         else:
@@ -108,6 +108,21 @@ class SubTreeXOPDE(GPPDE, GPForest):
         e = np.sign(self._p_der[p1])
         return e
 
+    def tree_params(self, type_xpoint_selection=0):
+        self._tree_length = np.empty(self._max_length,
+                                     dtype=self._ind_dtype)
+        self._tree_mask = np.empty(self._max_length,
+                                   dtype=self._ind_dtype)
+        self._tree = PDEXO(self._nop,
+                           self._tree_length,
+                           self._tree_mask,
+                           self._min_length,
+                           self._max_length,
+                           select_root=0,
+                           type_xpoint_selection=type_xpoint_selection)
+
+
+class SubTreeXOPDE(GPForestPDE):
     def tree_params(self, type_xpoint_selection=0):
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
