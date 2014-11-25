@@ -288,6 +288,8 @@ cdef class Tree:
             else:
                 m[i] = 0
         if self._select_root == 0:
+            if m[0] == 1:
+                c -= 1
             m[0] = 0
         return c 
 
@@ -442,6 +444,9 @@ cdef class Tree:
         cdef int nop = self._nop[indC[p1]], 
         cdef int afunc=0
         for i in range(self._nfunc):
+            # output cannot be selected
+            if i == 15:
+                continue
             if nop == self._nop[i]:
                 afunc += 1
         # print "*"*10, afunc, nop
@@ -449,6 +454,9 @@ cdef class Tree:
         i = -1
         while afunc:
             i += 1
+            # output cannot be selected
+            if i == 15:
+                continue
             if nop == self._nop[i]:
                 afunc -= 1
         indC[p1] = i
@@ -645,6 +653,9 @@ cdef class PDEXO(Tree):
         eval.pmutation_eval_inner(nop, stC, index)
         pmut_eval = eval._pmut_eval
         for _i in range(self._nfunc):
+            # output cannot be selected
+            if _i == 15:
+                continue
             if nop != self._nop[_i]:
                 continue
             j1 = i * c

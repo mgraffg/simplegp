@@ -65,5 +65,52 @@ class TestELM(object):
         yh = elm.predict(elm._x)
         fname = tempfile.mktemp()
         elm.save_best(fname)
-        elm = ELM.run_cl(x, y, ntrees=3, generations=2, fname_best=fname)
+        elm2 = ELM.run_cl(x, y, ntrees=3, generations=2, fname_best=fname)
         assert np.all(elm.predict(elm._x) == yh)
+        r = elm._elm_constants[elm.best] == elm2._elm_constants[elm2.best]
+        assert np.all(r)
+
+    def test_elm_rational(self):
+        def save(elm):
+            import tempfile
+            fname = tempfile.mktemp()
+            elm.save_best(fname)
+            return fname
+
+        def cons(elm):
+            bs = elm.best
+            fit = elm.fitness(bs)
+            print elm.distance(elm._f, elm.eval(bs)),\
+                elm.population[bs],\
+                elm._ntrees, bs
+            elm._fitness[bs] = -np.inf
+            cons = elm._elm_constants[bs].copy()
+            elm._elm_constants[bs] = None
+            print elm.fitness(bs), fit, elm._best_fit
+            assert elm.fitness(bs) == fit
+            r = elm._elm_constants[bs] == cons
+            assert np.all(r)
+        y = np.array([-1.173305, -1.210321, -1.234109, -1.245411,
+                      -1.245645, -1.236385, -1.218823, -1.193283, -1.158863,
+                      -1.11328, -1.053116, -0.974774, -0.876306, -0.759682,
+                      -0.632008, -0.504144, -0.386973, -0.287819, -0.20919,
+                      -0.149825, -0.106533])
+        x = np.arange(-1, 1.1, 0.1)[:, np.newaxis]
+        elm = ELM.run_cl(x, y, pxo=0.1, ppm=0, generations=5)
+        assert elm._tree.get_select_root() == 0
+        cons(elm)
+        elm2 = ELM.run_cl(x, y, fname_best=save(elm), generations=2)
+        assert np.all(elm.predict(elm._x) == elm.predict(elm._x))
+        r = elm._elm_constants[elm.best] == elm2._elm_constants[elm2.best]
+        print elm._elm_constants[elm.best], elm2._elm_constants[elm2.best]
+        print r
+        assert np.all(r)
+
+    def test_subtree_mask_bug(self):
+        x, y = self.create_problem()
+        gp = ELM.run_cl(x, y, ntrees=2, generations=2)
+        nvar = gp.nfunc
+        ind = np.array([15, 0, nvar, nvar, nvar], dtype=np.int)
+        ind2 = np.array([15, nvar, nvar], dtype=np.int)
+        c = gp._tree.crossover_mask(ind, ind2, 1)
+        assert gp._tree_mask[:ind2.shape[0]].sum() == c
