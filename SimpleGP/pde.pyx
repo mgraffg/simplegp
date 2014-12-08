@@ -51,6 +51,8 @@ cdef class PDE:
         self._st = <FLOAT *>_st.data
         self._tree.set_pos(0)
         self._tree.compute_parents_inner(self._ind, self._parent, -1)
+        if not self._tree._select_root:
+            pos = 1
         while pos < end:
             if (1 == only_functions and indC[pos] >= self._tree._nfunc)\
                or np.random.rand() >= ppm:
