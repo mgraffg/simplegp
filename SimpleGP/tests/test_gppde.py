@@ -414,10 +414,7 @@ class TestSimpleGPPDE(object):
 
     def test_time(self):
         t = time.time()
-        gp = self._gp
-        gp._gens = 10
-        gp._verbose = True
-        gp.run()
+        GPPDE.run_cl(self._x, self._y, generations=5, verbose=True)
         print "Time", time.time() - t
         assert (time.time() - t) < 1
 
