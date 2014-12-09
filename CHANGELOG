@@ -1,4 +1,5 @@
 Version 0.8.*
+	+ Bug in point mutation, the output was not set correctly
 	+ Bug in point mutation, it was possible to select the root
 	+ Bug in GPForest, it was possible to select the root
 	+ Implementing an Exteme Leargning Machine with GP and GPPDE
