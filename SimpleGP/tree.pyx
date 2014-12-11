@@ -468,6 +468,8 @@ cdef class Tree:
                   float ppm):
         cdef INT *indC = <INT*> ind.data
         cdef int end=ind.shape[0], pos=0, c=0
+        if not self._select_root:
+            pos = 1
         while pos < end:
             if (1 == only_func and indC[pos] >= self._nfunc)\
                or np.random.rand() >= ppm:
