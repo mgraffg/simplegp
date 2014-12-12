@@ -36,6 +36,12 @@ cdef class PDE:
         stdlib.free(self._parent)
         stdlib.free(self._path)
 
+    def get_path(self, npc.ndarray[INT, ndim=1, mode="c"] path):
+        cdef int i 
+        cdef INT *pathC = <INT *> path.data
+        for i in range(self._end):
+            pathC[i] = self._path[i]
+        return self._end
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
