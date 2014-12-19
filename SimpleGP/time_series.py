@@ -74,16 +74,17 @@ class TimeSeries(GP):
     @classmethod
     def run_cl(cls, serie, y=None, test=None, nlags=None,
                max_length=None, **kwargs):
+        length = serie.shape[0]
         if serie.ndim == 1:
             assert y is None
             if nlags is None:
-                nlags = cls.compute_nlags(serie.shape[0])
+                nlags = cls.compute_nlags(length)
             serie, y = cls.create_W(serie, window=nlags)
         assert y is not None and nlags is not None
         if max_length is None:
-            max_length = serie.shape[0] // 2
+            max_length = length // 2
         if isinstance(max_length, types.FunctionType):
-            max_length = max_length(serie.shape[0])
+            max_length = max_length(length)
         if max_length < 8:
             max_length = 8
         if test is None and nlags == serie.shape[1]:
@@ -94,8 +95,6 @@ class TimeSeries(GP):
 
     @staticmethod
     def compute_nlags(size):
-        if size < 16:
-            return int(np.floor(np.log2(size)))
         return int(np.ceil(np.log2(size)))
 
     @staticmethod

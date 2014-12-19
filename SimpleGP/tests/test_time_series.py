@@ -31,8 +31,6 @@ class TestTimeSeries(object):
         assert time.time() - t < 1.1
 
     def test_compute_nlags(self):
-        nlags = np.floor(np.log2(15))
-        assert nlags == TimeSeries.compute_nlags(15)
         nlags = np.ceil(np.log2(17))
         assert nlags == TimeSeries.compute_nlags(17)
 
@@ -57,6 +55,7 @@ class TestTimeSeries(object):
         x, y = TimeSeries.create_W(ts,
                                    window=TS.compute_nlags(ts.shape[0]))
         gp1 = TimeSeries.run_cl(x, y, generations=generations,
+                                max_length=ts.shape[0] // 2,
                                 nlags=x.shape[1], nsteps=vs.shape[0])
         pr = gp1.predict_best()
         assert np.all(pr1 == pr)
@@ -102,7 +101,8 @@ class TestTimeSeries(object):
         max_length = gp._max_length
         TS = TimeSeries
         x, y = TS.create_W(ts, TS.compute_nlags(ts.shape[0]))
-        gp = TS.run_cl(x, y, generations=2, nlags=x.shape[1],
+        gp = TS.run_cl(x, y, max_length=ts.shape[0] // 2,
+                       generations=2, nlags=x.shape[1],
                        nsteps=6)
         assert gp._max_length == max_length
         gp = TimeSeries.run_cl(ts, generations=2,

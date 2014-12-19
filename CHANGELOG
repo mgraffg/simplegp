@@ -1,4 +1,5 @@
 Version 0.8.*
+	+ Minor change in TimeSeries, max_length is computed using the length of the time series
 	+ New method in PDE to get the computed path to root
 	+ Bug in point mutation, it was possible to select the root on simplegp
 	+ Bug in point mutation, the output was not set correctly
