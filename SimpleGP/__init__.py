@@ -24,6 +24,7 @@ from .recursiveGP import RecursiveGP, RGP
 from .eval import Eval
 from .Rprop import RPROP
 from .elm import ELM, ELMPDE
+from .SecondDerivative import GPPDE2
 from utils import Pool, VerifyOutput
 
 
@@ -32,7 +33,7 @@ __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            RecursiveGP, RGP, GPwRestart, GPMAE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool, BestNotFound, Generational, GenerationalPDE,
-           ELM, ELMPDE, GPForestPDE]
+           ELM, ELMPDE, GPForestPDE, GPPDE2]
 
 
 
