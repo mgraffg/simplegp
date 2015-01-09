@@ -24,6 +24,18 @@ vs = np.array([588568.0, 646758.0, 849998.0, 1106740.0, 1184550.0, 1425090.0])
 
 
 class TestTimeSeries(object):
+    def test_predict_best(self):
+        gp = TimeSeries.run_cl(ts, generations=2, nsteps=vs.shape[0],
+                               verbose=True)
+        gp.population[gp.best] = np.array([0, gp.nfunc, gp.nfunc+gp.nvar])
+        gp._p_constants[gp.best][0] = 1
+        x = np.atleast_2d(np.zeros(gp._x.shape[1]))
+        x[0, 0] = 1
+        yh = gp.predict_best(X=x)
+        y = np.arange(vs.shape[0]) + 2
+        print y, yh
+        assert np.all(y == yh)
+
     def test_walltime(self):
         t = time.time()
         TimeSeries.run_cl(ts, walltime=1,
