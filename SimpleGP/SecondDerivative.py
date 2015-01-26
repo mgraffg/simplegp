@@ -45,7 +45,8 @@ class GPPDE2(GPPDE):
             segunda = self._p_der2[self._path2[:self._end2][-2]]
             # print "error de segunda: ", segunda
         # print "error de segunda: ", segunda
-        paso = primera.sum()/segunda.sum()
+        paso = primera / segunda.sum()
+        # paso = primera / segunda
         newton = self._p_st[self._xo_father1][p1]-paso
         n = self._p[self._xo_father2].shape[0]
         dist = []
