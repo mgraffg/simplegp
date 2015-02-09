@@ -387,6 +387,21 @@ class TestSimpleGP(object):
         assert np.all(s1.population[bs] == p)
         assert np.all(s1._p_constants[bs] == cons)
 
+    def test_save_best_param(self):
+        import tempfile
+        fname = tempfile.mktemp()
+        s = GP.run_cl(self._x, self._y, seed=0, generations=2,
+                      fname_best=fname,
+                      save_only_best=True)
+        bs = s.best
+        mask = np.ones(s.popsize, dtype=np.bool)
+        mask[bs] = False
+        # print s.population[mask]
+        assert np.all(map(lambda x: x is None, s.population[mask]))
+        with open(fname) as fpt:
+            best = np.load(fpt)[bs]
+            assert np.all(s.population[bs] == best)
+
     def test_predict(self):
         gp = self._gp
         gp.run()

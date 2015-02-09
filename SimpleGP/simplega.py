@@ -52,6 +52,7 @@ class SimpleGA(object):
     def __init__(self, popsize=1000, ppm=0.1, chromosome_length=3,
                  tournament_size=2, generations=50, seed=None, verbose=False,
                  pxo=0.9, pm=0.2, stats=False, fname_best=None,
+                 save_only_best=False,
                  walltime=None,
                  dtype=np.float,
                  ind_dtype=np.int):
@@ -78,6 +79,7 @@ class SimpleGA(object):
         self._last_call_to_stats = 0
         self._p = None
         self._test_set = None
+        self._save_only_best = save_only_best
         signal.signal(signal.SIGTERM, self.on_exit)
         if walltime is not None:
             signal.signal(signal.SIGALRM, self.walltime)
@@ -423,6 +425,14 @@ population size is smaller or larger than the current one
             self.on_exit()
         return flag
 
+    def clear_population_except_best(self):
+        bs = self.best
+        mask = np.ones(self.popsize, dtype=np.bool)
+        mask[bs] = False
+        self.population[mask] = None
+        self._fitness[mask] = -np.inf
+        return mask
+
     def save(self, fname=None):
         """
         Save the population to fname if fname is None the save in
@@ -431,6 +441,8 @@ population size is smaller or larger than the current one
         fname = fname if fname is not None else self._fname_best
         if fname is None:
             return
+        if self._save_only_best:
+            self.clear_population_except_best()
         with open(fname, 'wb') as fpt:
             np.save(fpt, self._p)
             np.save(fpt, self._fitness)

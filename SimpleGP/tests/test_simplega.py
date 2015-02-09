@@ -89,6 +89,23 @@ def test_save():
     assert np.all(p == s1.population)
 
 
+def test_save_best_param():
+    import tempfile
+    np.random.RandomState(0)
+    x = np.linspace(0, 1, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    f = (X * pol).sum(axis=1)
+    s = SimpleGA.init_cl(popsize=10, generations=5,
+                         save_only_best=True).train(X, f)
+    s.run()
+    fname = tempfile.mktemp()
+    p = s.population
+    bs = s.population[s.best].copy()
+    s.save(fname)
+    assert np.all(p[s.best] == bs)
+
+
 def test_kill_ind_best():
     np.random.RandomState(0)
     x = np.linspace(0, 1, 100)

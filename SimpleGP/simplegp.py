@@ -779,6 +779,8 @@ population size is smaller or larger than the current one
         fname = fname if fname is not None else self._fname_best
         if fname is None:
             return False
+        if self._save_only_best:
+            self.clear_population_except_best()
         with open(fname, 'wb') as fpt:
             np.save(fpt, self._p)
             np.save(fpt, self._p_constants)
@@ -790,16 +792,16 @@ population size is smaller or larger than the current one
                 np.save(fpt, self.length_per_gen)
         return True
 
+    def clear_population_except_best(self):
+        mask = super(GP, self).clear_population_except_best()
+        self._p_constants[mask] = None
+        return mask
+
     def save_best(self, fname=None):
         """
         Save only best individual
         """
-        bs = self.best
-        mask = np.ones(self.popsize, dtype=np.bool)
-        mask[bs] = False
-        self.population[mask] = None
-        self._p_constants[mask] = None
-        self._fitness[mask] = -np.inf
+        self.clear_population_except_best()
         return self.save(fname=fname)
 
     def set_best(self):
