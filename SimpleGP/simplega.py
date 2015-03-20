@@ -224,6 +224,14 @@ population size is smaller or larger than the current one
                 self._p = np.load(fpt)
                 self._fitness = np.load(fpt)
                 self.gens_ind = np.load(fpt)
+                a = self._p
+                m = np.all(np.isfinite(a), axis=1)
+                if (~m).sum():
+                    tmp = self.random_ind(size=((~m).sum(),
+                                                self._chromosome_length))
+                    a[~m] = tmp
+                    self._fitness[~m] = -np.inf
+                self.best = self._fitness.argmax()
             if self._p.ndim == 2 and self._p.shape[0] == self._popsize \
                and self._p.shape[1] == self._chromosome_length:
                 return True

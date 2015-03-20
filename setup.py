@@ -84,7 +84,7 @@ setup(
     version=version,
     url='http://dep.fie.umich.mx/~mgraffg',
     author="Mario Graff",
-    author_email="mgraffg@dep.fie.umich.mx",
+    author_email="mgraffg@ieee.org",
     cmdclass={"build_ext": build_ext, "clean": Clean},
     ext_modules=ext_modules,
     packages=['SimpleGP'],
