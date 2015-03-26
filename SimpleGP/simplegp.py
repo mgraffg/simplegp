@@ -345,16 +345,16 @@ population size is smaller or larger than the current one
             self._p_constants[i] = cons
 
     def isfunc(self, a):
-        return a < self._nop.shape[0]
+        return a < self.nfunc
 
     def isvar(self, a):
-        nfunc = self._nop.shape[0]
-        nvar = self._x.shape[1]
+        nfunc = self.nfunc
+        nvar = self.nvar
         return (a >= nfunc) and (a < nfunc+nvar)
 
     def isconstant(self, a):
-        nfunc = self._nop.shape[0]
-        nvar = self._x.shape[1]
+        nfunc = self.nfunc
+        nvar = self.nvar
         return a >= nfunc+nvar
 
     def any_constant(self, ind):
@@ -366,11 +366,11 @@ population size is smaller or larger than the current one
 
     def random_leaf(self):
         if np.random.rand() < 0.5 or self._nrandom == 0:
-            l = np.random.randint(self._x.shape[1])
-            return l + self._func.shape[0]
+            l = np.random.randint(self.nvar)
+            return l + self.nfunc
         else:
             l = np.random.randint(self._constants.shape[0])
-            return l + self._func.shape[0] + self._x.shape[1]
+            return l + self.nfunc + self.nvar
 
     def create_random_ind_full(self, depth=3, first_call=True,
                                **kwargs):
