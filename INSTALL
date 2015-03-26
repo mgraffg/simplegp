@@ -15,3 +15,7 @@ To measure the coverage of the package
 $ cd simplegp
 $ python setup.py build_ext --inplace
 $ nosetests --with-coverage --cover-package=SimpleGP
+
+To make a profile
+
+$ python -m cProfile -s 'cumu' lstsqGP_rational_problems.py 
