@@ -1,5 +1,6 @@
 from SimpleGP import lstsqGP
 import numpy as np
+from nose.tools import assert_almost_equals
 
 
 def create_problem():
@@ -28,13 +29,17 @@ def test_create_population():
 
 def test_crossover_mutation():
     x, y = create_problem()
-    gp = lstsqGP().train(x, y)
+    gp = lstsqGP(seed=0).train(x, y)
     gp.create_population()
     while not gp.pre_crossover():
         gp.pre_crossover()
     f1 = gp.population[gp._xo_father1]
     f2 = gp.population[gp._xo_father2]
     son = gp.crossover(f1, f2)
+    print gp._ind_generated_c
+    d = np.fabs(gp._ind_generated_c - np.array([-4.06569463e-01,
+                                                -7.40067741e+04])).sum()
+    assert_almost_equals(d, 0, 5)
     assert np.all(np.isfinite(son))
     assert gp._ind_generated_c.shape[0] == 2
     son = gp.mutation(f1)
@@ -63,7 +68,7 @@ def test_kill_ind():
     gp.kill_ind(f4, son1)
     print "1xo", gp._pop_hist[f3]
     hist = gp._pop_hist[f4]
-    assert len(hist) == 2
+    assert len(hist) == 4
     assert len(hist[0]) == 3
     print "1m", hist
     gp._xo_father2 = f4
@@ -71,7 +76,7 @@ def test_kill_ind():
     gp.kill_ind(f1, son)
     hist = gp._pop_hist[f1]
     assert len(hist) == 3
-    assert len(hist[1]) == 2
+    assert len(hist[1]) == 4
     for i in [f1, f2, f3, f4]:
         print gp._pop_hist[i]
         print "*"*10
@@ -94,4 +99,3 @@ def test_fitness():
     if max([gp.fitness(f1), gp.fitness(f2)]) > gp.fitness(f3):
         assert False
     print gp.fitness(f1), gp.fitness(f2), gp.fitness(f3)
-        

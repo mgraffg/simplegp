@@ -1,4 +1,6 @@
 Version 0.9.*
+	+ The mutation now follows more closely the ideas of Moraglio on
+	Geometric Semantic
 	+ This is a novel algorithm class Least Squares GP. This is just a concept
 Version 0.8.*
 	+ Using nvar and nfunc instead of self._x.shape[1] and self._nop.shape[0]
