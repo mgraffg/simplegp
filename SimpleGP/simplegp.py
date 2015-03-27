@@ -775,6 +775,9 @@ population size is smaller or larger than the current one
             fpt.write("""n%s [label="%0.4f"];\n""" % (pos, c))
             return pos
 
+    def save_extras(self, fpt):
+        pass
+
     def save(self, fname=None):
         fname = fname if fname is not None else self._fname_best
         if fname is None:
@@ -790,6 +793,7 @@ population size is smaller or larger than the current one
             if self._stats:
                 np.save(fpt, self.fit_per_gen)
                 np.save(fpt, self.length_per_gen)
+            self.save_extras(fpt)
         return True
 
     def clear_population_except_best(self):
@@ -811,6 +815,9 @@ population size is smaller or larger than the current one
             self._fitness[i] = -np.inf
             self.fitness(i)
 
+    def load_extras(self, fpt):
+        pass
+
     def load_prev_run(self):
         try:
             with open(self._fname_best, 'rb') as fpt:
@@ -830,6 +837,7 @@ population size is smaller or larger than the current one
                 if self._stats:
                     self.fit_per_gen = np.load(fpt)
                     self.length_per_gen = np.load(fpt)
+                self.load_extras(fpt)
             self.set_best()
             if self._p.dtype == np.object\
                and self._p.shape[0] == self._popsize:

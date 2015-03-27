@@ -215,6 +215,9 @@ population size is smaller or larger than the current one
                 best = comp
         return best
 
+    def load_extras(self, fpt):
+        pass
+        
     def load_prev_run(self):
         """
         Method used to load a previous run. It returns False if fails
@@ -232,6 +235,9 @@ population size is smaller or larger than the current one
                     a[~m] = tmp
                     self._fitness[~m] = -np.inf
                 self.best = self._fitness.argmax()
+                if self._stats:
+                    self.fit_per_gen = np.load(fpt)
+                self.load_extras(fpt)
             if self._p.ndim == 2 and self._p.shape[0] == self._popsize \
                and self._p.shape[1] == self._chromosome_length:
                 return True
@@ -441,6 +447,9 @@ population size is smaller or larger than the current one
         self._fitness[mask] = -np.inf
         return mask
 
+    def save_extras(self, fpt):
+        pass
+
     def save(self, fname=None):
         """
         Save the population to fname if fname is None the save in
@@ -457,6 +466,7 @@ population size is smaller or larger than the current one
             np.save(fpt, self.gens_ind)
             if self._stats:
                 np.save(fpt, self.fit_per_gen)
+            self.save_extras(fpt)
 
     @classmethod
     def init_cl(cls, generations=10000,

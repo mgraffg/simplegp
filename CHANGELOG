@@ -1,4 +1,5 @@
 Version 0.9.*
+	+ save_extras is called in save and load_extras is called in load_prev_run
 	+ The mutation now follows more closely the ideas of Moraglio on
 	Geometric Semantic
 	+ This is a novel algorithm class Least Squares GP. This is just a concept

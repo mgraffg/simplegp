@@ -351,6 +351,32 @@ class TestSimpleGP(object):
             assert np.all(map(lambda x: np.all(cons[x] == cons1[x]),
                               range(s.popsize)))
 
+    def test_save_extras(self):
+
+        class GP2(GP):
+            def save_extras(self, fpt):
+                print "hola save", "!"*10
+                np.save(fpt, 1)
+
+            def load_extras(self, fpt):
+                print "hola load", "@"*10
+                self._p_extra = np.load(fpt)
+        import tempfile
+        fname = tempfile.mktemp()
+        x = np.linspace(0, 1, 100)
+        pol = np.array([0.2, -0.3, 0.2])
+        X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+        f = (X * pol).sum(axis=1)
+        s = GP2(popsize=3, save_only_best=True,
+                fname_best=fname, seed=0, verbose=True,
+                generations=5).train(X, f)
+        s.run()
+        s1 = GP2(popsize=3, save_only_best=True,
+                 fname_best=fname, seed=0, verbose=True,
+                 generations=5).train(X, f)
+        s1.run()
+        assert s1._p_extra == 1
+
     def test_save_run(self):
         import tempfile
         s = GP.run_cl(self._x, self._y, seed=0, generations=2)

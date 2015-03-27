@@ -128,6 +128,33 @@ def test_save_best_param():
     assert np.all(p[s.best] == bs)
 
 
+def test_save_extras():
+
+    class GA(SimpleGA):
+        def save_extras(self, fpt):
+            print "hola save", "!"*10
+            np.save(fpt, 1)
+
+        def load_extras(self, fpt):
+            print "hola load", "@"*10
+            self._p_extra = np.load(fpt)
+    import tempfile
+    fname = tempfile.mktemp()
+    x = np.linspace(0, 1, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    f = (X * pol).sum(axis=1)
+    s = GA(popsize=10, save_only_best=True,
+           fname_best=fname, seed=0, verbose=True,
+           generations=5).train(X, f)
+    s.run()
+    s1 = GA(popsize=10, save_only_best=True,
+            fname_best=fname, seed=0, verbose=True,
+            generations=5).train(X, f)
+    s1.run()
+    assert s1._p_extra == 1
+
+    
 def test_kill_ind_best():
     np.random.RandomState(0)
     x = np.linspace(0, 1, 100)
