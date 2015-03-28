@@ -1,4 +1,5 @@
 from SimpleGP import GP, BestNotFound
+import types
 import numpy as np
 from numpy.linalg import lstsq
 
@@ -10,6 +11,18 @@ class lstsqGP(GP):
         self._pop_eval = None
         self._pop_hist = None
         self._nparents = 2
+
+    def save_extras(self, fpt):
+        best = self.best
+        np.save(fpt, best)
+        np.save(fpt, self._pop_hist[best])
+        np.save(fpt, self._pop_eval[best])
+
+    def load_extras(self, fpt):
+        best = np.load(fpt)
+        hist = np.load(fpt)
+        eval = np.load(fpt)
+        self._load_tmp = [best, hist, eval]
 
     def kill_ind(self, kill, son):
         """
@@ -38,7 +51,9 @@ class lstsqGP(GP):
                              range(self.popsize)))
             m = np.isfinite(m)
             return m
-        super(lstsqGP, self).create_population()
+        flag = super(lstsqGP, self).create_population()
+        if not flag:
+            self._fitness.fill(-np.inf)
         m = test_fitness()
         while (~m).sum():
             index = np.where(~m)[0]
@@ -53,7 +68,13 @@ class lstsqGP(GP):
         for i in range(self.popsize):
             self._pop_eval[i] = self.eval(i)
         self._pop_eval_mut = self._pop_eval.copy()
-
+        if not flag:
+            best, hist, eval = self._load_tmp
+            self._pop_hist[best] = hist
+            self._pop_eval[best] = eval
+            self._fitness[best] = - self.distance(self._f, eval)
+            self.new_best(int(best))
+        
     def compute_alpha_beta(self, X):
         return lstsq(X, self._f)[0]
 
@@ -81,3 +102,25 @@ class lstsqGP(GP):
         y = X.dot(alpha_beta)
         self._ind_generated_c = alpha_beta
         return y
+
+        
+class lstsqEval(object):
+    def __init__(self, init):
+        self._init = init
+
+    def eval(self, ind):
+        if isinstance(ind, types.IntType):
+            return self._init[ind]
+        if len(ind) == 3:
+            # crossover
+            p1, p2, coef = ind
+            args = []
+            for i in [p1, p2]:
+                args.append(self.eval(i))
+            X = np.vstack(args).T
+            return X.dot(coef)
+        else:
+            # mutation
+            p1, t1, t2, coef = ind
+            X = np.vstack((self.eval(p1), self._init[t1] - self._init[t2])).T
+            return X.dot(coef)

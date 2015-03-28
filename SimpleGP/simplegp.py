@@ -333,9 +333,9 @@ population size is smaller or larger than the current one
         if self._fname_best is not None and\
            os.path.isfile(self._fname_best)\
            and self.load_prev_run():
-            return
+            return False
         if self._p is not None:
-            return
+            return False
         self._p_constants = np.empty(self._popsize, dtype=np.object)
         self._p = np.empty(self._popsize, dtype=np.object)
         self._fitness = np.zeros(self._popsize)
@@ -343,6 +343,7 @@ population size is smaller or larger than the current one
         for i, ind, cons in self.create_population_generator():
             self._p[i] = ind
             self._p_constants[i] = cons
+        return True
 
     def isfunc(self, a):
         return a < self.nfunc

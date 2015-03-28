@@ -1,4 +1,9 @@
 Version 0.9.*
+	+ lstsqGP saves the population to a file, it only saves the best
+	so far
+	+ lstsqEval evaluates an individual, usefull to predict
+	+ create_population returns True if the population was created or
+	False if it was loaded from a previous run
 	+ save_extras is called in save and load_extras is called in load_prev_run
 	+ The mutation now follows more closely the ideas of Moraglio on
 	Geometric Semantic

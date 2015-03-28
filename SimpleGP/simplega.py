@@ -249,17 +249,20 @@ population size is smaller or larger than the current one
         """
         Create the initial population. It first called load_prev_run if
         this method returns False then it creates the population.
+        create_population returns True if the population was created and
+        False if it was loaded from a previous run
         """
         if self._fname_best is not None \
            and os.path.isfile(self._fname_best) \
            and self.load_prev_run():
-            return
+            return False
         if self._p is not None:
-            return
+            return False
         self._p = self.random_ind(size=(self._popsize,
                                         self._chromosome_length))
         self._fitness = np.zeros(self._popsize)
         self._fitness[:] = -np.inf
+        return True
 
     def eval(self, ind):
         """

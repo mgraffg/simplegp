@@ -99,3 +99,47 @@ def test_fitness():
     if max([gp.fitness(f1), gp.fitness(f2)]) > gp.fitness(f3):
         assert False
     print gp.fitness(f1), gp.fitness(f2), gp.fitness(f3)
+
+
+def test_eval():
+    from SimpleGP.lstsqGP import lstsqEval
+    x, y = create_problem()
+    gp = lstsqGP(seed=0).train(x, y)
+    gp.create_population()
+    gp._xo_father1 = 0
+    gp._xo_father2 = 1
+    son = gp.crossover(0, 0)
+    gp.kill_ind(0, son)
+    son = gp.mutation(0)
+    gp.kill_ind(0, son)
+    gp._xo_father1 = 2
+    gp._xo_father2 = 3
+    son = gp.crossover(0, 0)
+    gp.kill_ind(1, son)
+    gp._xo_father1 = 0
+    gp._xo_father2 = 1
+    son = gp.crossover(0, 0)
+    gp.kill_ind(4, son)
+    print gp._pop_hist[4]
+    eval = lstsqEval(gp._pop_eval_mut)
+    pr = eval.eval(gp._pop_hist[4])
+    print pr[:3], gp._pop_eval[4][:3]
+    assert np.all(pr == gp._pop_eval[4])
+
+    
+def test_save():
+    import tempfile
+    fname = tempfile.mktemp()
+    x, y = create_problem()
+    gp = lstsqGP(generations=5, fname_best=fname,
+                 seed=0,
+                 verbose=True).train(x, y)
+    gp.run()
+    print gp.best
+    fit = gp.fitness(gp.best)
+    gp = lstsqGP(generations=5, fname_best=fname,
+                 seed=0,
+                 verbose=True).train(x, y)
+    gp.run()
+    print gp.best, gp._fitness[gp.best], fit
+    assert fit == gp.fitness(gp.best)
