@@ -780,12 +780,9 @@ population size is smaller or larger than the current one
         pass
 
     def save(self, fname=None):
-        fname = fname if fname is not None else self._fname_best
-        if fname is None:
-            return False
-        if self._save_only_best:
-            self.clear_population_except_best()
-        with open(fname, 'wb') as fpt:
+        import gzip
+
+        def save_inner(fpt):
             np.save(fpt, self._p)
             np.save(fpt, self._p_constants)
             np.save(fpt, self._fitness)
@@ -795,6 +792,18 @@ population size is smaller or larger than the current one
                 np.save(fpt, self.fit_per_gen)
                 np.save(fpt, self.length_per_gen)
             self.save_extras(fpt)
+            
+        fname = fname if fname is not None else self._fname_best
+        if fname is None:
+            return False
+        if self._save_only_best:
+            self.clear_population_except_best()
+        if fname.count('.gz'):
+            with gzip.open(fname, 'wb') as fpt:
+                save_inner(fpt)
+        else:
+            with open(fname, 'wb') as fpt:
+                save_inner(fpt)
         return True
 
     def clear_population_except_best(self):
@@ -820,25 +829,34 @@ population size is smaller or larger than the current one
         pass
 
     def load_prev_run(self):
+        import gzip
+
+        def load(fpt):
+            self._p = np.load(fpt)
+            self._p_constants = np.load(fpt)
+            arr = filter(lambda x: self._p[x] is None,
+                         range(self._p.shape[0]))
+            if len(arr):
+                cp_gen = self.create_population_generator
+                for i, ind, c in cp_gen(len(arr)):
+                    _i = arr[i]
+                    self.population[_i] = ind
+                    self._p_constants[_i] = c
+            self._fitness = np.load(fpt)
+            self.gens_ind = int(np.load(fpt))
+            self.nodes_evaluated = np.load(fpt)
+            if self._stats:
+                self.fit_per_gen = np.load(fpt)
+                self.length_per_gen = np.load(fpt)
+            self.load_extras(fpt)
+
         try:
-            with open(self._fname_best, 'rb') as fpt:
-                self._p = np.load(fpt)
-                self._p_constants = np.load(fpt)
-                arr = filter(lambda x: self._p[x] is None,
-                             range(self._p.shape[0]))
-                if len(arr):
-                    cp_gen = self.create_population_generator
-                    for i, ind, c in cp_gen(len(arr)):
-                        _i = arr[i]
-                        self.population[_i] = ind
-                        self._p_constants[_i] = c
-                self._fitness = np.load(fpt)
-                self.gens_ind = int(np.load(fpt))
-                self.nodes_evaluated = np.load(fpt)
-                if self._stats:
-                    self.fit_per_gen = np.load(fpt)
-                    self.length_per_gen = np.load(fpt)
-                self.load_extras(fpt)
+            if self._fname_best.count('.gz'):
+                with gzip.open(self._fname_best, 'rb') as fpt:
+                    load(fpt)
+            else:
+                with open(self._fname_best, 'rb') as fpt:
+                    load(fpt)
             self.set_best()
             if self._p.dtype == np.object\
                and self._p.shape[0] == self._popsize:

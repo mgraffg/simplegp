@@ -222,22 +222,31 @@ population size is smaller or larger than the current one
         """
         Method used to load a previous run. It returns False if fails
         """
+        import gzip
+        
+        def load(ftp):
+            self._p = np.load(fpt)
+            self._fitness = np.load(fpt)
+            self.gens_ind = np.load(fpt)
+            a = self._p
+            m = np.all(np.isfinite(a), axis=1)
+            if (~m).sum():
+                tmp = self.random_ind(size=((~m).sum(),
+                                            self._chromosome_length))
+                a[~m] = tmp
+                self._fitness[~m] = -np.inf
+            self.best = self._fitness.argmax()
+            if self._stats:
+                self.fit_per_gen = np.load(fpt)
+            self.load_extras(fpt)
+            
         try:
-            with open(self._fname_best, 'rb') as fpt:
-                self._p = np.load(fpt)
-                self._fitness = np.load(fpt)
-                self.gens_ind = np.load(fpt)
-                a = self._p
-                m = np.all(np.isfinite(a), axis=1)
-                if (~m).sum():
-                    tmp = self.random_ind(size=((~m).sum(),
-                                                self._chromosome_length))
-                    a[~m] = tmp
-                    self._fitness[~m] = -np.inf
-                self.best = self._fitness.argmax()
-                if self._stats:
-                    self.fit_per_gen = np.load(fpt)
-                self.load_extras(fpt)
+            if self._fname_best.count('.gz'):
+                with gzip.open(self._fname_best, 'rb') as fpt:
+                    load(fpt)
+            else:
+                with open(self._fname_best, 'rb') as fpt:
+                    load(fpt)
             if self._p.ndim == 2 and self._p.shape[0] == self._popsize \
                and self._p.shape[1] == self._chromosome_length:
                 return True
@@ -458,19 +467,29 @@ population size is smaller or larger than the current one
         Save the population to fname if fname is None the save in
         self._fname_best. If both are None then it does nothing.
         """
-        fname = fname if fname is not None else self._fname_best
-        if fname is None:
-            return
-        if self._save_only_best:
-            self.clear_population_except_best()
-        with open(fname, 'wb') as fpt:
+        import gzip
+        
+        def save_inner(fpt):
             np.save(fpt, self._p)
             np.save(fpt, self._fitness)
             np.save(fpt, self.gens_ind)
             if self._stats:
                 np.save(fpt, self.fit_per_gen)
             self.save_extras(fpt)
-
+            
+        fname = fname if fname is not None else self._fname_best
+        if fname is None:
+            return False
+        if self._save_only_best:
+            self.clear_population_except_best()
+        if fname.count('.gz'):
+            with gzip.open(fname, 'wb') as fpt:
+                save_inner(fpt)
+        else:
+            with open(fname, 'wb') as fpt:
+                save_inner(fpt)
+        return True
+            
     @classmethod
     def init_cl(cls, generations=10000,
                 popsize=3, pm=0.1, pxo=0.9, seed=0,
