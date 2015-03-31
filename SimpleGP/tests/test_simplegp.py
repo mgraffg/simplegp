@@ -403,7 +403,7 @@ class TestSimpleGP(object):
         bs = s.best
         p = s.population[bs].copy()
         cons = s._p_constants[bs].copy()
-        fname = tempfile.mktemp()
+        fname = tempfile.mktemp() + '.gz'
         s.save_best(fname)
         s1 = GP.run_cl(self._x, self._y, fname_best=fname,
                        generations=2)

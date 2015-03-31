@@ -140,6 +140,15 @@ class lstsqGP(GP):
         self._ind_generated_c = alpha_beta
         return y
 
+    def predict(self, X, ind=None):
+        init = np.array(map(lambda x: super(lstsqGP, self).predict(X, ind=x),
+                            range(self.popsize)))
+        if ind is None:
+            ind = self.best
+        eval = lstsqEval(init, self._history_ind, self._history_coef)
+        pr = eval.eval(self._pop_hist[ind])
+        return pr
+
 
 class lstsqEval(object):
     def __init__(self, init, hist_ind, hist_coef):
@@ -162,11 +171,6 @@ class lstsqEval(object):
         if h[0] == -1:
             return h[1:]
         return h
-
-    def increment(self):
-        pos = self._pos
-        self._pos += 1
-        return pos
 
     def eval(self, ind):
         def get_ev(_ind):
@@ -196,3 +200,15 @@ class lstsqEval(object):
             _m[index] = c
             c += 1
         return get_ev(ind)
+
+
+class GSGP(lstsqGP):
+    def __init__(self, ms=0.001, **kwargs):
+        super(GSGP, self).__init__(**kwargs)
+        self._ms = ms
+
+    def compute_alpha_beta(self, X):
+        if self._nparents == 2:
+            beta = np.random.rand()
+            return np.array([beta, 1-beta])
+        return np.array([1, self._ms])

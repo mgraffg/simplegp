@@ -1,5 +1,5 @@
 import numpy as np
-from SimpleGP import lstsqGP
+from SimpleGP import lstsqGP, GSGP
 import types
 from SimpleGP.lstsqGP import lstsqEval
 
@@ -18,18 +18,17 @@ l = np.array(map(lambda x: map(float, x.split()),
                  open('data/rational-problems.txt', 'r').readlines()))
 
 
-def run(pr):
+def run(ins, pr):
     print "haciendo", pr
-    gp = lstsqGP(seed=0, func=['+', '-', '*', '/'],
-                 verbose=True,  # fname_best='tmp.npy.gz', pxo=0.9,
-                 generations=50).train(x, l[pr])
+    gp = ins(seed=0, func=['+', '-', '*', '/'],
+             popsize=100,
+             verbose=True,  # fname_best='tmp.npy.gz', pxo=0.9,
+             generations=2000).train(x, l[pr])
     gp.run()
     return gp
     # return gp._pop_eval[gp.best]
 
-gp = run(0)
-eval = lstsqEval(gp._pop_eval_mut, gp._history_ind, gp._history_coef)
-print eval.eval(gp._pop_hist[gp.best])
-# ind = gp._pop_hist[gp.best]
-# print eval.eval(ind), length(ind)
+gp = run(lstsqGP, 0)
+print "*"*10
+gp1 = run(GSGP, 0)
 

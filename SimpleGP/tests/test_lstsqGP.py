@@ -115,6 +115,7 @@ def test_save():
                  seed=0,
                  verbose=True).train(x, y)
     gp.run()
+    pop_eval = gp._pop_eval.copy()
     print gp.best
     fit = gp.fitness(gp.best)
     gp = lstsqGP(generations=5, fname_best=fname,
@@ -123,6 +124,7 @@ def test_save():
     gp.run()
     print gp.best, gp._fitness[gp.best], fit
     assert fit == gp.fitness(gp.best)
+    assert np.all(pop_eval == gp._pop_eval)
 
 
 def test_save_only_best():
@@ -148,3 +150,12 @@ def test_history():
     gp._history_ind.max()
     print gp._pop_hist[gp.best], gp._history_ind[gp._pop_hist[gp.best]]
     assert np.all(gp._history_ind[gp._history_index:] == -1)
+
+
+def test_predict():
+    x, y = create_problem()
+    gp = lstsqGP(generations=3,
+                 seed=0,
+                 verbose=True).train(x, y)
+    gp.run()
+    assert np.all(gp._pop_eval[gp.best] == gp.predict(x.copy()))

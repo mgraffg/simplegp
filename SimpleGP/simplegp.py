@@ -781,6 +781,8 @@ population size is smaller or larger than the current one
 
     def save(self, fname=None):
         import gzip
+        import tempfile
+        import os
 
         def save_inner(fpt):
             np.save(fpt, self._p)
@@ -792,19 +794,24 @@ population size is smaller or larger than the current one
                 np.save(fpt, self.fit_per_gen)
                 np.save(fpt, self.length_per_gen)
             self.save_extras(fpt)
-            
+
         fname = fname if fname is not None else self._fname_best
+        fname_is_gzip = False
         if fname is None:
             return False
         if self._save_only_best:
             self.clear_population_except_best()
         if fname.count('.gz'):
-            raise NotImplementedError('There is a bug here')
-            with gzip.open(fname, 'wb') as fpt:
-                save_inner(fpt)
-        else:
-            with open(fname, 'wb') as fpt:
-                save_inner(fpt)
+            fname_is_gzip = True
+            fname_o = fname
+            fname = tempfile.mktemp()
+        with open(fname, 'wb') as fpt:
+            save_inner(fpt)
+        if fname_is_gzip:
+            with open(fname, 'rb') as original:
+                with gzip.open(fname_o, 'wb') as fpt:
+                    fpt.writelines(original)
+            os.unlink(fname)
         return True
 
     def clear_population_except_best(self):
@@ -831,6 +838,7 @@ population size is smaller or larger than the current one
 
     def load_prev_run(self):
         import gzip
+        import tempfile
 
         def load(fpt):
             self._p = np.load(fpt)
@@ -852,12 +860,14 @@ population size is smaller or larger than the current one
             self.load_extras(fpt)
 
         try:
+            fname = self._fname_best
             if self._fname_best.count('.gz'):
-                with gzip.open(self._fname_best, 'rb') as fpt:
-                    load(fpt)
-            else:
-                with open(self._fname_best, 'rb') as fpt:
-                    load(fpt)
+                fname = tempfile.mktemp()
+                with gzip.open(self._fname_best, 'rb') as original:
+                    with open(fname, 'wb') as fpt:
+                        fpt.writelines(original)
+            with open(fname, 'rb') as fpt:
+                load(fpt)
             self.set_best()
             if self._p.dtype == np.object\
                and self._p.shape[0] == self._popsize:
