@@ -1,4 +1,5 @@
 Version 0.9.*
+	+ Improving lstsqGP
 	+ The save and load methods use gzip if the file name ends with .gz
 	+ lstsqGP saves the population to a file, it only saves the best
 	so far

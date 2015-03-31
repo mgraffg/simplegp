@@ -799,6 +799,7 @@ population size is smaller or larger than the current one
         if self._save_only_best:
             self.clear_population_except_best()
         if fname.count('.gz'):
+            raise NotImplementedError('There is a bug here')
             with gzip.open(fname, 'wb') as fpt:
                 save_inner(fpt)
         else:

@@ -61,26 +61,11 @@ def test_kill_ind():
         f3 = gp.tournament(True)
     son = gp.crossover(f1, f2)
     gp.kill_ind(f3, son)
-    assert len(gp._pop_hist[f3]) == 3
-    print "1xo", gp._pop_hist[f3]
+    assert gp._history_ind[gp._history_index-1][-1] == -1
     gp._xo_father1 = f3
     son1 = gp.mutation(f3)
     gp.kill_ind(f4, son1)
-    print "1xo", gp._pop_hist[f3]
-    hist = gp._pop_hist[f4]
-    assert len(hist) == 4
-    assert len(hist[0]) == 3
-    print "1m", hist
-    gp._xo_father2 = f4
-    son = gp.crossover(f1, f4)
-    gp.kill_ind(f1, son)
-    hist = gp._pop_hist[f1]
-    assert len(hist) == 3
-    assert len(hist[1]) == 4
-    for i in [f1, f2, f3, f4]:
-        print gp._pop_hist[i]
-        print "*"*10
-    print son
+    assert gp._history_ind[gp._history_index-1][-1] > -1
 
 
 def test_fitness():
@@ -103,33 +88,28 @@ def test_fitness():
 
 def test_eval():
     from SimpleGP.lstsqGP import lstsqEval
+
+    def predict(ind):
+        return eval.eval(ind)
     x, y = create_problem()
-    gp = lstsqGP(seed=0).train(x, y)
-    gp.create_population()
-    gp._xo_father1 = 0
-    gp._xo_father2 = 1
-    son = gp.crossover(0, 0)
-    gp.kill_ind(0, son)
-    son = gp.mutation(0)
-    gp.kill_ind(0, son)
-    gp._xo_father1 = 2
-    gp._xo_father2 = 3
-    son = gp.crossover(0, 0)
-    gp.kill_ind(1, son)
-    gp._xo_father1 = 0
-    gp._xo_father2 = 1
-    son = gp.crossover(0, 0)
-    gp.kill_ind(4, son)
-    print gp._pop_hist[4]
-    eval = lstsqEval(gp._pop_eval_mut)
-    pr = eval.eval(gp._pop_hist[4])
-    print pr[:3], gp._pop_eval[4][:3]
-    assert np.all(pr == gp._pop_eval[4])
+    gp = lstsqGP(seed=0, popsize=100, generations=3).train(x, y)
+    gp.run()
+    eval = lstsqEval(gp._pop_eval_mut,
+                     gp._history_ind,
+                     gp._history_coef)
+    inds = eval.inds_to_eval(gp._pop_hist[gp.best])
+    print len(inds), inds[-1], gp._pop_hist[gp.best],\
+        gp._history_ind[gp._pop_hist[gp.best]]
+    for i in range(gp.popsize):
+        pr = eval.eval(gp._pop_hist[i])
+        assert np.all(pr == gp._pop_eval[i])
 
     
 def test_save():
     import tempfile
     fname = tempfile.mktemp()
+    # fname = fname + '.gz'
+    print fname
     x, y = create_problem()
     gp = lstsqGP(generations=5, fname_best=fname,
                  seed=0,
@@ -143,3 +123,28 @@ def test_save():
     gp.run()
     print gp.best, gp._fitness[gp.best], fit
     assert fit == gp.fitness(gp.best)
+
+
+def test_save_only_best():
+    x, y = create_problem()
+    try:
+        lstsqGP(generations=3,
+                seed=0,
+                save_only_best=True,
+                verbose=True).train(x, y)
+        assert False
+    except NotImplementedError:
+        pass
+        
+
+def test_history():
+    x, y = create_problem()
+    gp = lstsqGP(generations=3,
+                 seed=0,
+                 verbose=True).train(x, y)
+    gp.run()
+    assert gp._history_coef[gp._history_index:].sum() == 0
+    # print gp._history_index, gp._history_ind[:gp._history_index],
+    gp._history_ind.max()
+    print gp._pop_hist[gp.best], gp._history_ind[gp._pop_hist[gp.best]]
+    assert np.all(gp._history_ind[gp._history_index:] == -1)
