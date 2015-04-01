@@ -432,7 +432,7 @@ cdef class Tree:
         cdef int ncons = cons.shape[0], i
         if self.isvar(indC[p1]):
             indC[p1] = self._nfunc + np.random.randint(self._nvar)
-        else:
+        elif ncons:
             i = indC[p1] - self._nfunc - self._nvar
             ind_consC[i] = consC[np.random.randint(ncons)]
 
