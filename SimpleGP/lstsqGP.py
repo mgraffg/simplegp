@@ -212,3 +212,7 @@ class GSGP(lstsqGP):
             beta = np.random.rand()
             return np.array([beta, 1-beta])
         return np.array([1, self._ms])
+
+    def improve_fit(self, son):
+        fit = - self.distance(self._f, son)
+        return fit, True
