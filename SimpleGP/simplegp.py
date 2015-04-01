@@ -839,6 +839,7 @@ population size is smaller or larger than the current one
     def load_prev_run(self):
         import gzip
         import tempfile
+        import os
 
         def load(fpt):
             self._p = np.load(fpt)
@@ -868,6 +869,8 @@ population size is smaller or larger than the current one
                         fpt.writelines(original)
             with open(fname, 'rb') as fpt:
                 load(fpt)
+            if self._fname_best.count('.gz'):
+                os.unlink(fname)
             self.set_best()
             if self._p.dtype == np.object\
                and self._p.shape[0] == self._popsize:
