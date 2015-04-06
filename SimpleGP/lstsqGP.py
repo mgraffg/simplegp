@@ -69,6 +69,9 @@ class lstsqGP(GP):
             return fit, False
         if self._nparents == 2 and fit <= self.fitness(self._xo_father2):
             return fit, False
+        if self._test_set is not None:
+            if not np.all(np.isfinite(self._test_set_tmp)):
+                return fit, False
         return fit, True
 
     def kill_ind(self, kill, son):
@@ -81,9 +84,26 @@ class lstsqGP(GP):
         if not imp:
             return
         self._pop_eval[kill] = son
+        if self._test_set is not None:
+            self._test_set_eval[kill] = self._test_set_tmp
         self.save_hist(kill)
         self._fitness[kill] = fit
         self.new_best(kill)
+
+    def predict_test_set(self, ind):
+        try:
+            return self._test_set_eval[ind]
+        except AttributeError:
+            return self.predict(self._test_set, ind)
+
+    def init_set_set(self):
+        if self._test_set is None:
+            return
+        self._test_set_eval = np.array(map(lambda x:
+                                           self.predict(self._test_set,
+                                                        x),
+                                           range(self.popsize)))
+        self._test_set_eval_mut = self._test_set_eval.copy()
 
     def create_population(self):
         def test_fitness():
@@ -92,6 +112,7 @@ class lstsqGP(GP):
             m = np.isfinite(m)
             return m
         flag = super(lstsqGP, self).create_population()
+        self._pop_hist = np.arange(self.popsize)
         if not flag:
             self._fitness.fill(-np.inf)
         m = test_fitness()
@@ -103,7 +124,6 @@ class lstsqGP(GP):
                 self._p_constants[index[i]] = cons
             m = test_fitness()
         self._pop_eval = np.empty((self.popsize, self._f.shape[0]))
-        self._pop_hist = np.arange(self.popsize)
         for i in range(self.popsize):
             self._pop_eval[i] = self.eval(i).copy()
         self._pop_eval_mut = self._pop_eval.copy()
@@ -126,6 +146,7 @@ class lstsqGP(GP):
                                           3), dtype=np.int)
             self._history_ind.fill(-1)
             self._history_index = self.popsize
+        self.init_set_set()
 
     def compute_alpha_beta(self, X):
         return lstsq(X, self._f)[0]
@@ -138,6 +159,10 @@ class lstsqGP(GP):
         alpha_beta = self.compute_alpha_beta(X)
         y = X.dot(alpha_beta)
         self._ind_generated_c = alpha_beta
+        if self._test_set is not None:
+            ev = self._test_set_eval
+            _ = ev[f1] * alpha_beta[0] + ev[f2] * alpha_beta[1]
+            self._test_set_tmp = _
         return y
 
     def mutation(self, father1):
@@ -153,6 +178,11 @@ class lstsqGP(GP):
         alpha_beta = lstsq(X, self._f)[0]
         y = X.dot(alpha_beta)
         self._ind_generated_c = alpha_beta
+        if self._test_set is not None:
+            ev = self._test_set_eval
+            mut = self._test_set_eval_mut
+            _ = ev[f1] * alpha_beta[0] + (mut[p1] - mut[p2]) * alpha_beta[1]
+            self._test_set_tmp = _
         return y
 
     def eval(self, ind=None, **kwargs):

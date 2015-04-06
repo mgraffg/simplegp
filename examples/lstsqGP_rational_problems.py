@@ -1,7 +1,6 @@
 import numpy as np
 from SimpleGP import lstsqGP, GSGP
 import types
-from SimpleGP.lstsqGP import lstsqEval
 
 
 def length(ind):

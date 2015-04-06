@@ -14,10 +14,10 @@ def create_problem():
 
 def test_lstsqGP():
     x, y = create_problem()
-    gp = lstsqGP(generations=5, verbose=True).train(x, y)
-    gp.run()
+    gp = lstsqGP.run_cl(x, y, test=x, generations=5, verbose=True)
+    assert np.all(gp.predict(x) == gp._test_set_eval[gp.best])
 
-        
+
 def test_create_population():
     x, y = create_problem()
     gp = lstsqGP().train(x, y)

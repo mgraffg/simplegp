@@ -280,6 +280,10 @@ population size is smaller or larger than the current one
         """
         return (self._x * ind).sum(axis=1)
 
+    def predict_test_set(self, ind):
+        """Predicting the test set"""
+        return self.predict(self._test_set, ind)
+
     def predict(self, X, ind=None):
         """
         Outputs the evaluation of the (ind)-th individual when the
@@ -359,8 +363,8 @@ population size is smaller or larger than the current one
         """
         if self.new_best_comparison(k):
             if self._test_set is not None:
-                x = self._test_set
-                r = self.predict(x, k)
+                # x = self._test_set
+                r = self.predict_test_set(k)
                 if not self.test_f(r):
                     self._fitness[k] = -np.inf
                     return False
