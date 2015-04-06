@@ -1,5 +1,6 @@
 from SimpleGP import GP, BestNotFound
 import numpy as np
+import types
 from numpy.linalg import lstsq
 
 
@@ -154,13 +155,22 @@ class lstsqGP(GP):
         self._ind_generated_c = alpha_beta
         return y
 
-    def predict(self, X, ind=None):
-        init = np.array(map(lambda x: super(lstsqGP, self).predict(X, ind=x),
-                            range(self.popsize)))
+    def eval(self, ind=None, **kwargs):
         if ind is None:
-            ind = self.best
-        eval = lstsqEval(init, self._history_ind, self._history_coef)
-        pr = eval.eval(self._pop_hist[ind])
+            return super(lstsqGP, self).eval(ind=ind, **kwargs)
+        if not isinstance(ind, types.IntType):
+            cdn = "The individual must be part of the population"
+            raise NotImplementedError(cdn)
+        if self._pop_hist[ind] == ind:
+            return super(lstsqGP, self).eval(ind=ind, **kwargs)
+        eval = lstsqEval(None, self._history_ind, self._history_coef)
+        inds = eval.inds_to_eval(self._pop_hist[ind])
+        init = np.zeros((self.popsize, self._x.shape[0]))
+        for i in inds:
+            if i < self.popsize:
+                init[i] = super(lstsqGP, self).eval(ind=i, **kwargs)
+        eval.init = init
+        pr = eval.eval(self._pop_hist[ind], inds=inds)
         return pr
 
 
@@ -171,6 +181,14 @@ class lstsqEval(object):
         self._hist_coef = hist_coef
         self._pos = 0
 
+    @property
+    def init(self):
+        return self._init
+
+    @init.setter
+    def init(self, init):
+        self._init = init
+        
     def inds_to_eval(self, ind):
         h = {ind: 1}
         lst = self._hist_ind[ind].tolist()
@@ -186,13 +204,14 @@ class lstsqEval(object):
             return h[1:]
         return h
 
-    def eval(self, ind):
+    def eval(self, ind, inds=None):
         def get_ev(_ind):
             if _ind < popsize:
                 return init[_ind]
             return st[_m[_ind]]
 
-        inds = self.inds_to_eval(ind)
+        if inds is None:
+            inds = self.inds_to_eval(ind)
         popsize = self._init.shape[0]
         coef = self._hist_coef
         init = self._init

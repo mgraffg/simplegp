@@ -1,4 +1,5 @@
 Version 0.9.*
+	+ Using eval instead of predict
 	+ Minor modifications
 	+ Bug in saving usin gzip
 	+ Implementing predict in lstsqGP

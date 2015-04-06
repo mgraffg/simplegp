@@ -101,7 +101,11 @@ def test_eval():
     print len(inds), inds[-1], gp._pop_hist[gp.best],\
         gp._history_ind[gp._pop_hist[gp.best]]
     for i in range(gp.popsize):
-        pr = eval.eval(gp._pop_hist[i])
+        if i == gp.best:
+            inds = eval.inds_to_eval(gp._pop_hist[i])
+            pr = eval.eval(gp._pop_hist[i], inds=inds)
+        else:
+            pr = eval.eval(gp._pop_hist[i])
         assert np.all(pr == gp._pop_eval[i])
 
     
@@ -116,6 +120,7 @@ def test_save():
                  verbose=True).train(x, y)
     gp.run()
     pop_eval = gp._pop_eval.copy()
+    pop_eval_mut = gp._pop_eval_mut.copy()
     print gp.best
     fit = gp.fitness(gp.best)
     gp = lstsqGP(generations=5, fname_best=fname,
@@ -125,6 +130,7 @@ def test_save():
     print gp.best, gp._fitness[gp.best], fit
     assert fit == gp.fitness(gp.best)
     assert np.all(pop_eval == gp._pop_eval)
+    assert np.all(pop_eval_mut == gp._pop_eval_mut)
 
 
 def test_save_only_best():
@@ -158,4 +164,21 @@ def test_predict():
                  seed=0,
                  verbose=True).train(x, y)
     gp.run()
+    print gp._pop_eval[gp.best][:3]
+    print gp.eval()[:3]
+    print gp.predict(x.copy())[:3]
+    print gp._pop_hist[gp.best]
     assert np.all(gp._pop_eval[gp.best] == gp.predict(x.copy()))
+
+
+def test_eval_error():
+    x, y = create_problem()
+    gp = lstsqGP(generations=3,
+                 seed=0,
+                 verbose=True).train(x, y)
+    gp.run()
+    try:
+        gp.eval(gp._p[gp.best])
+        assert False
+    except NotImplementedError:
+        pass
