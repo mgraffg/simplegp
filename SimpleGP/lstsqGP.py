@@ -1,5 +1,4 @@
 from SimpleGP import GP, BestNotFound
-import types
 import numpy as np
 from numpy.linalg import lstsq
 
@@ -16,6 +15,7 @@ class lstsqGP(GP):
         self._nparents = 2
 
     def save_extras(self, fpt):
+        super(lstsqGP, self).save_extras(fpt)
         best = self.best
         np.save(fpt, best)
         np.save(fpt, self._pop_hist)
@@ -25,6 +25,7 @@ class lstsqGP(GP):
         np.save(fpt, self._history_index)
 
     def load_extras(self, fpt):
+        super(lstsqGP, self).load_extras(fpt)
         best = np.load(fpt)
         hist = np.load(fpt)
         eval = np.load(fpt)
@@ -47,6 +48,19 @@ class lstsqGP(GP):
             self._history_ind[index] = np.array([f1, f2, -1])
         self._pop_hist[kill] = index
         self._history_index += 1
+
+    def new_best_comparison(self, k):
+        """
+        This function is called from new_best
+        """
+        if self._best_fit is None:
+            return True
+        f = self._fitness[k]
+        if self._best_fit > f:
+            return False
+        if self._best_fit == f:
+            return False
+        return True
 
     def improve_fit(self, son):
         fit = - self.distance(self._f, son)
