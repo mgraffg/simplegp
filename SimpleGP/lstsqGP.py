@@ -191,16 +191,18 @@ class lstsqGP(GP):
         if not isinstance(ind, types.IntType):
             cdn = "The individual must be part of the population"
             raise NotImplementedError(cdn)
-        if self._pop_hist[ind] == ind:
+        if ind < self.popsize and self._pop_hist[ind] == ind:
             return super(lstsqGP, self).eval(ind=ind, **kwargs)
         eval = lstsqEval(None, self._history_ind, self._history_coef)
-        inds = eval.inds_to_eval(self._pop_hist[ind])
+        if ind < self.popsize:
+            ind = self._pop_hist[ind]
+        inds = eval.inds_to_eval(ind)
         init = np.zeros((self.popsize, self._x.shape[0]))
         for i in inds:
             if i < self.popsize:
                 init[i] = super(lstsqGP, self).eval(ind=i, **kwargs)
         eval.init = init
-        pr = eval.eval(self._pop_hist[ind], inds=inds)
+        pr = eval.eval(ind, inds=inds)
         return pr
 
 

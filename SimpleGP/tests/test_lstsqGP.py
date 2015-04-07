@@ -107,8 +107,9 @@ def test_eval():
         else:
             pr = eval.eval(gp._pop_hist[i])
         assert np.all(pr == gp._pop_eval[i])
+    assert np.all(gp.eval(gp._pop_hist[gp.best]) == gp._pop_eval[gp.best])
 
-    
+
 def test_save():
     import tempfile
     fname = tempfile.mktemp()

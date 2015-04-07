@@ -1,4 +1,6 @@
 Version 0.9.*
+	+ lstsqGP.eval receives the index of the individual or its
+	position in the population
 	+ Testing the test set during the evolution
 	+ Using eval instead of predict
 	+ Minor modifications
