@@ -111,8 +111,8 @@ class lstsqGP(GP):
                              range(self.popsize)))
             m = np.isfinite(m)
             return m
-        flag = super(lstsqGP, self).create_population()
         self._pop_hist = np.arange(self.popsize)
+        flag = super(lstsqGP, self).create_population()
         if not flag:
             self._fitness.fill(-np.inf)
         m = test_fitness()
