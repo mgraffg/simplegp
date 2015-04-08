@@ -1,4 +1,5 @@
 Version 0.8.*
+	+ Improving stats, making it more precise
 	+ Using nvar and nfunc instead of self._x.shape[1] and self._nop.shape[0]
 	+ GA uses save_only_best
 	+ new parameter, save_only_best

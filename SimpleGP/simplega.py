@@ -126,7 +126,7 @@ population size is smaller or larger than the current one
         """
         Setting some variables to the defaults values
         """
-        self.gens_ind = 0
+        self.gens_ind = self.popsize
         self._run = True
         self._last_call_to_stats = 0
         self._best_fit = None
@@ -396,11 +396,12 @@ population size is smaller or larger than the current one
         if i - self._last_call_to_stats < self._popsize:
             return False
         self._last_call_to_stats = i
-        if self._stats:
-            self.fit_per_gen[i/self._popsize] = self._fitness[self.best]
-        if self._verbose:
-            print "Gen: " + str(i) + "/" + str(self._gens * self._popsize) + \
-                " " + "%0.4f" % self._fitness[self.best]
+        if self._best is not None:
+            if self._stats:
+                self.fit_per_gen[i/self._popsize] = self._fitness[self.best]
+            if self._verbose:
+                print "Gen: " + str(i) + "/" + str(self._gens * self._popsize)\
+                    + " " + "%0.4f" % self._fitness[self.best]
         return True
 
     def run(self, exit_call=True):
@@ -414,18 +415,19 @@ population size is smaller or larger than the current one
         while (not self._timeout and
                self.gens_ind < self._gens*self._popsize and self._run):
             try:
+                self.stats()
                 son = self.genetic_operators()
                 kill = self.tournament(neg=True)
                 while kill == self._best:
                     kill = self.tournament(neg=True)
                 self._kill_ind = kill
                 self.kill_ind(kill, son)
-                self.stats()
                 self.gens_ind += 1
             except KeyboardInterrupt:
                 if exit_call:
                     self.on_exit()
                 return False
+        self.stats()
         flag = True
         if not self._run:
             flag = False
