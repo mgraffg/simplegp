@@ -7,3 +7,4 @@ MANIFEST
 SimpleGP.egg-info
 TODO
 dist
+.coverage

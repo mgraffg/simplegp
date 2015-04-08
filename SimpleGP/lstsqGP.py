@@ -103,7 +103,7 @@ class lstsqGP(GP):
                                            self.predict(self._test_set,
                                                         x),
                                            range(self.popsize)))
-        self._test_set_eval_mut = self._test_set_eval.copy()
+        self._test_set_eval_mut = 1 / (1 + np.exp(self._test_set_eval))
 
     def create_population(self):
         def test_fitness():
@@ -126,7 +126,7 @@ class lstsqGP(GP):
         self._pop_eval = np.empty((self.popsize, self._f.shape[0]))
         for i in range(self.popsize):
             self._pop_eval[i] = self.eval(i).copy()
-        self._pop_eval_mut = self._pop_eval.copy()
+        self._pop_eval_mut = 1 / (1 + np.exp(self._pop_eval))
         if not flag:
             best, hist, eval, coef, ind, index = self._load_tmp
             self._pop_hist = hist
@@ -175,7 +175,7 @@ class lstsqGP(GP):
         self._xo_father2 = [p1, p2]
         X = np.vstack((self._pop_eval[f1],
                        self._pop_eval_mut[p1] - self._pop_eval_mut[p2])).T
-        alpha_beta = lstsq(X, self._f)[0]
+        alpha_beta = self.compute_alpha_beta(X)
         y = X.dot(alpha_beta)
         self._ind_generated_c = alpha_beta
         if self._test_set is not None:
@@ -220,7 +220,7 @@ class lstsqEval(object):
     @init.setter
     def init(self, init):
         self._init = init
-        
+
     def inds_to_eval(self, ind):
         h = {ind: 1}
         lst = self._hist_ind[ind].tolist()
@@ -268,7 +268,7 @@ class lstsqEval(object):
 
 
 class GSGP(lstsqGP):
-    def __init__(self, ms=0.001, **kwargs):
+    def __init__(self, ms=1.0, **kwargs):
         super(GSGP, self).__init__(**kwargs)
         self._ms = ms
 
