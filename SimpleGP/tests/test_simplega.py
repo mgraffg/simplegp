@@ -184,3 +184,27 @@ def test_create_population():
     print s.population[0]
     assert np.all(map(lambda x: np.all(p[x] == s.population[x]),
                       range(s.popsize)))
+
+
+def test_stats():
+    class GA2(SimpleGA):
+        def __init__(self, **kwargs):
+            super(GA2, self).__init__(**kwargs)
+            self._call_stats = 0
+            self._generations = 0
+
+        def stats(self):
+            self._call_stats += 1
+            flag = super(GA2, self).stats()
+            if flag:
+                # print self.gens_ind
+                self._generations += 1
+                self._lcall = self.gens_ind
+                return flag
+    x = np.linspace(0, 1, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    f = (X * pol).sum(axis=1)
+    ga = GA2.run_cl(X, f, popsize=3, generations=11, verbose=True)
+    print ga._call_stats, ga._generations, ga.gens_ind, ga._last_call_to_stats
+    assert ga._generations == 11
