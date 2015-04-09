@@ -103,7 +103,7 @@ class lstsqGP(GP):
                                            self.predict(self._test_set,
                                                         x),
                                            range(self.popsize)))
-        self._test_set_eval_mut = 1 / (1 + np.exp(self._test_set_eval))
+        self._test_set_eval_mut = self.sigmoid(self._test_set_eval)
 
     def create_population(self):
         def test_fitness():
@@ -126,7 +126,7 @@ class lstsqGP(GP):
         self._pop_eval = np.empty((self.popsize, self._f.shape[0]))
         for i in range(self.popsize):
             self._pop_eval[i] = self.eval(i).copy()
-        self._pop_eval_mut = 1 / (1 + np.exp(self._pop_eval))
+        self._pop_eval_mut = self.sigmoid(self._pop_eval)
         if not flag:
             best, hist, eval, coef, ind, index = self._load_tmp
             self._pop_hist = hist
@@ -205,6 +205,11 @@ class lstsqGP(GP):
         pr = eval.eval(ind, inds=inds)
         return pr
 
+    @staticmethod
+    def sigmoid(x):
+        # return x.copy()
+        return 1 / (1 + np.exp(-x))
+
 
 class lstsqEval(object):
     def __init__(self, init, hist_ind, hist_coef):
@@ -260,13 +265,15 @@ class lstsqEval(object):
             if hist[-1] == -1:
                 f2 = get_ev(hist[1])
             else:
-                f2 = init[hist[1]] - init[hist[2]]
+                sigmoid = lstsqGP.sigmoid
+                f2 = sigmoid(init[hist[1]]) - sigmoid(init[hist[2]])
             st.append(c1 * f1 + c2 * f2)
             _m[index] = c
             c += 1
         return get_ev(ind)
 
 
+        
 class GSGP(lstsqGP):
     def __init__(self, ms=1.0, **kwargs):
         super(GSGP, self).__init__(**kwargs)

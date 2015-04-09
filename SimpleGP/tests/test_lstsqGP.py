@@ -94,7 +94,11 @@ def test_eval():
     x, y = create_problem()
     gp = lstsqGP(seed=0, popsize=100, generations=3).train(x, y)
     gp.run()
-    eval = lstsqEval(gp._pop_eval_mut,
+    init = np.array(map(lambda x:
+                        gp.eval_ind(gp._p[x],
+                                    constants=gp._p_constants[x]).copy(),
+                        range(gp.popsize)))
+    eval = lstsqEval(init,
                      gp._history_ind,
                      gp._history_coef)
     inds = eval.inds_to_eval(gp._pop_hist[gp.best])
@@ -106,6 +110,7 @@ def test_eval():
             pr = eval.eval(gp._pop_hist[i], inds=inds)
         else:
             pr = eval.eval(gp._pop_hist[i])
+        print pr[:3], gp._pop_eval[i][:3], i
         assert np.all(pr == gp._pop_eval[i])
     assert np.all(gp.eval(gp._pop_hist[gp.best]) == gp._pop_eval[gp.best])
 
