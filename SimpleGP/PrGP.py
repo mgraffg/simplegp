@@ -1,22 +1,37 @@
+# Copyright 2015 Mario Graff Guerrero
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from SimpleGP import GP, BestNotFound
 import numpy as np
 import types
 from numpy.linalg import lstsq
 
 
-class lstsqGP(GP):
+class PrGP(GP):
     def __init__(self, save_only_best=False, **kwargs):
         if save_only_best:
             raise NotImplementedError("This option is not implemented")
-        super(lstsqGP, self).__init__(save_only_best=save_only_best,
-                                      **kwargs)
+        super(PrGP, self).__init__(save_only_best=save_only_best,
+                                   **kwargs)
         self._pop_eval_mut = None
         self._pop_eval = None
         self._pop_hist = None
         self._nparents = 2
 
     def save_extras(self, fpt):
-        super(lstsqGP, self).save_extras(fpt)
+        super(PrGP, self).save_extras(fpt)
         best = self.best
         np.save(fpt, best)
         np.save(fpt, self._pop_hist)
@@ -26,7 +41,7 @@ class lstsqGP(GP):
         np.save(fpt, self._history_index)
 
     def load_extras(self, fpt):
-        super(lstsqGP, self).load_extras(fpt)
+        super(PrGP, self).load_extras(fpt)
         best = np.load(fpt)
         hist = np.load(fpt)
         eval = np.load(fpt)
@@ -112,7 +127,7 @@ class lstsqGP(GP):
             m = np.isfinite(m)
             return m
         self._pop_hist = np.arange(self.popsize)
-        flag = super(lstsqGP, self).create_population()
+        flag = super(PrGP, self).create_population()
         if not flag:
             self._fitness.fill(-np.inf)
         m = test_fitness()
@@ -187,12 +202,12 @@ class lstsqGP(GP):
 
     def eval(self, ind=None, **kwargs):
         if ind is None:
-            return super(lstsqGP, self).eval(ind=ind, **kwargs)
+            return super(PrGP, self).eval(ind=ind, **kwargs)
         if not isinstance(ind, types.IntType):
             cdn = "The individual must be part of the population"
             raise NotImplementedError(cdn)
         if ind < self.popsize and self._pop_hist[ind] == ind:
-            return super(lstsqGP, self).eval(ind=ind, **kwargs)
+            return super(PrGP, self).eval(ind=ind, **kwargs)
         eval = lstsqEval(None, self._history_ind, self._history_coef)
         if ind < self.popsize:
             ind = self._pop_hist[ind]
@@ -200,7 +215,7 @@ class lstsqGP(GP):
         init = np.zeros((self.popsize, self._x.shape[0]))
         for i in inds:
             if i < self.popsize:
-                init[i] = super(lstsqGP, self).eval(ind=i, **kwargs)
+                init[i] = super(PrGP, self).eval(ind=i, **kwargs)
         eval.init = init
         pr = eval.eval(ind, inds=inds)
         return pr
@@ -265,7 +280,7 @@ class lstsqEval(object):
             if hist[-1] == -1:
                 f2 = get_ev(hist[1])
             else:
-                sigmoid = lstsqGP.sigmoid
+                sigmoid = PrGP.sigmoid
                 f2 = sigmoid(init[hist[1]]) - sigmoid(init[hist[2]])
             st.append(c1 * f1 + c2 * f2)
             _m[index] = c
@@ -273,8 +288,7 @@ class lstsqEval(object):
         return get_ev(ind)
 
 
-        
-class GSGP(lstsqGP):
+class GSGP(PrGP):
     def __init__(self, ms=1.0, **kwargs):
         super(GSGP, self).__init__(**kwargs)
         self._ms = ms

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-__version__ = '0.9.10'
+__version__ = '0.9.11'
 
 from .simplega import SimpleGA, BestNotFound
 from .simplegp import GP, GPwRestart, GPMAE
@@ -24,7 +24,7 @@ from .recursiveGP import RecursiveGP, RGP
 from .eval import Eval
 from .Rprop import RPROP
 from .elm import ELM, ELMPDE
-from .lstsqGP import lstsqGP, GSGP
+from .PrGP import PrGP, GSGP
 from utils import Pool, VerifyOutput
 
 
@@ -33,7 +33,7 @@ __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            RecursiveGP, RGP, GPwRestart, GPMAE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool, BestNotFound, Generational, GenerationalPDE,
-           ELM, ELMPDE, GPForestPDE, lstsqGP, GSGP]
+           ELM, ELMPDE, GPForestPDE, PrGP, GSGP]
 
 
 

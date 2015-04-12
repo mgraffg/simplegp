@@ -1,4 +1,19 @@
-from SimpleGP import lstsqGP
+# Copyright 2015 Mario Graff Guerrero
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+from SimpleGP import PrGP
 import numpy as np
 from nose.tools import assert_almost_equals
 
@@ -14,13 +29,13 @@ def create_problem():
 
 def test_lstsqGP():
     x, y = create_problem()
-    gp = lstsqGP.run_cl(x, y, test=x, generations=5, verbose=True)
+    gp = PrGP.run_cl(x, y, test=x, generations=5, verbose=True)
     assert np.all(gp.predict(x) == gp._test_set_eval[gp.best])
 
 
 def test_create_population():
     x, y = create_problem()
-    gp = lstsqGP().train(x, y)
+    gp = PrGP().train(x, y)
     gp.create_population()
     for i in range(gp.popsize):
         assert np.all(gp._pop_eval[i] == gp.eval(i))
@@ -29,7 +44,7 @@ def test_create_population():
 
 def test_crossover_mutation():
     x, y = create_problem()
-    gp = lstsqGP(seed=0).train(x, y)
+    gp = PrGP(seed=0).train(x, y)
     gp.create_population()
     while not gp.pre_crossover():
         gp.pre_crossover()
@@ -49,7 +64,7 @@ def test_crossover_mutation():
 
 def test_kill_ind():
     x, y = create_problem()
-    gp = lstsqGP(seed=0).train(x, y)
+    gp = PrGP(seed=0).train(x, y)
     gp.create_population()
     while not gp.pre_crossover():
         gp.pre_crossover()
@@ -70,7 +85,7 @@ def test_kill_ind():
 
 def test_fitness():
     x, y = create_problem()
-    gp = lstsqGP(seed=0).train(x, y)
+    gp = PrGP(seed=0).train(x, y)
     gp.create_population()
     while not gp.pre_crossover():
         gp.pre_crossover()
@@ -87,12 +102,12 @@ def test_fitness():
 
 
 def test_eval():
-    from SimpleGP.lstsqGP import lstsqEval
+    from SimpleGP.PrGP import lstsqEval
 
     def predict(ind):
         return eval.eval(ind)
     x, y = create_problem()
-    gp = lstsqGP(seed=0, popsize=100, generations=3).train(x, y)
+    gp = PrGP(seed=0, popsize=100, generations=3).train(x, y)
     gp.run()
     init = np.array(map(lambda x:
                         gp.eval_ind(gp._p[x],
@@ -121,17 +136,17 @@ def test_save():
     # fname = fname + '.gz'
     print fname
     x, y = create_problem()
-    gp = lstsqGP(generations=5, fname_best=fname,
-                 seed=0,
-                 verbose=True).train(x, y)
+    gp = PrGP(generations=5, fname_best=fname,
+              seed=0,
+              verbose=True).train(x, y)
     gp.run()
     pop_eval = gp._pop_eval.copy()
     pop_eval_mut = gp._pop_eval_mut.copy()
     print gp.best
     fit = gp.fitness(gp.best)
-    gp = lstsqGP(generations=5, fname_best=fname,
-                 seed=0,
-                 verbose=True).train(x, y)
+    gp = PrGP(generations=5, fname_best=fname,
+              seed=0,
+              verbose=True).train(x, y)
     gp.run()
     print gp.best, gp._fitness[gp.best], fit
     assert fit == gp.fitness(gp.best)
@@ -142,20 +157,20 @@ def test_save():
 def test_save_only_best():
     x, y = create_problem()
     try:
-        lstsqGP(generations=3,
-                seed=0,
-                save_only_best=True,
-                verbose=True).train(x, y)
+        PrGP(generations=3,
+             seed=0,
+             save_only_best=True,
+             verbose=True).train(x, y)
         assert False
     except NotImplementedError:
         pass
-        
+
 
 def test_history():
     x, y = create_problem()
-    gp = lstsqGP(generations=3,
-                 seed=0,
-                 verbose=True).train(x, y)
+    gp = PrGP(generations=3,
+              seed=0,
+              verbose=True).train(x, y)
     gp.run()
     assert gp._history_coef[gp._history_index:].sum() == 0
     # print gp._history_index, gp._history_ind[:gp._history_index],
@@ -166,9 +181,9 @@ def test_history():
 
 def test_predict():
     x, y = create_problem()
-    gp = lstsqGP(generations=3,
-                 seed=0,
-                 verbose=True).train(x, y)
+    gp = PrGP(generations=3,
+              seed=0,
+              verbose=True).train(x, y)
     gp.run()
     print gp._pop_eval[gp.best][:3]
     print gp.eval()[:3]
@@ -179,9 +194,9 @@ def test_predict():
 
 def test_eval_error():
     x, y = create_problem()
-    gp = lstsqGP(generations=3,
-                 seed=0,
-                 verbose=True).train(x, y)
+    gp = PrGP(generations=3,
+              seed=0,
+              verbose=True).train(x, y)
     gp.run()
     try:
         gp.eval(gp._p[gp.best])
