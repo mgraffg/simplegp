@@ -1,3 +1,6 @@
+Version 0.10.*
+	+ Creating an evaluation function that works with sparse matrix;
+	however, this method is extremely slow.
 Version 0.9.*
 	+ Renaming lstsqGP to PrGP
 	+ Bug in Eval
