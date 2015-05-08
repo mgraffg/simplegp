@@ -14,9 +14,7 @@
 
 
 import numpy as np
-from scipy.sparse import issparse
-from scipy.sparse import csr_matrix as Smatrix
-from scipy.sparse import isspmatrix_csr as isSmatrix
+from SimpleGP.sparse_array import SparseArray
 
 
 class SparseEval(object):
@@ -27,6 +25,7 @@ class SparseEval(object):
         self._nvar = None
         self._nfunc = nop.shape[0]
         self._output = None
+        self._size = None
 
     @property
     def nfunc(self):
@@ -42,12 +41,14 @@ class SparseEval(object):
 
     @X.setter
     def X(self, x):
-        if not issparse(x):
-            x = Smatrix(x)
-        elif not isSmatrix(x):
-            x = x.tocsc()
-        self._x = x
+        self._x = map(lambda i: SparseArray.fromlist(x[:, i]),
+                      range(x.shape[1]))
         self._nvar = x.shape[1]
+        self._size = self._x[0].size()
+
+    @property
+    def size(self):
+        return self._size
 
     def isfunc(self, a):
         return a < self.nfunc
@@ -66,53 +67,44 @@ class SparseEval(object):
         self._pos = 0
         self._ind = ind
         self._constants = constants
-        hy = np.asarray(self._eval().todense())
-        if hy.shape[1] == 1:
-            return hy.flatten()
+        hy = self._eval().tonparray()
         return hy
 
     @staticmethod
     def one_arg_func(_x, func):
-        x = _x.copy()
-        x.data = func(x.data)
-        return x
+        return func(_x)
 
     @staticmethod
     def sigmoid(_x):
-        x = -_x
-        x.data = np.exp(x.data)
-        one = Smatrix(np.ones(_x.shape[0])[:, np.newaxis])
-        return one / (one + x)
+        return 1. / (1. + np.exp(-_x))
 
     @staticmethod
     def ln(_x):
-        x = SparseEval.one_arg_func(_x, np.fabs)
-        x.data = np.log(x.data)
-        return x
+        return np.log(np.fabs(_x))
 
     @staticmethod
     def max_func(x, y):
         s = -100 * (x - y)
-        s.data = np.exp(s.data)
-        one = Smatrix(np.ones(x.shape[0])[:, np.newaxis])
+        s = np.exp(s)
+        one = 1.
         s = one / (one + s)
-        return s.multiply(x - y) + y
+        return s * (x - y) + y
 
     @staticmethod
     def min_func(x, y):
         s = -100 * (x - y)
-        s.data = np.exp(s.data)
-        one = Smatrix(np.ones(x.shape[0])[:, np.newaxis])
+        s = np.exp(s)
+        one = 1.
         s = one / (one + s)
-        return s.multiply(y - x) + x
+        return s * (y - x) + x
 
     @staticmethod
     def if_func(x, y, z):
         s = -100 * x
-        s.data = np.exp(s.data)
-        one = Smatrix(np.ones(x.shape[0])[:, np.newaxis])
+        s = np.exp(s)
+        one = 1.
         s = one / (one + s)
-        return s.multiply(y - z) + z
+        return s * (y - z) + z
 
     @staticmethod
     def argmax(*a):
@@ -121,7 +113,7 @@ class SparseEval(object):
         args = map(lambda x: None, range(nargs))
         for j, x in enumerate(a):
             x = beta * x
-            x.data = np.exp(x.data)
+            x = np.exp(x)
             args[j] = x
         sum = args[0]
         for i in range(1, nargs):
@@ -142,17 +134,18 @@ class SparseEval(object):
         if self.isfunc(node):
             args = map(lambda x: self._eval(), range(self._nop[node]))
             F = self.one_arg_func
-            func = [np.add, np.subtract,
-                    lambda x, y: x.multiply(y),
-                    np.divide,
+            func = [lambda x, y: x + y,  # np.add,
+                    lambda x, y: x - y,  # np.subtract,
+                    lambda x, y: x * y,  # np.multiply,
+                    lambda x, y: x / y,  # np.divide,
                     lambda x: F(x, np.fabs), lambda x: F(x, np.exp),
                     lambda x: F(x, np.sqrt), lambda x: F(x, np.sin),
                     lambda x: F(x, np.cos), self.sigmoid,
                     self.if_func, self.max_func, self.min_func,
-                    self.ln, lambda x: x.multiply(x), self.output, self.argmax]
+                    self.ln, np.square, self.output, self.argmax]
             return func[node](*args)
         elif self.isvar(node):
-            return self.X[:, node - self.nfunc]
+            return self.X[node - self.nfunc]
         else:
             v = self._constants[node - self.nfunc - self.nvar]
-            return Smatrix(np.ones(self.X.shape[0])[:, np.newaxis]) * v
+            return self._x[0].constant(v, self.size)

@@ -264,9 +264,9 @@ population size is smaller or larger than the current one
         if constants is None:
             constants = self._constants
         if not self._do_simplify:
-            c = np.where(ind >= (self._nop.shape[0] + self._x.shape[1]))[0]
+            c = np.where(ind >= (self._nop.shape[0] + self.nvar))[0]
             cons = np.zeros(c.shape[0], dtype=self._dtype)
-            ncons = (self._nop.shape[0] + self._x.shape[1])
+            ncons = (self._nop.shape[0] + self.nvar)
             for _k, v in enumerate(c):
                 cons[_k] = constants[ind[v] - ncons]
                 ind[v] = _k + ncons
@@ -288,14 +288,14 @@ population size is smaller or larger than the current one
 
     def train(self, x, f):
         super(GP, self).train(x, f)
-        self._eval = Eval(0, self._x.shape[1],
+        self._eval = Eval(0, self.nvar,
                           self._nop, self._max_nargs)
         self._st = None
         self._p_der_st = None
         self._error_st = None
         self._simplify = Simplify(x.shape[1], self._nop)
         self._simplify.set_constants(self._constants2)
-        self._tree.set_nvar(self._x.shape[1])
+        self._tree.set_nvar(self.nvar)
         return self
 
     def predict(self, X, ind=None):
@@ -718,10 +718,10 @@ population size is smaller or larger than the current one
                 return "("+cdn+")", pos
             else:
                 return cdn, pos
-        elif ind[pos] < self._func.shape[0] + self._x.shape[1]:
+        elif ind[pos] < self._func.shape[0] + self.nvar:
             return "X%s" % (ind[pos] - self._func.shape[0]), pos + 1
         else:
-            c = ind[pos] - self._func.shape[0] - self._x.shape[1]
+            c = ind[pos] - self._func.shape[0] - self.nvar
             return str(constants[c]), pos + 1
 
     def graphviz(self, ind=None, constants=None, fname=None,
@@ -736,7 +736,7 @@ population size is smaller or larger than the current one
             constants = self._constants
         self._g_pos = 0
         if var_names is None:
-            self._var_names = map(lambda x: "X%s" % x, range(self._x.shape[1]))
+            self._var_names = map(lambda x: "X%s" % x, range(self.nvar))
         else:
             self._var_names = var_names
         if isinstance(fname, types.FileType):
@@ -766,12 +766,12 @@ population size is smaller or larger than the current one
                 posd = self._graphviz(ind, constants, fpt)
                 fpt.write("""n%s -> n%s;\n""" % (pos, posd))
             return pos
-        elif ind[pos] < self._func.shape[0] + self._x.shape[1]:
+        elif ind[pos] < self._func.shape[0] + self.nvar:
             vn = self._var_names[ind[pos] - self._func.shape[0]]
             fpt.write("""n%s [label="%s"];\n""" % (pos, vn))
             return pos
         else:
-            c = ind[pos] - self._func.shape[0] - self._x.shape[1]
+            c = ind[pos] - self._func.shape[0] - self.nvar
             c = constants[c]
             fpt.write("""n%s [label="%0.4f"];\n""" % (pos, c))
             return pos

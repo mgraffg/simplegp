@@ -1,4 +1,6 @@
 Version 0.10.*
+	+ Creating an SparseArray
+	+ New evaluation class that works with SparseArray
 	+ Creating an evaluation function that works with sparse matrix;
 	however, this method is extremely slow.
 Version 0.9.*

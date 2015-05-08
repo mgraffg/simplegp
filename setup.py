@@ -66,6 +66,11 @@ ext_modules = [Extension("SimpleGP.Simplify",
                          [join("SimpleGP", "pde.pxd"),
                           join("SimpleGP", "pde.pyx")],
                          # libraries=["m"],
+                         include_dirs=[numpy.get_include()]),
+               Extension("SimpleGP.sparse_array",
+                         [join("SimpleGP", "sparse_array.pxd"),
+                          join("SimpleGP", "sparse_array.pyx")],
+                         # libraries=["m"],
                          include_dirs=[numpy.get_include()])]
 
 version = open("VERSION").readline().lstrip().rstrip()
