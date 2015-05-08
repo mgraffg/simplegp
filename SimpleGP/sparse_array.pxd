@@ -42,7 +42,7 @@ cdef class SparseArray:
     cpdef SparseArray empty(self, int nele, int size=?)
     cpdef SparseArray constant(self, double v, int size=?)
 
-cdef class SEval:
+cdef class SparseEval:
     cdef list _st
     cdef list _x
     cdef long *_nop
@@ -58,7 +58,6 @@ cdef class SEval:
     cdef int isfunc(self, int a)
     cdef int isvar(self, int a)
     cdef int isconstant(self, int a)
-    cdef void init_st(self, int n)
     cpdef eval(self, npc.ndarray[long, ndim=1] ind,
                npc.ndarray[double, ndim=1] constants,
                bint to_np_array=?)

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from SimpleGP import GP
-from SimpleGP.sparse_array import SparseArray, SparseEval, SEval
+from SimpleGP import SparseArray, SparseEval
 from nose.tools import assert_almost_equals
 import numpy as np
 np.set_printoptions(precision=3)
@@ -136,21 +136,21 @@ def test_sparse_array_div():
     print sr[:10]
     assert np.all(r == sr)
 
-    
+
 def test_sparse_array_sum2():
     np.random.seed(0)
     uno = create_numpy_array()
     suno = SparseArray.fromlist(uno)
     assert suno.sum() == uno.sum()
 
-    
+
 def test_sparse_array_fabs():
     np.random.seed(0)
     uno = create_numpy_array()
     suno = SparseArray.fromlist(uno * -1)
     assert suno.fabs().sum() == uno.sum()
 
-    
+
 def test_sparse_constant():
     s = SparseArray().constant(12, 10)
     assert len(filter(lambda x: x == 12, s.tolist())) == 10
@@ -175,7 +175,7 @@ def test_seval():
     x, y = create_problem()
     gp = GP.run_cl(x, y, generations=2,
                    func=['+', '-', '*'])
-    sparse = SEval(gp._nop)
+    sparse = SparseEval(gp._nop)
     sparse.X(x)
     for i in range(gp.popsize):
         y = gp.predict(gp._x, ind=i)
@@ -191,59 +191,12 @@ def test_seval():
         print y[m]
         print gp._x[m]
         assert_almost_equals(np.fabs(y - hy).sum(), 0)
-    
-        
-def test_eval():
-    x, y = create_problem()
-    gp = GP.run_cl(x, y, generations=2,
-                   func=['+', '-', '*'])
-    sparse = SparseEval(gp._nop)
-    sparse.X = x
-    for i in range(gp.popsize):
-        y = gp.predict(gp._x, ind=i)
-        if not np.all(np.isfinite(y)):
-            continue
-        print gp.print_infix(gp.population[i],
-                             constants=gp._p_constants[i])
-        hy = sparse.eval(gp.population[i], gp._p_constants[i])
-        # print hy[:10]
-        # print y[:10]
-        m = np.fabs(y - hy) > 0
-        print np.fabs(y - hy)[m]
-        print hy[m]
-        print y[m]
-        # print gp._x[m]
-        assert_almost_equals(np.fabs(y - hy).sum(), 0)
-
-
-def test_eval_simple_tree():
-    x, y = create_problem()
-    gp = GP().train(x, y)
-    sparse = SparseEval(gp._nop)
-    sparse.X = x
-    assert sparse.nvar == x.shape[1]
-    assert sparse.nfunc == gp._nop.shape[0]
-    y = x[:, 0] + x[:, 1]  # * 12.1 + 12.1
-    var = sparse.nfunc
-    cons = sparse.nfunc + sparse.nvar
-    # ind = np.array([0, var, 0, 2, var+1, cons, cons], dtype=np.int)
-    ind = np.array([0, var, var+1])
-    cons = np.array([12.1])
-    print gp.print_infix(ind, constants=cons)
-    hy = sparse.eval(ind, cons)
-    print hy[:10]
-    print y[:10]
-    print sparse.X[1].tonparray()[:10]
-    print x[:10, 1]
-    print sparse.X[0].tonparray()[:10]
-    print np.fabs(y - hy).sum()
-    assert_almost_equals(np.fabs(y - hy).sum(), 0)
 
 
 def test_seval_simple_tree():
     x, y = create_problem()
     gp = GP().train(x, y)
-    sparse = SEval(gp._nop)
+    sparse = SparseEval(gp._nop)
     sparse.X(x)
     y = x[:, 0] + x[:, 1] * 12.1 + 12.1
     var = gp._nop.shape[0]
@@ -258,5 +211,3 @@ def test_seval_simple_tree():
     print np.fabs(y - hy).sum()
     map(lambda x: assert_almost_equals(y[x], hy[x]), range(y.shape[0]))
     # assert_almost_equals(np.fabs(y - hy).sum(), 0)
-    
-# test_seval_simple_tree()

@@ -1,8 +1,7 @@
 import numpy as np
 from SimpleGP import GP
-from SimpleGP.sparse_array import SEval as SparseEval
+from SimpleGP import SparseEval
 from SimpleGP.Simplify import Simplify
-import time
 
 
 class SparseGP(GP):
@@ -34,45 +33,13 @@ def create_problem():
     return x, y
 
 
-def create_instance(x, y):
-    gp = GP.run_cl(x, y,  func=['+', '-', '*'],
-                   verbose=True,
-                   max_length=256, popsize=10000,
-                   generations=2)
-    return gp
-
-
-def run3():
+def run():
     x, y = create_problem()
     gp = SparseGP.run_cl(x, y,  func=['+', '-', '*', '/'],
                          max_length=256, popsize=10000, verbose=True,
                          generations=10)
     return gp
 
-    
-def run():
-    x, y = create_problem()
-    gp = create_instance(x, y)
-    sparse = SparseEval(gp._nop)
-    sparse.X(x)
-    l = time.time()
-    for i in range(gp.popsize):
-        # i = 0
-        # print gp.print_infix(gp.population[i], constants=gp._p_constants[i])
-        sparse.eval(gp.population[i], gp._p_constants[i])
-    tot = time.time() - l
-    print tot, tot / float(gp.popsize)
-
-
-def run2():
-    x, y = create_problem()
-    gp = create_instance(x, y)
-    l = time.time()
-    for i in range(gp.popsize):
-        gp.eval(i)
-    tot = time.time() - l
-    print tot, tot / float(gp.popsize)
-
 
 if __name__ == '__main__':
-    run3()
+    run()
