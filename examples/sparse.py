@@ -40,6 +40,14 @@ def run():
                          generations=10)
     return gp
 
+    
+def run2():
+    x, y = create_problem()
+    gp = GP.run_cl(x, y,  func=['+', '-', '*', '/'],
+                   max_length=256, popsize=10000, verbose=True,
+                   generations=10)
+    return gp
+
 
 if __name__ == '__main__':
     run()

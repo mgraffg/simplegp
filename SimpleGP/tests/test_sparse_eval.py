@@ -151,6 +151,36 @@ def test_sparse_array_fabs():
     assert suno.fabs().sum() == uno.sum()
 
 
+def test_sparse_array_sin():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno).sin().tonparray()
+    print uno[:10]
+    print suno[:10]
+    assert np.all(np.sin(uno) == suno)
+
+
+def test_sparse_array_sq():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno).sq().tonparray()
+    print uno[:10]
+    print suno[:10]
+    assert np.all(uno**2 == suno)
+
+    
+def test_sparse_array_sqrt():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    uno[0] = -1
+    suno = SparseArray.fromlist(uno).sqrt().tonparray()
+    uno = np.sqrt(uno)
+    print uno[:10]
+    print suno[:10]
+    assert np.all(uno[1:] == suno[1:])
+    assert np.isnan(uno[0]) and np.isnan(suno[0])
+
+    
 def test_sparse_constant():
     s = SparseArray().constant(12, 10)
     assert len(filter(lambda x: x == 12, s.tolist())) == 10
@@ -174,7 +204,7 @@ def create_problem():
 def test_seval():
     x, y = create_problem()
     gp = GP.run_cl(x, y, generations=2,
-                   func=['+', '-', '*'])
+                   func=['+', '-', '*', 'abs', 'sin', 'sq', 'sqrt'])
     sparse = SparseEval(gp._nop)
     sparse.X(x)
     for i in range(gp.popsize):
@@ -211,3 +241,23 @@ def test_seval_simple_tree():
     print np.fabs(y - hy).sum()
     map(lambda x: assert_almost_equals(y[x], hy[x]), range(y.shape[0]))
     # assert_almost_equals(np.fabs(y - hy).sum(), 0)
+
+
+def test_seval_output():
+    x, y = create_problem()
+    gp = GP().train(x, y)
+    gp._nop[gp._output_pos] = 2
+    sparse = SparseEval(gp._nop)
+    sparse.X(x)
+    y = SparseArray.fromlist(x[:, 0] + x[:, 1] * 12.1 + 12.1)
+    var = gp._nop.shape[0]
+    cons = var + x.shape[1]
+    ind = np.array([15, 0, var, 0, 2, var+1, cons, cons, 0, var, 0, 2,
+                    var+1, cons, cons], dtype=np.int)
+    print ind
+    cons = np.array([12.10])
+    print gp.print_infix(ind, constants=cons)
+    sparse.eval(ind, cons)
+    hy2 = sparse.get_output()
+    for hy in hy2:
+        assert_almost_equals((y - hy).fabs().sum(), 0)

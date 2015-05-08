@@ -1,4 +1,5 @@
 Version 0.10.*
+	+ new functions in SparseEval
 	+ Creating an SparseArray
 	+ New evaluation class that works with SparseArray
 	+ Creating an evaluation function that works with sparse matrix;

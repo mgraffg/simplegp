@@ -38,6 +38,9 @@ cdef class SparseArray:
     cpdef int div(self, SparseArray other, SparseArray res)
     cpdef double sum(self)
     cpdef SparseArray fabs(self)
+    cpdef SparseArray sin(self)
+    cpdef SparseArray sq(self)
+    cpdef SparseArray sqrt(self)
     cpdef init(self, int nele)
     cpdef SparseArray empty(self, int nele, int size=?)
     cpdef SparseArray constant(self, double v, int size=?)
@@ -45,6 +48,8 @@ cdef class SparseArray:
 cdef class SparseEval:
     cdef list _st
     cdef list _x
+    cdef list _output
+    cdef SparseArray _x1
     cdef long *_nop
     cdef int _nvar
     cdef int _nfunc
@@ -63,3 +68,4 @@ cdef class SparseEval:
                bint to_np_array=?)
     cdef SparseArray _eval(self)
     cdef SparseArray two_args(self, int func, SparseArray first, SparseArray second)
+    cdef SparseArray one_arg(self, int func, SparseArray first)

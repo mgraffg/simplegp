@@ -240,13 +240,40 @@ cdef class SparseArray:
         return res
 
     cpdef SparseArray fabs(self):
-        cdef SparseArray res = self.empty(self.nele(), self.size())
+        cdef SparseArray res = self.empty(self.nele(), self._size)
         cdef int i
         for i in xrange(self.nele()):
             res._dataC[i] = math.fabs(self._dataC[i])
             res._indexC[i] = self._indexC[i]
         return res
-            
+
+    cpdef SparseArray sin(self):
+        cdef SparseArray res = self.empty(self.nele(), self._size)
+        cdef int i
+        for i in xrange(self.nele()):
+            res._dataC[i] = math.sin(self._dataC[i])
+            res._indexC[i] = self._indexC[i]
+        return res
+
+    cpdef SparseArray sq(self):
+        cdef SparseArray res = self.empty(self.nele(), self._size)
+        cdef int i
+        cdef double r
+        for i in xrange(self.nele()):
+            r = self._dataC[i]
+            res._dataC[i] = r * r
+            res._indexC[i] = self._indexC[i]
+        return res
+
+    cpdef SparseArray sqrt(self):
+        cdef SparseArray res = self.empty(self.nele(), self._size)
+        cdef int i
+        cdef double r
+        for i in xrange(self.nele()):
+            res._dataC[i] = math.sqrt(self._dataC[i])
+            res._indexC[i] = self._indexC[i]
+        return res
+        
     def tonparray(self):
         import numpy as np
         cdef npc.ndarray[double, ndim=1] res = np.zeros(self.size())
@@ -304,13 +331,13 @@ cdef class SparseArray:
     cpdef SparseArray constant(self, double v, int size=-1):
         cdef int i
         cdef SparseArray res = SparseArray()
+        if size == -1:
+            size = self.size()
+        res.set_size(size)        
         if v == 0:
             res.init(0)
         else:
             res.init(size)
-        if size == -1:
-            size = self.size()
-        res.set_size(size)
         for i in range(res.nele()):
             res._dataC[i] = v
             res._indexC[i] = i
@@ -350,6 +377,7 @@ cdef class SparseEval:
                           range(x.shape[1]))
         self.set_nvar(len(self._x))
         self.set_size(self._x[0].size())
+        self._x1 = self._x[0]
 
     cpdef eval(self, npc.ndarray[long, ndim=1] ind,
                npc.ndarray[double, ndim=1] constants, bint to_np_array=1):
@@ -379,27 +407,51 @@ cdef class SparseEval:
             res = first.empty(nele, self._size)
             first.mul(second, res)
             return res
-        else:  # divide
+        elif func == 3:  # divide
             res = first.empty(first.nintersection(second), self._size)
             first.div(second, res)
             return res
-            
+        else:
+            raise NotImplementedError("%s" % func)
+
+    cdef SparseArray one_arg(self, int func, SparseArray first):
+        if func == 4:
+            return first.fabs()
+        elif func == 6:
+            return first.sqrt()
+        elif func == 7:
+            return first.sin()
+        elif func == 14:
+            return first.sq()
+        else:
+            raise NotImplementedError("%s" % func)
+
+    def get_output(self):
+        return self._output
+        
     cdef SparseArray _eval(self):
         cdef SparseArray res, first, second
         cdef int pos = self._pos
         cdef double v
         self._pos += 1
-        cdef int node = self._ind[pos]
+        cdef int node = self._ind[pos], nop
         if self.isfunc(node):
-            if self._nop[node] == 2:
-                first = self._eval()
-                second = self._eval()
-                res = self.two_args(node, first, second)
+            nop = self._nop[node]
+            if node == 15:
+                self._output = map(lambda x: self._eval(), range(nop))
+                res = self._output[0]
+            else:
+                if nop == 1:
+                    res = self.one_arg(node, self._eval())
+                elif nop == 2:
+                    first = self._eval()
+                    second = self._eval()
+                    res = self.two_args(node, first, second)
         elif self.isvar(node):
             res = self._x[node - self._nfunc]
         else:
             v = self._constants[node - self._nfunc - self._nvar]
-            res = self._x[0].constant(v, self._size)
+            res = self._x1.constant(v)
         return res
             
         
