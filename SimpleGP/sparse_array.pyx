@@ -278,14 +278,39 @@ cdef class SparseArray:
             res._indexC[i] = self._indexC[i]
         return res
 
+    @cython.cdivision(True)
+    cpdef SparseArray sigmoid(self):
+        cdef SparseArray res = self.empty(self.nele(), self._size)
+        cdef int i
+        cdef double r
+        for i in xrange(self.nele()):
+            res._dataC[i] = 1 / (1 + math.exp((-self._dataC[i] + 1) * 30))
+            res._indexC[i] = self._indexC[i]
+        return res
+
+    cpdef SparseArray if_func(self, SparseArray y, SparseArray z):
+        cdef SparseArray s = self.sigmoid()
+        cdef SparseArray sy = s.empty(s.nintersection(y), s._size)
+        cdef SparseArray sz = s.empty(s.nintersection(z), s._size)
+        cdef SparseArray r
+        cdef SparseArray res
+        s.mul(y, sy)
+        s.mul(z, sz)
+        r = sy.empty(sy.nunion(sz), sy._size)
+        sy.sub(sz, r)
+        res = r.empty(r.nunion(z), r._size)
+        r.add(z, res)
+        return res
+            
     cpdef double SAE(self, SparseArray other):
         cdef int a=0, b=0, index=0, c=0
-        cdef int anele = self.nele(), bnele=other.nele()
-        cdef int rnele=self.nunion(other)
+        cdef int anele = self._nele, bnele=other._nele
         cdef double r, res=0
         cdef SparseArray last
-        for c in range(rnele):
-            if a >= anele:
+        while True:
+            if a >= anele and b >= bnele:
+                break
+            elif a >= anele:
                 index = other._indexC[b]
                 r = - other._dataC[b]
                 b += 1
@@ -471,6 +496,8 @@ cdef class SparseEval:
             return first.sqrt()
         elif func == 7:
             return first.sin()
+        elif func == 9:
+            return first.sigmoid()
         elif func == 14:
             return first.sq()
         else:
@@ -480,7 +507,7 @@ cdef class SparseEval:
         return self._output
         
     cdef SparseArray _eval(self):
-        cdef SparseArray res, first, second
+        cdef SparseArray res, first, second, third
         cdef int pos = self._pos
         cdef double v
         self._pos += 1
@@ -497,6 +524,16 @@ cdef class SparseEval:
                     first = self._eval()
                     second = self._eval()
                     res = self.two_args(node, first, second)
+                elif nop == 3:
+                    if node == 10:
+                        first = self._eval()
+                        second = self._eval()
+                        third = self._eval()
+                        res = first.if_func(second, third)
+                    else:
+                        raise NotImplementedError("%s" % node)
+                else:
+                    raise NotImplementedError("%s" % node)
         elif self.isvar(node):
             res = self._x[node - self._nfunc]
         else:

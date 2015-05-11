@@ -191,6 +191,43 @@ def test_sparse_array_sqrt():
     assert np.isnan(uno[0]) and np.isnan(suno[0])
 
 
+def test_sparse_array_sigmoid():
+    np.random.seed(0)
+    uno = create_numpy_array() * 100
+    uno[0] = -1000
+    uno[1] = 1000
+    suno = SparseArray.fromlist(uno).sigmoid().tonparray()
+    uno = 1 / (1 + np.exp((-uno + 1) * 30))
+    print uno[:10]
+    print suno[:10]
+    map(lambda x: assert_almost_equals(x[0], x[1]), zip(uno, suno))
+
+
+def test_sparse_array_if():
+    def sigmoid(x):
+        return 1 / (1 + np.exp((-x + 1) * 30))
+
+    sa = SparseArray.fromlist
+    np.random.seed(0)
+    x = create_numpy_array() * 10
+    x[0] = -1
+    x[1] = 1
+    y = np.ones_like(x)
+    z = np.ones_like(x) + 1
+    s = sigmoid(x)
+    r = s * y - s * z + z
+    # print r
+    map(lambda x: assert_almost_equals(x[0], x[1]),
+        zip(r, (sa(x).if_func(sa(y),
+                              sa(z))).tonparray()))
+    x.fill(0)
+    s1 = sa(x)
+    r = s1.if_func(s1, sa(y))
+    print r.tonparray()
+    assert False
+    
+
+    
 def test_sparse_array_SAE():
     np.random.seed(0)
     uno = create_numpy_array()

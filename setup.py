@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools import Extension
 from Cython.Distutils import build_ext
 from distutils import sysconfig
@@ -92,7 +92,8 @@ setup(
     author_email="mgraffg@ieee.org",
     cmdclass={"build_ext": build_ext, "clean": Clean},
     ext_modules=ext_modules,
-    packages=['SimpleGP'],
+    packages=find_packages(),
+    package_data={'': ['*.pxd']},
     install_requires=['cython >= 0.19.2', 'numpy >= 1.6.2',
                       'pymock >= 1.0.5']
 )
