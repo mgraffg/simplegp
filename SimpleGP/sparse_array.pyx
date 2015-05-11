@@ -21,7 +21,11 @@ cimport cython
 import numpy as np
 import types
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
-# from cpython.ref cimport Py_INCREF
+cdef extern from "numpy/npy_math.h":
+    bint npy_isinf(double)
+    bint npy_isnan(double)
+    long double INFINITY "NPY_INFINITY"
+
 
 @cython.freelist(512)
 cdef class SparseArray:
@@ -273,7 +277,39 @@ cdef class SparseArray:
             res._dataC[i] = math.sqrt(self._dataC[i])
             res._indexC[i] = self._indexC[i]
         return res
-        
+
+    cpdef double SAE(self, SparseArray other):
+        cdef int a=0, b=0, index=0, c=0
+        cdef int anele = self.nele(), bnele=other.nele()
+        cdef int rnele=self.nunion(other)
+        cdef double r, res=0
+        cdef SparseArray last
+        for c in range(rnele):
+            if a >= anele:
+                index = other._indexC[b]
+                r = - other._dataC[b]
+                b += 1
+            elif b >= bnele:
+                index = self._indexC[a]
+                r = self._dataC[a]
+                a += 1
+            else:
+                index = self._indexC[a]
+                if index == other._indexC[b]:
+                    r = self._dataC[a] - other._dataC[b]
+                    a += 1; b += 1
+                elif index < other._indexC[b]:
+                    r = self._dataC[a]
+                    a += 1
+                else:
+                    r = - other._dataC[b]
+                    index = other._indexC[b]
+                    b += 1
+            res +=  math.fabs(r)
+        if npy_isnan(res):
+            return INFINITY
+        return res
+            
     def tonparray(self):
         import numpy as np
         cdef npc.ndarray[double, ndim=1] res = np.zeros(self.size())
@@ -284,6 +320,20 @@ cdef class SparseArray:
             resC[ele] = self._dataC[i]
         return res
 
+    def get_data(self):
+        cdef list d=[]
+        cdef int i
+        for i in range(self.nele()):
+            d.append(self._dataC[i])
+        return d
+
+    def get_index(self):
+        cdef list d=[]
+        cdef int i
+        for i in range(self.nele()):
+            d.append(self._indexC[i])
+        return d    
+        
     def tolist(self):
         cdef int i, ele
         lst = map(lambda x: 0, xrange(self.size()))

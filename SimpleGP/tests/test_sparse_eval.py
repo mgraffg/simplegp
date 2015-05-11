@@ -42,6 +42,16 @@ def test_sparse_array():
     assert sp.nele() == 100
 
 
+def test_get_data_index():
+    np.random.seed(0)
+    var = create_numpy_array()
+    array = SparseArray.fromlist(var)
+    n = SparseArray()
+    n.init(array.nele())
+    n.set_size(array.size())
+    n.set_data_index(array.get_data(), array.get_index())
+    assert (array - n).fabs().sum() == 0
+
 def test_nunion():
     size = 1000
     uno = create_numpy_array(size)
@@ -180,7 +190,19 @@ def test_sparse_array_sqrt():
     assert np.all(uno[1:] == suno[1:])
     assert np.isnan(uno[0]) and np.isnan(suno[0])
 
+
+def test_sparse_array_SAE():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    dos = create_numpy_array()
+    suno = SparseArray.fromlist(uno)
+    sdos = SparseArray.fromlist(dos)
+    assert suno.SAE(sdos) == np.fabs(uno-dos).sum()
+    uno[0] = np.nan
+    suno = SparseArray.fromlist(uno)
+    assert suno.SAE(sdos) == np.inf
     
+
 def test_sparse_constant():
     s = SparseArray().constant(12, 10)
     assert len(filter(lambda x: x == 12, s.tolist())) == 10
