@@ -418,6 +418,21 @@ cdef class SparseArray:
             res._indexC[i] = i
         return res
 
+    @staticmethod
+    @cython.boundscheck(False)
+    @cython.nonecheck(False)
+    def distance(list X, list ev, npc.ndarray[double, ndim=2] output):
+        cdef SparseArray x
+        cdef SparseArray y
+        cdef double *data = <double *> output.data
+        cdef int c = 0, i=0, j=0, len_X = len(X)
+        for i in range(len(ev)):
+            x = ev[i]
+            for j in range(len_X):
+                y = X[j]
+                data[c] = x.SAE(y)
+                c += 1
+        
 cdef class SparseEval:
     def __cinit__(self, npc.ndarray[long, ndim=1] nop):
         self._nop = <long *> nop.data
