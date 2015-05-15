@@ -179,7 +179,7 @@ class SparseGPPG(SubTreeXO):
         prototypes = self.prototypes
         npro = nprototypes if nprototypes is not None else len(prototypes)
         l, cl = self.eval_prototypes(self.prototypes[:npro])
-        D = np.zeros((len(l), len(self._x)))
+        D = np.zeros((len(l), len(X)))
         SparseArray.distance(X, l, D)
         s = D.argmin(axis=0)
         return cl[s]
