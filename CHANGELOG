@@ -1,4 +1,6 @@
 Version 0.10.*
+	+ New class SparseGPPG. GPPG is classifier that uses 1NN and
+	prototypes generation
 	+ Sigmoid and if_func have been included
 	+ new functions in SparseEval
 	+ Creating an SparseArray
