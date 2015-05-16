@@ -243,8 +243,11 @@ class SparseGPPG(SubTreeXO):
 
     @staticmethod
     def recall(y, yh):
-        l = map(lambda x: ((y == yh)[y == x]).sum() / float((y == x).sum()),
-                np.unique(y))
+        l = []
+        for cl in np.unique(y):
+            m = y == cl
+            r = (yh[m] == cl).sum() / float(m.sum())
+            l.append(r)
         return np.array(l)
 
     @staticmethod
@@ -252,6 +255,6 @@ class SparseGPPG(SubTreeXO):
         l = []
         for cl in np.unique(y):
             m = yh == cl
-            r = (y[m] == cl).sum() / float(m.sum())
-            l.append(r)
+            p = (y[m] == cl).sum() / float(m.sum())
+            l.append(p)
         return np.array(l)
