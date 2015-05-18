@@ -220,14 +220,8 @@ def test_sparse_array_if():
     map(lambda x: assert_almost_equals(x[0], x[1]),
         zip(r, (sa(x).if_func(sa(y),
                               sa(z))).tonparray()))
-    x.fill(0)
-    s1 = sa(x)
-    r = s1.if_func(s1, sa(y))
-    print r.tonparray()
-    assert False
-    
 
-    
+
 def test_sparse_array_SAE():
     np.random.seed(0)
     uno = create_numpy_array()

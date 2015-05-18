@@ -236,7 +236,7 @@ class SparseGPPG(SubTreeXO):
                 fbest = gp.fitness(gp.best)
                 prototypes = gp.prototypes
                 r = gp.recall(gp._f, gp.eval())
-                tree_cl = np.where((r - r.min()) < tol)[0].tolist()
+                tree_cl = np.where((r - r.min()) <= tol)[0].tolist()
         return gp
 
     @classmethod
