@@ -1,4 +1,4 @@
-# Copyright 2013 Mario Graff Guerrero
+# Copyright 2015 Mario Graff Guerrero
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -201,6 +201,7 @@ class SparseGPPG(SubTreeXO):
     @classmethod
     def run_cl(cls, X, y, nprototypes=10, fname_best=None,
                func=['+', '-', 'abs', 'sin', 'sq', 'sqrt', 'sigmoid', 'if'],
+               tol=0.0,
                nrandom=0, verbose=False, max_length=512, tree_cl=None,
                seed=0, prototypes=None, **kwargs):
         prototypes = [] if prototypes is None else prototypes
@@ -234,7 +235,8 @@ class SparseGPPG(SubTreeXO):
             else:
                 fbest = gp.fitness(gp.best)
                 prototypes = gp.prototypes
-                tree_cl = [gp.recall(gp._f, gp.eval()).argmin()]
+                r = gp.recall(gp._f, gp.eval())
+                tree_cl = np.where((r - r.min()) < tol)[0].tolist()
         return gp
 
     @classmethod
