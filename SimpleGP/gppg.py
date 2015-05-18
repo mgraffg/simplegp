@@ -173,10 +173,14 @@ class SparseGPPG(SubTreeXO):
             yh = np.vstack((self._pg_cl, yh))[s, np.arange(s.shape[0])]
         return yh
 
-    def predict(self, X, ind=None, nprototypes=None):
+    def predict(self, X, ind=None, nprototypes=None, prototypes=None):
         if ind is None:
             ind = self.best
-        prototypes = self.prototypes
+        p = (self.population[ind],
+             self._p_constants[ind],
+             self._tree_cl)
+        if prototypes is None:
+            prototypes = self._prototypes + [p]
         npro = nprototypes if nprototypes is not None else len(prototypes)
         l, cl = self.eval_prototypes(self.prototypes[:npro])
         D = np.zeros((len(l), len(X)))
