@@ -1,6 +1,7 @@
 import test_classification
 import numpy as np
 from SimpleGP import SparseGPPG, SparseArray
+import os
 
 cl = test_classification.cl
 X = test_classification.X
@@ -8,9 +9,12 @@ X = test_classification.X
 
 def test_gppg():
     x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
+    fname = 'gppg.npy.gz'
     gp = SparseGPPG.run_cl(x, cl, nprototypes=2,
+                           fname_best=fname,
                            verbose=True, generations=2)
     assert len(gp.prototypes) == 2
+    os.unlink(fname)
 
 
 def test_tol():

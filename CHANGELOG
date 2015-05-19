@@ -1,4 +1,5 @@
 Version 0.10.*
+	+ Using shutil instead of os.unlink
 	+ New class SparseGPPG. GPPG is classifier that uses 1NN and
 	prototypes generation
 	+ Sigmoid and if_func have been included

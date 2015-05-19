@@ -18,6 +18,7 @@ from SimpleGP.sparse_array import SparseEval, SparseArray
 from SimpleGP.Simplify import Simplify
 import tempfile
 import os
+import shutil
 
 
 class SparseGPPG(SubTreeXO):
@@ -223,12 +224,7 @@ class SparseGPPG(SubTreeXO):
             gp.run()
             nprot = len(gp.prototypes)
             if fname_best is not None and fname != fname_best:
-                try:
-                    os.unlink(fname_best)
-                except OSError:
-                    pass
-                os.link(fname, fname_best)
-                os.unlink(fname)
+                shutil.move(fname, fname_best)
             gp.verbose(nprot)
             if fbest > -np.inf and fbest > gp.fitness(gp.best):
                 return gp
