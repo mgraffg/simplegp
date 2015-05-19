@@ -202,10 +202,11 @@ class SparseGPPG(SubTreeXO):
     @classmethod
     def run_cl(cls, X, y, nprototypes=10, fname_best=None,
                func=['+', '-', 'abs', 'sin', 'sq', 'sqrt', 'sigmoid', 'if'],
-               tol=0.0,
+               tol=0.0, func_select=None,
                nrandom=0, verbose=False, max_length=512, tree_cl=None,
                seed=0, prototypes=None, **kwargs):
         prototypes = [] if prototypes is None else prototypes
+        func_select = cls.recall if func_select is None else func_select
         nprot = 0
         fbest = -np.inf
         fname = None
@@ -231,7 +232,7 @@ class SparseGPPG(SubTreeXO):
             else:
                 fbest = gp.fitness(gp.best)
                 prototypes = gp.prototypes
-                r = gp.recall(gp._f, gp.eval())
+                r = func_select(gp._f, gp.eval())
                 tree_cl = np.where((r - r.min()) <= tol)[0].tolist()
         return gp
 
