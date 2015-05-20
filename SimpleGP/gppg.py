@@ -17,7 +17,6 @@ from SimpleGP.forest import SubTreeXO
 from SimpleGP.sparse_array import SparseEval, SparseArray
 from SimpleGP.Simplify import Simplify
 import tempfile
-import os
 import shutil
 
 
@@ -32,13 +31,29 @@ class SparseGPPG(SubTreeXO):
             self._tree_cl = tree_cl
         self._pg_cl = None
         self._pg_d = None
+        self._prototypes_argsort = None
 
     @property
     def prototypes(self):
-        p = (self.population[self.best],
-             self._p_constants[self.best],
-             self._tree_cl)
-        return self._prototypes + [p]
+        ps = self._prototypes_argsort
+        p = self._prototypes + [(self.population[self.best],
+                                 self._p_constants[self.best],
+                                 self._tree_cl)]
+        if ps is None:
+            _, perf = self.prototypes_performance(p)
+            perf = perf.tolist()
+            cnt = []
+            for cl in map(lambda x: x[2], p):
+                if len(cl) > 1:
+                    s = sum(perf[:len(cl)])
+                    del perf[:len(cl)]
+                else:
+                    s = perf[0]
+                    del perf[0]
+                cnt.append(s)
+            ps = np.argsort(cnt)[::-1]
+            self._prototypes_argsort = ps
+        return map(lambda x: p[x], ps)
 
     def save_extras(self, fpt):
         super(SparseGPPG, self).save_extras(fpt)
@@ -146,8 +161,10 @@ class SparseGPPG(SubTreeXO):
         self._nop[self._output_pos] = self._ntrees
         return l, np.concatenate(cl)
 
-    def prototypes_performance(self):
-        l, cl = self.eval_prototypes(self.prototypes)
+    def prototypes_performance(self, prototypes=None):
+        if prototypes is None:
+            prototypes = self.prototypes
+        l, cl = self.eval_prototypes(prototypes)
         D = np.zeros((len(l), len(self._x)))
         SparseArray.distance(self._x, l, D)
         s = D.argmin(axis=0)

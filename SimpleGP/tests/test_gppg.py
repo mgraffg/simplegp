@@ -23,4 +23,12 @@ def test_tol():
                            verbose=True, generations=2)
     assert np.all(np.array(map(lambda x: len(x[-1]),
                                gp.prototypes)) == np.array([3, 1, 3]))
-    
+
+
+def test_sort_prototypes():
+    x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
+    gp = SparseGPPG.run_cl(x, cl, nprototypes=3, tol=0.05, popsize=100,
+                           verbose=True, generations=2)
+    _, perf = gp.prototypes_performance()
+    ps = gp._prototypes_argsort
+    assert np.all((ps[1:] - ps[:-1]) == 1)
