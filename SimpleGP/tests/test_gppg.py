@@ -43,4 +43,3 @@ def test_gppgD():
     d1 = gp._dist_matrix_W.min(axis=0)[gp.eval() == cl].sum()
     d2 = gp1._dist_matrix_W.min(axis=0)[gp1.eval() == cl].sum()
     assert d1 < d2
-    
