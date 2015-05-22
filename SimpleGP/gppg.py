@@ -287,6 +287,7 @@ class SparseGPPGD(SparseGPPG):
         if self._pg_d is not None:
             W = self._dist_matrix_W
         W = W.min(axis=0)
+        max = W.max()
         lst = []
         for i in np.unique(y):
             m = y == i
@@ -295,7 +296,6 @@ class SparseGPPGD(SparseGPPG):
             W1 = W[m]
             m1 = y1 == yh1
             avg = W1[m1].mean() if m1.sum() else 0
-            max = W1.max()
             wrs = max * (~m1).sum() / float(m.shape[0])
             lst.append(avg + wrs)
         return sum(lst)
