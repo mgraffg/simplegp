@@ -189,6 +189,7 @@ class SparseGPPG(SubTreeXO):
             W = np.vstack((self._pg_d, d))
             s = W.argmin(axis=0)
             yh = np.vstack((self._pg_cl, yh))[s, np.arange(s.shape[0])]
+            self._dist_matrix_W = W
         return yh
 
     def predict(self, X, ind=None, nprototypes=None, prototypes=None):
@@ -278,3 +279,13 @@ class SparseGPPG(SubTreeXO):
             p = (y[m] == cl).sum() / float(m.sum())
             l.append(p)
         return np.array(l)
+
+
+class SparseGPPGD(SparseGPPG):
+    def distance(self, y, yh):
+        W = self._dist_matrix
+        if self._pg_d is not None:
+            W = self._dist_matrix_W
+        W = W.min(axis=0)
+        m = y == yh
+        return W[m].sum() + (~m).sum() * W[m].max()

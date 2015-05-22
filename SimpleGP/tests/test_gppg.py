@@ -1,6 +1,6 @@
 import test_classification
 import numpy as np
-from SimpleGP import SparseGPPG, SparseArray
+from SimpleGP import SparseGPPG, SparseArray, SparseGPPGD
 import os
 
 cl = test_classification.cl
@@ -32,3 +32,15 @@ def test_sort_prototypes():
     _, perf = gp.prototypes_performance()
     ps = gp._prototypes_argsort
     assert np.all((ps[1:] - ps[:-1]) == 1)
+
+
+def test_gppgD():
+    x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
+    gp = SparseGPPGD.run_cl(x, cl, nprototypes=2,
+                            verbose=True, generations=2)
+    gp1 = SparseGPPG.run_cl(x, cl, nprototypes=2,
+                            verbose=True, generations=2)
+    d1 = gp._dist_matrix_W.min(axis=0)[gp.eval() == cl].sum()
+    d2 = gp1._dist_matrix_W.min(axis=0)[gp1.eval() == cl].sum()
+    assert d1 < d2
+    
