@@ -26,7 +26,7 @@ from .Rprop import RPROP
 from .elm import ELM, ELMPDE
 from .PrGP import PrGP, GSGP
 from .sparse_array import SparseArray, SparseEval
-from .gppg import SparseGPPG, SparseGPPGD
+from .gppg import SparseGPPG
 from utils import Pool, VerifyOutput
 
 
@@ -36,7 +36,7 @@ __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool, BestNotFound, Generational, GenerationalPDE,
            ELM, ELMPDE, GPForestPDE, PrGP, GSGP, SparseEval,
-           SparseArray, SparseGPPG, SparseGPPGD]
+           SparseArray, SparseGPPG]
 
 
 

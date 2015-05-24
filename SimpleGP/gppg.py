@@ -217,6 +217,22 @@ class SparseGPPG(SubTreeXO):
             print "Iter:", i, "R:", map(lambda x: "%0.4f" % x, r),\
                 "P:", map(lambda x: "%0.4f" % x, p)
 
+    def func_select(self, y, yh):
+        return self.recall(y, yh)
+
+    def recall_distance(self, y, yh):
+        W = self._dist_matrix
+        if self._pg_d is not None:
+            W = self._dist_matrix_W
+        W = W.min(axis=0)
+        l = []
+        for cl in np.unique(y):
+            m = y == cl
+            r = (1 / (1 + W[m][yh[m] == cl])).sum()
+            r /= float(m.sum())
+            l.append(r)
+        return np.array(l)
+
     @classmethod
     def run_cl(cls, X, y, nprototypes=10, fname_best=None,
                func=['+', '-', 'abs', 'sin', 'sq', 'sqrt', 'sigmoid', 'if'],
@@ -224,7 +240,6 @@ class SparseGPPG(SubTreeXO):
                nrandom=0, verbose=False, max_length=512, tree_cl=None,
                seed=0, prototypes=None, **kwargs):
         prototypes = [] if prototypes is None else prototypes
-        func_select = cls.recall if func_select is None else func_select
         nprot = 0
         fbest = -np.inf
         fname = None
@@ -250,7 +265,8 @@ class SparseGPPG(SubTreeXO):
             else:
                 fbest = gp.fitness(gp.best)
                 prototypes = gp.prototypes
-                r = func_select(gp._f, gp.eval())
+                fs = gp.func_select if func_select is None else func_select
+                r = fs(gp._f, gp.eval())
                 tree_cl = np.where((r - r.min()) <= tol)[0].tolist()
         return gp
 
@@ -279,22 +295,3 @@ class SparseGPPG(SubTreeXO):
             p = (y[m] == cl).sum() / float(m.sum())
             l.append(p)
         return np.array(l)
-
-
-class SparseGPPGD(SparseGPPG):
-    def distance(self, y, yh):
-        W = self._dist_matrix
-        if self._pg_d is not None:
-            W = self._dist_matrix_W
-        W = W.min(axis=0)
-        max = W.max()
-        avg = 0
-        for i in np.unique(y):
-            m = y == i
-            y1 = y[m]
-            yh1 = yh[m]
-            W1 = W[m]
-            m1 = y1 == yh1
-            avg += W1[m1].mean() if m1.sum() else 0
-        avg += max * (~(y == yh)).sum()
-        return avg

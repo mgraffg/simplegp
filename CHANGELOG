@@ -1,4 +1,6 @@
 Version 0.10.*
+	+ Implementing a measure that captures the recall with the
+	distance 
 	+ Using shutil instead of os.unlink
 	+ New class SparseGPPG. GPPG is classifier that uses 1NN and
 	prototypes generation

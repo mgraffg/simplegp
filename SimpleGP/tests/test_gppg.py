@@ -1,6 +1,6 @@
 import test_classification
 import numpy as np
-from SimpleGP import SparseGPPG, SparseArray, SparseGPPGD
+from SimpleGP import SparseGPPG, SparseArray
 import os
 
 cl = test_classification.cl
@@ -34,12 +34,28 @@ def test_sort_prototypes():
     assert np.all((ps[1:] - ps[:-1]) == 1)
 
 
-def test_gppgD():
+def test_recall_d():
+    class GPD(SparseGPPG):
+        def distance(self, y, yh):
+            return -self.recall_distance(y, yh).mean()
+
     x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
-    gp = SparseGPPGD.run_cl(x, cl, nprototypes=2,
-                            verbose=True, generations=2)
-    gp1 = SparseGPPG.run_cl(x, cl, nprototypes=2,
-                            verbose=True, generations=2)
-    d1 = gp._dist_matrix_W.min(axis=0)[gp.eval() == cl].sum()
-    d2 = gp1._dist_matrix_W.min(axis=0)[gp1.eval() == cl].sum()
-    assert d1 < d2
+    gp = GPD.run_cl(x, cl, nprototypes=2,
+                    verbose=True, generations=2)
+    r = gp.recall_distance(gp._f, gp.eval())
+    print r
+    assert np.all(r <= 1)
+
+
+def test_func_select():
+    def func_select(x, y):
+        raise Exception("!!!")
+    x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
+    try:
+        SparseGPPG.run_cl(x, cl, nprototypes=2,
+                          func_select=func_select,
+                          verbose=True, generations=2)
+    except Exception:
+        return
+    assert False
+    
