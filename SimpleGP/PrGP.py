@@ -30,6 +30,9 @@ class PrGP(GP):
         self._pop_hist = None
         self._nparents = 2
 
+    def set_best(self):
+        pass
+
     def save_extras(self, fpt):
         super(PrGP, self).save_extras(fpt)
         best = self.best
@@ -42,7 +45,7 @@ class PrGP(GP):
 
     def load_extras(self, fpt):
         super(PrGP, self).load_extras(fpt)
-        best = np.load(fpt)
+        best = int(np.load(fpt))
         hist = np.load(fpt)
         eval = np.load(fpt)
         coef = np.load(fpt)
@@ -50,6 +53,8 @@ class PrGP(GP):
         index = np.load(fpt)
         self._load_tmp = [best, hist, eval, coef,
                           ind, index]
+        self._best = best
+        self._best_fit = self._fitness[best]
 
     def save_hist(self, kill):
         index = self._history_index
