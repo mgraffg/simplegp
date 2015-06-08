@@ -120,11 +120,9 @@ class PrGP(GP):
         return self.predict(self._test_set, ind)
 
     def init_test_set(self):
-        print "hola!!!******"
         if self._test_set is None:
             return
         if self._test_set_eval is not None:
-            print "hola!!!", self._test_set_eval
             return
         self._test_set_eval = np.array(map(lambda x:
                                            self.predict(self._test_set,
