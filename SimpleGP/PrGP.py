@@ -28,6 +28,8 @@ class PrGP(GP):
         self._pop_eval_mut = None
         self._pop_eval = None
         self._pop_hist = None
+        self._test_set_eval = None
+        self._test_set_eval_mut = None
         self._nparents = 2
 
     def set_best(self):
@@ -42,6 +44,8 @@ class PrGP(GP):
         np.save(fpt, self._history_coef)
         np.save(fpt, self._history_ind)
         np.save(fpt, self._history_index)
+        np.save(fpt, self._test_set_eval)
+        np.save(fpt, self._test_set_eval_mut)
 
     def load_extras(self, fpt):
         super(PrGP, self).load_extras(fpt)
@@ -51,10 +55,10 @@ class PrGP(GP):
         coef = np.load(fpt)
         ind = np.load(fpt)
         index = np.load(fpt)
+        self._test_set_eval = np.load(fpt)
+        self._test_set_eval_mut = np.load(fpt)
         self._load_tmp = [best, hist, eval, coef,
                           ind, index]
-        self._best = best
-        self._best_fit = self._fitness[best]
 
     def save_hist(self, kill):
         index = self._history_index
@@ -111,13 +115,16 @@ class PrGP(GP):
         self.new_best(kill)
 
     def predict_test_set(self, ind):
-        try:
+        if self._test_set_eval is not None:
             return self._test_set_eval[ind]
-        except AttributeError:
-            return self.predict(self._test_set, ind)
+        return self.predict(self._test_set, ind)
 
-    def init_set_set(self):
+    def init_test_set(self):
+        print "hola!!!******"
         if self._test_set is None:
+            return
+        if self._test_set_eval is not None:
+            print "hola!!!", self._test_set_eval
             return
         self._test_set_eval = np.array(map(lambda x:
                                            self.predict(self._test_set,
@@ -166,7 +173,7 @@ class PrGP(GP):
                                           3), dtype=np.int)
             self._history_ind.fill(-1)
             self._history_index = self.popsize
-        self.init_set_set()
+        self.init_test_set()
 
     def compute_alpha_beta(self, X):
         return lstsq(X, self._f)[0]
