@@ -295,3 +295,46 @@ class SparseGPPG(SubTreeXO):
             p = (y[m] == cl).sum() / float(m.sum())
             l.append(p)
         return np.array(l)
+
+
+class PGCl(SparseGPPG):
+    def eval_ind(self, ind, pos=0, constants=None):
+        from sklearn.naive_bayes import GaussianNB
+        c = constants if constants is not None else self._constants
+        self.nodes_evaluated += ind.shape[0]
+        self._eval.eval(ind, c, to_np_array=False)
+        yh = self._eval.get_output()
+        SparseArray.distance(self._x, yh, self._dist_matrix)
+        mn_finite = ~np.isfinite(self._dist_matrix)
+        if np.any(mn_finite):
+            return np.zeros_like(self._f) - 1
+        if self._pg_d is not None:
+            X = np.concatenate((self._dist_matrix.T, self._pg_d), axis=1)
+        else:
+            X = self._dist_matrix.T
+        m = GaussianNB().fit(X, self._f)
+        self._model = m
+        return m.predict(X)
+
+    def eval_prev_prototypes(self):
+        l, cl = self.eval_prototypes(self._prototypes)
+        if len(l):
+            tree_cl = cl
+            D = np.zeros((len(l), len(self._x)))
+            SparseArray.distance(self._x, l, D)
+            self._pg_cl = tree_cl
+            self._pg_d = D.T
+        else:
+            self._pg_cl = None
+            self._pg_d = None
+
+    def predict(self, X, ind=None):
+        if ind is None:
+            ind = self.best
+        self.eval(ind)
+        prototypes = self.prototypes
+        l, cl = self.eval_prototypes(prototypes)
+        D = np.zeros((len(l), len(X)))
+        SparseArray.distance(X, l, D)
+        return self._model.predict(D.T)
+            

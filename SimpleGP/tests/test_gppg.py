@@ -1,6 +1,7 @@
 import test_classification
 import numpy as np
 from SimpleGP import SparseGPPG, SparseArray
+from SimpleGP.gppg import PGCl
 import os
 
 cl = test_classification.cl
@@ -58,4 +59,33 @@ def test_func_select():
     except Exception:
         return
     assert False
+
+
+def test_pgcl():
+    x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
+    fname = 'pgcl.npy.gz'
+    gp = PGCl.run_cl(x, cl, nprototypes=2,
+                     fname_best=fname, popsize=100,
+                     verbose=True, generations=2)
+    os.unlink(fname)
+    assert gp._model.sigma_.shape[1] > 3
+
+
+def test_pgcl_prev_prot():
+    x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
+    gp = PGCl.run_cl(x, cl, nprototypes=2,
+                     verbose=True, generations=2)
+    print gp._pg_d.shape
+    assert gp._pg_d.shape[0] == 150
+    assert gp._pg_d.shape[1] == 3
+
+
+def test_pgcl_predict():
+    x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
+    fname = 'pgcl.npy.gz'
+    gp = PGCl.run_cl(x, cl, nprototypes=2,
+                     fname_best=fname, popsize=100,
+                     verbose=True, generations=2)
+    os.unlink(fname)
+    assert gp.fitness(gp.best) == -gp.distance(gp._f, gp.predict(x))
     

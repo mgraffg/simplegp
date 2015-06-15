@@ -1,4 +1,5 @@
 Version 0.10.*
+	+ Prototype Generation using GaussianNB as classifier
 	+ PrGP does not need set_best
 	+ Implementing a measure that captures the recall with the
 	distance 
