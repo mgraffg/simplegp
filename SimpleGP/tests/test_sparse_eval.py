@@ -228,7 +228,8 @@ def test_sparse_array_SAE():
     dos = create_numpy_array()
     suno = SparseArray.fromlist(uno)
     sdos = SparseArray.fromlist(dos)
-    assert suno.SAE(sdos) == np.fabs(uno-dos).sum()
+    print suno.SAE(sdos), np.fabs(uno-dos).sum()
+    assert_almost_equals(suno.SAE(sdos), np.fabs(uno-dos).sum())
     uno[0] = np.nan
     suno = SparseArray.fromlist(uno)
     assert suno.SAE(sdos) == np.inf

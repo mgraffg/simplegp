@@ -191,14 +191,14 @@ def test_stats():
         def __init__(self, **kwargs):
             super(GA2, self).__init__(**kwargs)
             self._call_stats = 0
-            self._generations = 0
+            self._generations_ = 0
 
         def stats(self):
             self._call_stats += 1
             flag = super(GA2, self).stats()
             if flag:
                 # print self.gens_ind
-                self._generations += 1
+                self._generations_ += 1
                 self._lcall = self.gens_ind
                 return flag
     x = np.linspace(0, 1, 100)
@@ -206,8 +206,8 @@ def test_stats():
     X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
     f = (X * pol).sum(axis=1)
     ga = GA2.run_cl(X, f, popsize=3, generations=11, verbose=True)
-    print ga._call_stats, ga._generations, ga.gens_ind, ga._last_call_to_stats
-    assert ga._generations == 11
+    print ga._call_stats, ga._generations_, ga.gens_ind, ga._last_call_to_stats
+    assert ga._generations_ == 11
 
 
 def test_get_params():
