@@ -45,6 +45,7 @@ class GPForest(GP):
             self._max_length = maximum
 
     def tree_params(self, type_xpoint_selection=0):
+        self._type_xpoint_selection = type_xpoint_selection
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -65,6 +66,7 @@ class GPForest(GP):
 
 class SubTreeXO(GPForest):
     def tree_params(self, type_xpoint_selection=0):
+        self._type_xpoint_selection = type_xpoint_selection
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,
@@ -106,6 +108,7 @@ class GPForestPDE(GPPDE, GPForest):
         super(GPForestPDE, self).set_error_p_der()
 
     def tree_params(self, type_xpoint_selection=0):
+        self._type_xpoint_selection = type_xpoint_selection
         self._tree_length = np.empty(self._max_length,
                                      dtype=self._ind_dtype)
         self._tree_mask = np.empty(self._max_length,
@@ -121,6 +124,7 @@ class GPForestPDE(GPPDE, GPForest):
 
 class SubTreeXOPDE(GPForestPDE):
     def tree_params(self, type_xpoint_selection=0):
+        self._type_xpoint_selection = type_xpoint_selection
         self._tree_length = np.empty(self._max_length,
                                      dtype=np.int)
         self._tree_mask = np.empty(self._max_length,

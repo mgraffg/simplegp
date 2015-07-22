@@ -31,6 +31,16 @@ class TestSimpleGPPDE(object):
                                  seed=0)
         self._gp.train(self._x, self._y)
 
+    def test_get_params(self):
+        s = GPPDE(popsize=10, max_length=512,
+                  max_mem=100,
+                  generations=3).fit(self._x, self._y)
+        p = s.get_params()
+        assert p['max_length'] == 512
+        assert p['generations'] == 3
+        assert p['popsize'] == 10
+        assert p['max_mem'] == 100
+
     def test_pmutation_run(self):
         gp = GPPDE.run_cl(self._x, self._y, seed=0, verbose=True,
                           generations=5, ppm=1, pxo=0.5)

@@ -15,6 +15,7 @@ import numpy as np
 import types
 import os
 import signal
+import inspect
 
 
 class BestNotFound(Exception):
@@ -58,8 +59,8 @@ class SimpleGA(object):
                  ind_dtype=np.int):
         self._popsize = popsize
         self._ppm = 1 - ppm
-        self._tsize = tournament_size
-        self._gens = generations
+        self._tournament_size = tournament_size
+        self._generations = generations
         self._pxo = pxo
         self._pm = pm
         self._verbose = verbose
@@ -70,8 +71,8 @@ class SimpleGA(object):
         self._timeout = False
         self._stats = stats
         if stats:
-            self.fit_per_gen = np.zeros(self._gens)
-        self.set_seed(seed)
+            self.fit_per_gen = np.zeros(self._generations)
+        self.seed = seed
         self._best_fit = None
         self._best = None
         self._fname_best = fname_best
@@ -80,13 +81,30 @@ class SimpleGA(object):
         self._p = None
         self._test_set = None
         self._save_only_best = save_only_best
+        self._walltime = walltime
         signal.signal(signal.SIGTERM, self.on_exit)
-        if walltime is not None:
+        if self._walltime is not None:
             signal.signal(signal.SIGALRM, self.walltime)
-            signal.alarm(walltime)
+            signal.alarm(self._walltime)
+
+    @property
+    def seed(self):
+        """
+        Seed used
+        """
+        return self._seed
+
+    @seed.setter
+    def seed(self, v):
+        self._seed = v
+        if v is not None:
+            np.random.seed(self._seed)
 
     @property
     def population(self):
+        """
+        Population
+        """
         return self._p
 
     @property
@@ -96,9 +114,9 @@ class SimpleGA(object):
 
     @popsize.setter
     def popsize(self, popsize):
-        """Set the population size, it handles the case where the new
-population size is smaller or larger than the current one
-
+        """
+        Set the population size, it handles the case where the new
+        population size is smaller or larger than the current one
         """
         if self._popsize == popsize:
             return
@@ -116,11 +134,45 @@ population size is smaller or larger than the current one
     @property
     def generations(self):
         """Number of generations"""
-        return self._gens
+        return self._generations
 
     @generations.setter
     def generations(self, v):
-        self._gens = v
+        self._generations = v
+
+    @classmethod
+    def _get_param_names(cls):
+        """Get parameter names for the class"""
+        args = inspect.getargspec(cls.__init__)[0]
+        args.pop(0)
+        return args
+
+    @classmethod
+    def _bases(cls):
+        """Get class' hierarchy"""
+        lst = list(cls.__bases__)
+        l = []
+        while len(lst):
+            k = lst.pop()
+            if k == object:
+                continue
+            lst += k.__bases__
+            l.append(k)
+        return l
+
+    def get_params(self, deep=True):
+        """
+        Parameters and their values.
+        """
+        params = {}
+        keys = set()
+        if deep:
+            for ins in self._bases():
+                keys.update(ins._get_param_names())
+        keys.update(self._get_param_names())
+        for key in keys:
+            params[key] = getattr(self, "_" + key)
+        return params
 
     def init(self):
         """
@@ -147,16 +199,15 @@ population size is smaller or larger than the current one
         self.save()
         self._run = False
 
-    def set_seed(self, seed):
-        if seed is not None:
-            np.random.seed(seed)
-
     def set_test(self, x):
         """
         x is the set test, this is used to test, during the evolution, that
         the best individual does not produce nan or inf
         """
         self._test_set = x.astype(self._dtype, copy=False, order='C')
+
+    def fit(self, *args, **kwargs):
+        return self.train(*args, **kwargs)
 
     def train(self, x, f):
         """
@@ -207,7 +258,7 @@ population size is smaller or larger than the current one
         else:
             func_cmp = lambda x, y: x > y
         best = np.random.randint(self._popsize) if self._popsize > 2 else 0
-        for i in range(self._tsize-1):
+        for i in range(self._tournament_size-1):
             comp = np.random.randint(self._popsize) if self._popsize > 2 else 1
             while comp == best:
                 comp = np.random.randint(self._popsize)
@@ -422,7 +473,7 @@ population size is smaller or larger than the current one
             if self._stats:
                 self.fit_per_gen[i/self._popsize] = self._fitness[self.best]
             if self._verbose:
-                print "Gen: " + str(i) + "/" + str(self._gens * self._popsize)\
+                print "Gen: " + str(i) + "/" + str(self._generations * self._popsize)\
                     + " " + "%0.4f" % self._fitness[self.best]
         return True
 
@@ -435,7 +486,7 @@ population size is smaller or larger than the current one
         """
         self.create_population()
         while (not self._timeout and
-               self.gens_ind < self._gens*self._popsize and self._run):
+               self.gens_ind < self._generations*self._popsize and self._run):
             try:
                 self.stats()
                 son = self.genetic_operators()

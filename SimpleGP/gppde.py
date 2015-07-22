@@ -195,6 +195,7 @@ class GPPDE(GP):
         return ind
 
     def tree_params(self, type_xpoint_selection=0):
+        self._type_xpoint_selection = type_xpoint_selection
         self._tree_length = np.empty(self._max_length,
                                      dtype=self._ind_dtype)
         self._tree_mask = np.empty(self._max_length,
@@ -314,10 +315,10 @@ class GPPDE(GP):
             mm = ins._max_mem - base
             assert mm > 0
             popsize = np.floor(mm / np.float(pr)).astype(np.int)
-            nind = ins._gens * ins._popsize
+            nind = ins.generations * ins.popsize
             popsize = filter(lambda x: (nind % x) == 0,
                              range(2, popsize+1))[-1]
-            ins._gens = np.floor(nind / popsize).astype(np.int)
+            ins._generations = np.floor(nind / popsize).astype(np.int)
             ins._popsize = popsize
         return ins
 

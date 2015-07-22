@@ -69,6 +69,23 @@ def test_GPForestPDE():
     assert isinstance(gp._tree, PDEXO)
 
 
+def test_GPForest_get_params():
+    from SimpleGP import GPForest
+    x = np.linspace(-10, 10, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    pol1 = np.array([-0.2, 0.3, -0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0])))
+    y = np.vstack(((X.T * pol).sum(axis=1),
+                   (X.T * pol1).sum(axis=1))).T
+    x = x[:, np.newaxis]
+    s = GPForest(max_length=512, generations=3, popsize=10, ntrees=2).fit(x, y)
+    p = s.get_params()
+    assert p['max_length'] == 512
+    assert p['generations'] == 3
+    assert p['popsize'] == 10
+    assert p['ntrees'] == 2
+
+
 def test_SubTreeXOPDE():
     from SimpleGP.tree import PDEXOSubtree
     x = np.linspace(-10, 10, 100)

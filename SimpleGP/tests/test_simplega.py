@@ -208,3 +208,17 @@ def test_stats():
     ga = GA2.run_cl(X, f, popsize=3, generations=11, verbose=True)
     print ga._call_stats, ga._generations, ga.gens_ind, ga._last_call_to_stats
     assert ga._generations == 11
+
+
+def test_get_params():
+    np.random.RandomState(0)
+    x = np.linspace(0, 1, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    f = (X * pol).sum(axis=1)
+    s = SimpleGA(popsize=10, generations=3).fit(X, f)
+    assert s
+    p = s.get_params()
+    assert p['popsize'] == 10
+    assert p['generations'] == 3
+    

@@ -161,6 +161,7 @@ class GP(SimpleGA):
 
     def __set_narg_to_argmax(self, nargs):
         """Setting the number of arguments to argmax"""
+        self._argmax_nargs = nargs
         if nargs is None:
             return
         self._nop[16] = nargs
@@ -173,7 +174,7 @@ class GP(SimpleGA):
     def format_params(self, verbose, verbose_nind):
         self._verbose = verbose
         if self._stats:
-            self.length_per_gen = np.zeros(self._gens)
+            self.length_per_gen = np.zeros(self._generations)
         self._left_p = "("
         self._right_p = ")"
         if verbose_nind is None:
@@ -193,6 +194,7 @@ class GP(SimpleGA):
             self._max_length = maximum
 
     def tree_params(self, type_xpoint_selection=0):
+        self._type_xpoint_selection = type_xpoint_selection
         self._tree_length = np.empty(self._max_length,
                                      dtype=self._ind_dtype)
         self._tree_mask = np.empty(self._max_length,
@@ -671,7 +673,7 @@ population size is smaller or larger than the current one
             bf = self._best_fit
             if bf is None:
                 bf = -1.
-            print "Gen: " + str(i) + "/" + str(self._gens * self._popsize)\
+            print "Gen: " + str(i) + "/" + str(self._generations * self._popsize)\
                 + " " + "%0.4f" % bf
         return True
 
@@ -681,7 +683,7 @@ population size is smaller or larger than the current one
         self.set_extras_to_ind(kill, son, delete=True)
 
     def run(self, exit_call=True):
-        self.length_per_gen = np.zeros(self._gens)
+        self.length_per_gen = np.zeros(self._generations)
         self.nodes_evaluated = 0
         return super(GP, self).run(exit_call=exit_call)
 

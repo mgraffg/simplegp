@@ -397,6 +397,19 @@ class TestSimpleGP(object):
         assert np.all(map(lambda x: np.all(cons[x] == cons1[x]),
                           range(s.popsize)))
 
+    def test_bases(self):
+        s = GP(popsize=10, max_length=512,
+               generations=3).fit(self._x, self._y)
+        assert len(s._bases()) == 1
+
+    def test_get_params(self):
+        s = GP(popsize=10, max_length=512,
+               generations=3).fit(self._x, self._y)
+        p = s.get_params()
+        assert p['max_length'] == 512
+        assert p['generations'] == 3
+        assert p['popsize'] == 10
+
     def test_save_best(self):
         import tempfile
         s = GP.run_cl(self._x, self._y, seed=0, generations=2)

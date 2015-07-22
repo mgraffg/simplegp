@@ -88,4 +88,13 @@ def test_pgcl_predict():
                      verbose=True, generations=2)
     os.unlink(fname)
     assert gp.fitness(gp.best) == -gp.distance(gp._f, gp.predict(x))
-    
+
+
+def test_get_params():
+    x = map(lambda x: SparseArray.fromlist(X[x]), range(X.shape[0]))
+    gp = SparseGPPG.run_cl(x, cl, nprototypes=3, tol=0.05, popsize=10,
+                           verbose=True, generations=2)
+    p = gp.get_params()
+    assert p['popsize'] == 10
+    assert p['generations'] == 2
+    assert p['tree_cl']

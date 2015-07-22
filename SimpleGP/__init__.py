@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-__version__ = '0.10.11'
+__version__ = '0.10.12'
 
 from .simplega import SimpleGA, BestNotFound
 from .simplegp import GP, GPwRestart, GPMAE
@@ -27,7 +27,7 @@ from .elm import ELM, ELMPDE
 from .PrGP import PrGP, GSGP
 from .sparse_array import SparseArray, SparseEval
 from .gppg import SparseGPPG
-from utils import Pool, VerifyOutput
+from .utils import Pool, VerifyOutput
 
 
 __all__ = [SimpleGA, TimeSeries, GP, GPPDE,

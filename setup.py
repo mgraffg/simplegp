@@ -87,12 +87,14 @@ setup(
     description="""A GP systems for symbolic regression and
     auto-recursive regression""",
     version=version,
-    url='http://dep.fie.umich.mx/~mgraffg',
+    url='http://ingeotec.mx/~mgraffg',
     author="Mario Graff",
     author_email="mgraffg@ieee.org",
     cmdclass={"build_ext": build_ext, "clean": Clean},
     ext_modules=ext_modules,
     packages=find_packages(),
+    include_package_data=True,
+    zip_safe=False,
     package_data={'': ['*.pxd']},
     install_requires=['cython >= 0.19.2', 'numpy >= 1.6.2',
                       'pymock >= 1.0.5']
