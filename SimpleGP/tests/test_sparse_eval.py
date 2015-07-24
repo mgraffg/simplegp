@@ -161,6 +161,14 @@ def test_sparse_array_fabs():
     assert suno.fabs().sum() == uno.sum()
 
 
+def test_sparse_array_exp():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno).exp().tonparray()
+    print np.exp(uno), suno
+    assert np.all(np.exp(uno) == suno)
+
+
 def test_sparse_array_sin():
     np.random.seed(0)
     uno = create_numpy_array()
@@ -168,6 +176,15 @@ def test_sparse_array_sin():
     print uno[:10]
     print suno[:10]
     assert np.all(np.sin(uno) == suno)
+
+
+def test_sparse_array_cos():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno).cos().tonparray()
+    print uno[:10]
+    print suno[:10]
+    assert np.all(np.cos(uno) == suno)
 
 
 def test_sparse_array_sq():

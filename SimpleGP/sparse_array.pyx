@@ -113,15 +113,13 @@ cdef class SparseArray:
         return c
 
     def __add__(self, other):
-        res = self.empty(self.nunion(other), self.size())
-        self.add(other, res)
-        return res
+        return self.add(other)
 
-    cpdef int add(self, SparseArray other, SparseArray res):
+    cpdef SparseArray add(self, SparseArray other):
+        cdef SparseArray res = self.empty(self.nunion(other), self.size())
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
-        cdef SparseArray last
         for c in range(rnele):
             if a >= anele:
                 index = other._indexC[b]
@@ -145,18 +143,16 @@ cdef class SparseArray:
                     b += 1
             res._dataC[c] = r
             res._indexC[c] = index
-        return 0
+        return res
 
     def __sub__(self, other):
-        res = self.empty(self.nunion(other), self.size())
-        self.sub(other, res)
-        return res
+        return self.sub(other)
         
-    cpdef int sub(self, SparseArray other, SparseArray res):
+    cpdef SparseArray sub(self, SparseArray other):
+        cdef SparseArray res = self.empty(self.nunion(other), self.size())
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
-        cdef SparseArray last
         for c in range(rnele):
             if a >= anele:
                 index = other._indexC[b]
@@ -180,14 +176,13 @@ cdef class SparseArray:
                     b += 1
             res._dataC[c] = r
             res._indexC[c] = index
-        return 0
-
-    def __mul__(self, other):
-        res = self.empty(self.nintersection(other), self.size())
-        self.mul(other, res)
         return res
 
-    cpdef int mul(self, SparseArray other, SparseArray res):
+    def __mul__(self, other):
+        return self.mul(other)
+
+    cpdef SparseArray mul(self, SparseArray other):
+        res = self.empty(self.nintersection(other), self.size())
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
@@ -206,16 +201,14 @@ cdef class SparseArray:
                     a += 1
                 else:
                     b += 1
-        return 0
-
-    def __div__(self, other):
-        cdef int s = self.nintersection(other)
-        res = self.empty(s, self.size())
-        self.div(other, res)
         return res
 
+    def __div__(self, other):
+        return self.div(other)
+
     @cython.cdivision(True)
-    cpdef int div(self, SparseArray other, SparseArray res):
+    cpdef SparseArray div(self, SparseArray other):
+        cdef SparseArray res = self.empty(self.nintersection(other), self.size())
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
@@ -234,7 +227,7 @@ cdef class SparseArray:
                     a += 1
                 else:
                     b += 1
-        return 0
+        return res
 
     cpdef double sum(self):
         cdef double res=0, *data = self._dataC
@@ -251,6 +244,18 @@ cdef class SparseArray:
             res._indexC[i] = self._indexC[i]
         return res
 
+    cpdef SparseArray exp(self):
+        cdef SparseArray res = self.empty(self.size(), self.size())
+        cdef int i, j=0
+        for i in xrange(self.size()):
+            if self._indexC[j] == i:
+                res._dataC[i] = math.exp(self._dataC[j])
+                j += 1
+            else:
+                res._dataC[i] = 1
+            res._indexC[i] = i
+        return res
+        
     cpdef SparseArray sin(self):
         cdef SparseArray res = self.empty(self.nele(), self._size)
         cdef int i
@@ -259,6 +264,18 @@ cdef class SparseArray:
             res._indexC[i] = self._indexC[i]
         return res
 
+    cpdef SparseArray cos(self):
+        cdef SparseArray res = self.empty(self.size(), self.size())
+        cdef int i, j=0
+        for i in xrange(self.size()):
+            if self._indexC[j] == i:
+                res._dataC[i] = math.cos(self._dataC[j])
+                j += 1
+            else:
+                res._dataC[i] = 1
+            res._indexC[i] = i
+        return res
+        
     cpdef SparseArray sq(self):
         cdef SparseArray res = self.empty(self.nele(), self._size)
         cdef int i
@@ -290,16 +307,13 @@ cdef class SparseArray:
 
     cpdef SparseArray if_func(self, SparseArray y, SparseArray z):
         cdef SparseArray s = self.sigmoid()
-        cdef SparseArray sy = s.empty(s.nintersection(y), s._size)
-        cdef SparseArray sz = s.empty(s.nintersection(z), s._size)
+        cdef SparseArray sy, sz
         cdef SparseArray r
         cdef SparseArray res
-        s.mul(y, sy)
-        s.mul(z, sz)
-        r = sy.empty(sy.nunion(sz), sy._size)
-        sy.sub(sz, r)
-        res = r.empty(r.nunion(z), r._size)
-        r.add(z, res)
+        sy = s.mul(y)
+        sz = s.mul(z)
+        r = sy.sub(sz)
+        res = r.add(z)
         return res
             
     cpdef double SAE(self, SparseArray other):
@@ -482,35 +496,28 @@ cdef class SparseEval:
 
     cdef SparseArray two_args(self, int func, SparseArray first,
                               SparseArray second):
-        cdef SparseArray res
-        cdef int nele    
         if func == 0:  # add
-            res = first.empty(first.nunion(second), self._size)
-            first.add(second, res)
-            return res
+            return first.add(second)
         elif func == 1:  # subtract
-            res = first.empty(first.nunion(second), self._size)
-            first.sub(second, res)
-            return res
+            return first.sub(second)
         elif func == 2:  # multiply
-            nele = first.nintersection(second)
-            res = first.empty(nele, self._size)
-            first.mul(second, res)
-            return res
+            return first.mul(second)
         elif func == 3:  # divide
-            res = first.empty(first.nintersection(second), self._size)
-            first.div(second, res)
-            return res
+            return first.div(second)
         else:
             raise NotImplementedError("%s" % func)
 
     cdef SparseArray one_arg(self, int func, SparseArray first):
         if func == 4:
             return first.fabs()
+        if func == 5:
+            return first.exp()
         elif func == 6:
             return first.sqrt()
         elif func == 7:
             return first.sin()
+        elif func == 8:
+            return first.cos()
         elif func == 9:
             return first.sigmoid()
         elif func == 14:
