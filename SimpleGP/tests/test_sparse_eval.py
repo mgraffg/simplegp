@@ -187,6 +187,17 @@ def test_sparse_array_cos():
     assert np.all(np.cos(uno) == suno)
 
 
+def test_sparse_array_ln():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno).ln().tonparray()
+    uno = np.log(np.fabs(uno))
+    uno[np.isinf(uno)] = 0
+    print uno[:10]
+    print suno[:10]
+    assert np.all(uno == suno)
+
+
 def test_sparse_array_sq():
     np.random.seed(0)
     uno = create_numpy_array()

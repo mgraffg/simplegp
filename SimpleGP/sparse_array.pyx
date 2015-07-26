@@ -276,6 +276,16 @@ cdef class SparseArray:
             res._indexC[i] = i
         return res
         
+    cpdef SparseArray ln(self):
+        cdef SparseArray res = self.empty(self.nele(), self._size)
+        cdef int i
+        cdef double r
+        for i in xrange(self.nele()):
+            r = self._dataC[i]
+            res._dataC[i] = math.log(math.fabs(r))
+            res._indexC[i] = self._indexC[i]
+        return res
+
     cpdef SparseArray sq(self):
         cdef SparseArray res = self.empty(self.nele(), self._size)
         cdef int i
@@ -520,6 +530,8 @@ cdef class SparseEval:
             return first.cos()
         elif func == 9:
             return first.sigmoid()
+        elif func == 13:
+            return first.ln()
         elif func == 14:
             return first.sq()
         else:
