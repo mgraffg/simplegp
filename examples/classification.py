@@ -10,6 +10,7 @@ fpt.close()
 
 gp = Classification(popsize=1000, generations=50, verbose=True,
                     verbose_nind=1000,
+                    # type_xpoint_selection=2,
                     func=["+", "-", "*", "/", 'abs', 'exp', 'sqrt',
                           'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
                           'ln', 'sq'],

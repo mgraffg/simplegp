@@ -195,6 +195,15 @@ cdef class Tree:
             p1 = np.random.randint(s - 1) + 1
         return p1
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef int select_xpoint_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] ind):
+        cdef int sub, p1, end
+        sub = np.random.randint(self._nop[15])
+        p1 = self.get_pos_arg_inner(<INT*>ind.data, 0, sub)
+        end = self.traverse_inner(<INT*>ind.data, p1)
+        return np.random.randint(p1, end)
+        
     def set_type_xpoint_selection(self, int t):
         self._type_xpoint_selection = t
 
@@ -208,6 +217,8 @@ cdef class Tree:
             return self.select_xpoint_uniform(ind)
         elif self._type_xpoint_selection == 1:
             return self.select_xpoint_depth(ind)
+        elif self._type_xpoint_selection == 2:
+            return self.select_xpoint_subtree(ind)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

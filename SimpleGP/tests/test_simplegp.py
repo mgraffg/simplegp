@@ -273,6 +273,27 @@ class TestSimpleGP(object):
             a[pos] = False
             assert pos >= 0 and pos < ind.shape[0]
 
+    @use_pymock
+    def test_father1_select_subtree(self):
+        gp = GP.init_cl(seed=0, type_xpoint_selection=2,
+                        generations=5).train(self._x, self._y)
+        assert gp._type_xpoint_selection == 2
+        var = gp.nfunc
+        ind = np.array([gp._output_pos, 0, var, var, 0, var+1, 1, var, var,
+                        0, 0, var, var, var], dtype=np.int)
+        gp.create_population()
+        gp._nop[gp._output_pos] = 3
+        gp.population[0] = ind
+        override(np.random, 'randint')
+        np.random.randint(3)
+        returns(1)
+        np.random.randint(4, 9)
+        returns(5)
+        replay()
+        assert gp._tree.father1_crossing_point(ind) == 5
+        # print gp.print_infix(0)
+        # assert False
+
     def test_type_xpoint_selection(self):
         ins = lambda x: GP.init_cl(seed=0, generations=5,
                                    type_xpoint_selection=x).train(self._x,

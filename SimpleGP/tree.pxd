@@ -88,6 +88,8 @@ cdef class Tree:
 
     cpdef int select_xpoint_uniform(self, npc.ndarray[INT, ndim=1, mode="c"] ind)
 
+    cpdef int select_xpoint_subtree(self, npc.ndarray[INT, ndim=1, mode="c"] ind)
+
     cpdef int father1_crossing_point(self, npc.ndarray[INT, ndim=1, mode="c"] ind)
 
     cpdef compute_parents(self, npc.ndarray[INT, ndim=1, mode="c"] ind,
