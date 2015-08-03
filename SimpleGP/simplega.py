@@ -122,6 +122,7 @@ class SimpleGA(object):
         fit_k = self.fitness_validation(k)
         if self._early_stopping is None or fit_k > self._early_stopping[0]:
             self.early_stopping_save(k, fit_k=fit_k)
+            self._early_stopping_gens_ind = self.gens_ind
 
     @property
     def seed(self):

@@ -20,11 +20,12 @@ from numpy.linalg import lstsq
 
 
 class PrGP(GP):
-    def __init__(self, save_only_best=False, **kwargs):
+    def __init__(self, save_only_best=False, nrandom=0,
+                 **kwargs):
         if save_only_best:
             raise NotImplementedError("This option is not implemented")
         super(PrGP, self).__init__(save_only_best=save_only_best,
-                                   **kwargs)
+                                   nrandom=nrandom, **kwargs)
         self._pop_eval_mut = None
         self._pop_eval = None
         self._pop_hist = None
