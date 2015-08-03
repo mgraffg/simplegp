@@ -53,12 +53,14 @@ class GP(SimpleGA):
     >>> pr = s.predict(x1[:, np.newaxis])
     """
     def __init__(self,
-                 func=['+', '-', '*', '/'],
+                 func=["+", "-", "*", "/", 'abs', 'exp', 'sqrt',
+                       'sin', 'cos', 'sigmoid', 'if', 'max', 'min',
+                       'ln', 'sq', 'argmax'],
                  mutation_depth=5, min_length=2,
                  nrandom=100, max_length=262143, verbose=False,
                  max_depth=7, max_length_subtree=np.inf,
                  min_depth=1, pgrow=0.5, pleaf=None,
-                 verbose_nind=None, argmax_nargs=None,
+                 verbose_nind=None, argmax_nargs=2,
                  do_simplify=True, max_n_worst_epochs=3, ppm=0.0,
                  type_xpoint_selection=0,
                  ppm2=0.1,

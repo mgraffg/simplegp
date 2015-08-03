@@ -17,8 +17,9 @@ import numpy as np
 
 
 class ELM(GPForest):
-    def __init__(self, ntrees=2, **kwargs):
-        super(ELM, self).__init__(ntrees=ntrees, **kwargs)
+    def __init__(self, ntrees=2, nrandom=0, **kwargs):
+        super(ELM, self).__init__(ntrees=ntrees, nrandom=nrandom,
+                                  **kwargs)
         self._elm_constants = None
 
     def early_stopping_save(self, k, fit_k=None):

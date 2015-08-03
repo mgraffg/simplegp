@@ -106,6 +106,10 @@ class SimpleGA(object):
         return self._early_stopping
 
     def fitness_validation(self, k):
+        """
+        Fitness function used in the validation set.
+        In this case it is the one used on the evolution
+        """
         cnt = self._test_set_y.shape[0]
         fit_k = -self.distance(self._test_set_y,
                                self._pr_test_set[:cnt])
