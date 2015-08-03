@@ -80,12 +80,44 @@ class SimpleGA(object):
         self._last_call_to_stats = 0
         self._p = None
         self._test_set = None
+        self._test_set_y = None
+        self._early_stopping = None
         self._save_only_best = save_only_best
         self._walltime = walltime
         signal.signal(signal.SIGTERM, self.on_exit)
         if self._walltime is not None:
             signal.signal(signal.SIGALRM, self.walltime)
             signal.alarm(self._walltime)
+
+    def early_stopping_save(self, k, fit_k=None):
+        """
+        Storing the best so far on the validation set.
+        This funtion is called from early_stopping
+        """
+        assert fit_k
+        self._early_stopping = [fit_k,
+                                self.population[k].copy()]
+
+    @property
+    def early_stopping(self):
+        """
+        Stores the best individual on the test_set
+        """
+        return self._early_stopping
+
+    def fitness_validation(self, k):
+        cnt = self._test_set_y.shape[0]
+        fit_k = -self.distance(self._test_set_y,
+                               self._pr_test_set[:cnt])
+        return fit_k
+
+    @early_stopping.setter
+    def early_stopping(self, k):
+        if self._test_set_y is None:
+            return
+        fit_k = self.fitness_validation(k)
+        if self._early_stopping is None or fit_k > self._early_stopping[0]:
+            self.early_stopping_save(k, fit_k=fit_k)
 
     @property
     def seed(self):
@@ -199,15 +231,24 @@ class SimpleGA(object):
         self.save()
         self._run = False
 
-    def set_test(self, x):
+    def set_test(self, x, y=None):
         """
         x is the set test, this is used to test, during the evolution, that
         the best individual does not produce nan or inf
         """
         self._test_set = x.astype(self._dtype, copy=False, order='C')
+        if y is not None:
+            self._test_set_y = y.astype(self._dtype, copy=False, order='C')
 
-    def fit(self, *args, **kwargs):
-        return self.train(*args, **kwargs)
+    def fit(self, x, f, test=None, test_y=None, **kwargs):
+        """
+        Fitting the model with x as inputs and f as outputs.
+        """
+        self.train(x, f, **kwargs)
+        if test is not None:
+            self.set_test(test, y=test_y)
+        self.run()
+        return self
 
     def train(self, x, f):
         """
@@ -419,6 +460,8 @@ class SimpleGA(object):
                 if not self.test_f(r):
                     self._fitness[k] = -np.inf
                     return False
+                self._pr_test_set = r
+                self.early_stopping = k
             self._best_fit = self._fitness[k]
             self._best = k
             return True

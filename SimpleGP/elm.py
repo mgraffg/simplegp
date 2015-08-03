@@ -21,6 +21,18 @@ class ELM(GPForest):
         super(ELM, self).__init__(ntrees=ntrees, **kwargs)
         self._elm_constants = None
 
+    def early_stopping_save(self, k, fit_k=None):
+        """
+        Storing the best so far on the validation set.
+        This funtion is called from early_stopping
+        """
+        assert fit_k
+        self._early_stopping = [fit_k,
+                                self.population[k].copy(),
+                                self._p_constants[k].copy(),
+                                self._elm_constants[k].copy(),
+                                self._pr_test_set.copy()]
+
     def create_population(self):
         if self._elm_constants is None or\
            self._elm_constants.shape[0] != self._popsize:

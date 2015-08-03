@@ -1,4 +1,6 @@
 Version 0.10.*
+	+ Using a validation set and saving the best so far on this set on
+	property early_stopping
 	+ Prototype Generation using GaussianNB as classifier
 	+ PrGP does not need set_best
 	+ Implementing a measure that captures the recall with the

@@ -39,6 +39,16 @@ class TestSimpleGP(object):
         y = (X * coef).sum(axis=1)
         return x, y
 
+    def test_early_stopping(self):
+        gp = GP(generations=3, popsize=100).fit(self._x, self._y,
+                                                test=self._x[::-1],
+                                                test_y=self._y[::-1])
+        assert np.all(gp.predict(gp._x[::-1]) == gp.early_stopping[-1])
+        print gp.early_stopping[0], gp.fitness(gp.best), gp.best
+        gp.population[0] = gp.early_stopping[1]
+        gp._p_constants[0] = gp.early_stopping[2]
+        assert np.all(gp.predict(gp._x, 0) == gp.predict(gp._x))
+
     @use_pymock
     def test_tree_select_pm(self):
         x, y = self.problem_three_variables()

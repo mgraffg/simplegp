@@ -206,6 +206,17 @@ class GP(SimpleGA):
                           self._max_length,
                           type_xpoint_selection=type_xpoint_selection)
 
+    def early_stopping_save(self, k, fit_k=None):
+        """
+        Storing the best so far on the validation set.
+        This funtion is called from early_stopping
+        """
+        assert fit_k
+        self._early_stopping = [fit_k,
+                                self.population[k].copy(),
+                                self._p_constants[k].copy(),
+                                self._pr_test_set.copy()]
+
     @property
     def popsize(self):
         """Population size"""

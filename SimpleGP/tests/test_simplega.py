@@ -222,3 +222,26 @@ def test_get_params():
     assert p['popsize'] == 10
     assert p['generations'] == 3
     
+
+def test_fit():
+    np.random.RandomState(0)
+    x = np.linspace(0, 1, 100)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    f = (X * pol).sum(axis=1)
+    s = SimpleGA(popsize=10, generations=3).fit(X, f)
+    print s.best
+
+
+def test_y():
+    np.random.RandomState(0)
+    x = np.linspace(0, 1, 10)
+    pol = np.array([0.2, -0.3, 0.2])
+    X = np.vstack((x**2, x, np.ones(x.shape[0]))).T
+    f = (X * pol).sum(axis=1)
+    s = SimpleGA(popsize=10, generations=3).fit(X, f, test=X,
+                                                test_y=f)
+    assert np.all(s._test_set_y == f)
+    assert len(s.early_stopping) == 2
+    assert s.early_stopping[0] == s.fitness(s.best)
+    print s.early_stopping, s.fitness(s.best), s.population[s.best]

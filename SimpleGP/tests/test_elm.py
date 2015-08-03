@@ -27,6 +27,18 @@ class TestELM(object):
         self._y = y
         return x, y
 
+    def test_early_stopping(self):
+        self.create_problem()
+        gp = ELM(generations=3, popsize=100).fit(self._x, self._y,
+                                                 test=self._x[::-1],
+                                                 test_y=self._y[::-1])
+        assert np.all(gp.predict(gp._x[::-1]) == gp.early_stopping[-1])
+        print gp.early_stopping[0], gp.fitness(gp.best), gp.best
+        gp.population[0] = gp.early_stopping[1]
+        gp._p_constants[0] = gp.early_stopping[2]
+        gp._elm_constants[0] = gp.early_stopping[3]
+        assert np.all(gp.predict(gp._x, 0) == gp.predict(gp._x))
+
     def test_elm(self):
         x, y = self.create_problem()
         elm = ELM.run_cl(x, y, ntrees=3, generations=2)

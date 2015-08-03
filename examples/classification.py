@@ -16,9 +16,8 @@ gp = Classification(popsize=1000, generations=50, verbose=True,
                           'ln', 'sq'],
                     fname_best=None,
                     seed=0, nrandom=0,
-                    pxo=0.9, pgrow=0.5, walltime=None)
-gp.train(X, cl)
-gp.run()
+                    pxo=0.9, pgrow=0.5,
+                    walltime=None).fit(X, cl)
 pr = gp.predict(X)
 print gp.fitness(gp.best)
 print (pr == cl).sum() / float(cl.shape[0])
