@@ -53,6 +53,7 @@ class SimpleGA(object):
     def __init__(self, popsize=1000, ppm=0.1, chromosome_length=3,
                  tournament_size=2, generations=50, seed=None, verbose=False,
                  pxo=0.9, pm=0.2, stats=False, fname_best=None,
+                 test_set=None, test_set_y=None,
                  save_only_best=False,
                  walltime=None,
                  dtype=np.float,
@@ -79,8 +80,11 @@ class SimpleGA(object):
         self._run = True
         self._last_call_to_stats = 0
         self._p = None
-        self._test_set = None
-        self._test_set_y = None
+        if test_set is not None:
+            self.set_test(test_set, y=test_set_y)
+        else:
+            self._test_set = test_set
+            self._test_set_y = test_set_y
         self._early_stopping = None
         self._save_only_best = save_only_best
         self._walltime = walltime

@@ -84,6 +84,8 @@ cdef class SparseArray:
     cpdef int nunion(self, SparseArray other):
         cdef int a=0, b=0, c=0
         cdef int anele = self.nele(), bnele=other.nele()
+        if self.size() == anele and anele == bnele:
+            return anele
         while (a < anele) and (b < bnele):
             if self._indexC[a] == other._indexC[b]:
                 a += 1
@@ -100,7 +102,9 @@ cdef class SparseArray:
 
     cpdef int nintersection(self, SparseArray other):
         cdef int a=0, b=0, c=0
-        cdef int anele = self.nele(), bnele=other.nele()    
+        cdef int anele = self.nele(), bnele=other.nele()
+        if self.size() == anele and anele == bnele:
+            return anele
         while (a < anele) and (b < bnele):
             if self._indexC[a] == other._indexC[b]:
                 a += 1
@@ -120,6 +124,11 @@ cdef class SparseArray:
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
+        if anele == rnele and bnele == rnele and res.size() == rnele:
+            for c in range(rnele):
+                res._dataC[c] = self._dataC[c] + other._dataC[c]
+                res._indexC[c] = c
+            return res
         for c in range(rnele):
             if a >= anele:
                 index = other._indexC[b]
@@ -153,6 +162,11 @@ cdef class SparseArray:
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
+        if anele == rnele and bnele == rnele and res.size() == rnele:
+            for c in range(rnele):
+                res._dataC[c] = self._dataC[c] - other._dataC[c]
+                res._indexC[c] = c
+            return res        
         for c in range(rnele):
             if a >= anele:
                 index = other._indexC[b]
@@ -186,6 +200,11 @@ cdef class SparseArray:
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
+        if anele == rnele and bnele == rnele and res.size() == rnele:
+            for c in range(rnele):
+                res._dataC[c] = self._dataC[c] * other._dataC[c]
+                res._indexC[c] = c
+            return res        
         while c < rnele:
             if a >= anele:
                 b += 1
@@ -212,6 +231,11 @@ cdef class SparseArray:
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
+        if anele == rnele and bnele == rnele and res.size() == rnele:
+            for c in range(rnele):
+                res._dataC[c] = self._dataC[c] / other._dataC[c]
+                res._indexC[c] = c
+            return res        
         while c < rnele:
             if a >= anele:
                 b += 1
@@ -246,9 +270,9 @@ cdef class SparseArray:
 
     cpdef SparseArray exp(self):
         cdef SparseArray res = self.empty(self.size(), self.size())
-        cdef int i, j=0
+        cdef int i, j=0, nele=self.nele()
         for i in xrange(self.size()):
-            if self._indexC[j] == i:
+            if j < nele and self._indexC[j] == i:
                 res._dataC[i] = math.exp(self._dataC[j])
                 j += 1
             else:
@@ -266,9 +290,9 @@ cdef class SparseArray:
 
     cpdef SparseArray cos(self):
         cdef SparseArray res = self.empty(self.size(), self.size())
-        cdef int i, j=0
+        cdef int i, j=0, nele=self.nele()
         for i in xrange(self.size()):
-            if self._indexC[j] == i:
+            if j < nele and self._indexC[j] == i:
                 res._dataC[i] = math.cos(self._dataC[j])
                 j += 1
             else:
@@ -297,7 +321,7 @@ cdef class SparseArray:
         return res
 
     cpdef SparseArray sqrt(self):
-        cdef SparseArray res = self.empty(self.nele(), self._size)
+        cdef SparseArray res = self.empty(self.nele(), self.size())
         cdef int i
         cdef double r
         for i in xrange(self.nele()):
@@ -359,6 +383,39 @@ cdef class SparseArray:
             return INFINITY
         return res
             
+    cpdef double SSE(self, SparseArray other):
+        cdef int a=0, b=0, index=0, c=0
+        cdef int anele = self._nele, bnele=other._nele
+        cdef double r, res=0
+        cdef SparseArray last
+        while True:
+            if a >= anele and b >= bnele:
+                break
+            elif a >= anele:
+                index = other._indexC[b]
+                r = - other._dataC[b]
+                b += 1
+            elif b >= bnele:
+                index = self._indexC[a]
+                r = self._dataC[a]
+                a += 1
+            else:
+                index = self._indexC[a]
+                if index == other._indexC[b]:
+                    r = self._dataC[a] - other._dataC[b]
+                    a += 1; b += 1
+                elif index < other._indexC[b]:
+                    r = self._dataC[a]
+                    a += 1
+                else:
+                    r = - other._dataC[b]
+                    index = other._indexC[b]
+                    b += 1
+            res +=  r * r
+        if npy_isnan(res):
+            return INFINITY
+        return res
+
     def tonparray(self):
         import numpy as np
         cdef npc.ndarray[double, ndim=1] res = np.zeros(self.size())
