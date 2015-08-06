@@ -1,4 +1,5 @@
 Version 0.10.*
+	+ Using sparse_array to create a GP system called GPS
 	+ Using a validation set and saving the best so far on this set on
 	property early_stopping
 	+ Prototype Generation using GaussianNB as classifier

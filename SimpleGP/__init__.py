@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-__version__ = '0.10.14'
+__version__ = '0.10.15'
 
 from .simplega import SimpleGA, BestNotFound
-from .simplegp import GP, GPwRestart, GPMAE
+from .simplegp import GP, GPwRestart, GPMAE, GPS
 from .generational import Generational, GenerationalPDE
 from .gppde import GPPDE
 from .forest import GPForest, GPForestPDE, SubTreeXO, SubTreeXOPDE
@@ -36,7 +36,7 @@ __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool, BestNotFound, Generational, GenerationalPDE,
            ELM, ELMPDE, GPForestPDE, PrGP, GSGP, SparseEval,
-           SparseArray, SparseGPPG]
+           SparseArray, SparseGPPG, GPS]
 
 
 

@@ -343,3 +343,23 @@ def test_seval_output():
     hy2 = sparse.get_output()
     for hy in hy2:
         assert_almost_equals((y - hy).fabs().sum(), 0)
+
+
+def test_finite():
+    a = SparseArray.fromlist([1, np.inf])
+    assert not a.isfinite()
+    a = SparseArray.fromlist([1, np.nan])
+    assert not a.isfinite()
+    a = SparseArray.fromlist([1, 0, 1])
+    assert a.isfinite()
+
+
+def test_slice():
+    uno = create_numpy_array(10)
+    suno = SparseArray.fromlist(uno)
+    assert np.all(suno[:50].tonparray() == uno[:50])
+
+
+def test_copy():
+    uno = SparseArray.fromlist(create_numpy_array(10))
+    assert uno.copy().SSE(uno) == 0

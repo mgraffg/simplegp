@@ -18,6 +18,7 @@ import numpy as np
 from SimpleGP.Simplify import Simplify
 from SimpleGP.eval import Eval
 from SimpleGP.tree import Tree
+from SimpleGP.sparse_array import SparseArray, SparseEval
 
 from SimpleGP.simplega import SimpleGA
 
@@ -986,6 +987,80 @@ class GPwRestart(GP):
                 self._p_constants[i] = cons
                 self._fitness[i] = -np.inf
         return super(GPwRestart, self).stats()
+
+
+class GPS(GP):
+    def __init__(self, func=['+', '-', '*', '/', 'abs', 'exp', 'sqrt',
+                             'sin', 'cos', 'sigmoid', 'ln', 'sq',
+                             'if'], **kwargs):
+        super(GPS, self).__init__(func=func, **kwargs)
+
+    def distance(self, y, yh):
+        return y.SSE(yh) / y.size()
+        
+    def eval_ind(self, ind, pos=0, constants=None):
+        c = constants if constants is not None else self._constants
+        self.nodes_evaluated += ind.shape[0]
+        yh = self._eval.eval(ind, c, to_np_array=False)
+        return yh
+
+    @property
+    def nvar(self):
+        """Number of independent variables"""
+        return self._nvar
+        
+    def set_test(self, x, y=None):
+        """
+        x is the set test, this is used to test, during the evolution, that
+        the best individual does not produce nan or inf
+        """
+        if isinstance(x, np.ndarray):
+            self._test_set = map(lambda t: SparseArray.fromlist(t), x.T)
+        else:
+            self._test_set = x
+        if y is not None:
+            if isinstance(y, np.ndarray):
+                self._test_set_y = SparseArray.fromlist(y)
+            else:
+                self._test_set_y = y
+
+    def train(self, x, f):
+        self._eval = SparseEval(self._nop)
+        if isinstance(f, np.ndarray):
+            x = map(lambda x: SparseArray.fromlist(x), x.T)
+        self._eval.X(x)
+        self._nvar = len(x)
+        self._x = x
+        if isinstance(f, np.ndarray):
+            self._f = SparseArray.fromlist(f)
+        self._st = None
+        self._p_der_st = None
+        self._error_st = None
+        self._simplify = Simplify(self.nvar, self._nop)
+        self._simplify.set_constants(self._constants2)
+        self._tree.set_nvar(self.nvar)
+        return self
+
+    def predict(self, X, ind=None):
+        if ind is None:
+            ind = self.best
+        self._eval.X(X)
+        yh = self.eval(ind)
+        self._eval.X(self._x)
+        return yh
+
+    def test_f(self, x):
+        return x.isfinite()
+
+    def fitness_validation(self, k):
+        """
+        Fitness function used in the validation set.
+        In this case it is the one used on the evolution
+        """
+        cnt = self._test_set_y.size()
+        fit_k = -self.distance(self._test_set_y,
+                               self._pr_test_set[:cnt])
+        return fit_k
 
 
 if __name__ == '__main__':

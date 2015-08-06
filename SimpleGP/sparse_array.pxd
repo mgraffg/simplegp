@@ -48,8 +48,10 @@ cdef class SparseArray:
     cpdef SparseArray if_func(self, SparseArray y, SparseArray z)
     cpdef double SAE(self, SparseArray other)
     cpdef double SSE(self, SparseArray other)
+    cpdef bint isfinite(self)    
     cpdef init(self, int nele)
     cpdef SparseArray empty(self, int nele, int size=?)
+    cpdef SparseArray copy(self)    
     cpdef SparseArray constant(self, double v, int size=?)
 
 cdef class SparseEval:

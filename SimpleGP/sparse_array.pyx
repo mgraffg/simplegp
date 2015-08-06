@@ -416,6 +416,37 @@ cdef class SparseArray:
             return INFINITY
         return res
 
+    cpdef bint isfinite(self):
+        cdef int i
+        cdef double r    
+        for i in range(self.nele()):
+            r = self._dataC[i]
+            if npy_isnan(r) or npy_isinf(r):
+                return 0
+        return 1
+
+    def __getitem__(self, value):
+        cdef int i, init=-1, cnt=0
+        cdef SparseArray res
+        if not isinstance(value, slice):
+            raise Exception("Not implemented yet")
+        start = value.start if value.start is not None else 0
+        stop = value.stop if value.stop is not None else self.size()
+        if stop > self.size():
+            stop = self.size()
+        for i in range(self.nele()):
+            if self._indexC[i] >= start and init == -1:
+                init = i
+            if init > -1 and self._indexC[i] < stop:
+                cnt += 1
+            if self._indexC[i] >= stop:
+                break
+        res = self.empty(cnt, stop - start)
+        for i in range(init, init+cnt):
+            res._indexC[i - init] = self._indexC[i]
+            res._dataC[i - init] = self._dataC[i]
+        return res
+        
     def tonparray(self):
         import numpy as np
         cdef npc.ndarray[double, ndim=1] res = np.zeros(self.size())
@@ -484,6 +515,14 @@ cdef class SparseArray:
             res.set_size(size)
         return res
 
+    cpdef SparseArray copy(self):
+        cdef SparseArray res = self.empty(self.nele(), self._size)
+        cdef int i
+        for i in range(self.nele()):
+            res._indexC[i] = self._indexC[i]
+            res._dataC[i] = self._dataC[i]
+        return res
+            
     cpdef SparseArray constant(self, double v, int size=-1):
         cdef int i
         cdef SparseArray res = SparseArray()
