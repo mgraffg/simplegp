@@ -274,8 +274,8 @@ def test_tonparray():
     assert np.all(uno == suno.tonparray())
 
 
-def create_problem():
-    x = np.linspace(-10, 10, 10)
+def create_problem(size=10):
+    x = np.linspace(-10, 10, size)
     pol = np.array([0.2, -0.3, 0.2])
     X = np.vstack((x**2, x, np.ones(x.shape[0])))
     y = (X.T * pol).sum(axis=1)
@@ -373,11 +373,30 @@ def test_mul_vec_cons():
 
 
 def test_seval2():
-    x, y = create_problem()
+    import time
+
+    def pred(ins):
+        t1 = time.time()
+        pr = ins(gp.population[i],
+                 gp._p_constants[i], 0)
+        t1 = time.time() - t1
+        return pr.tonparray(), t1
+
+    x, y = create_problem(10)
     gp = GPS(generations=3, seed=0, nrandom=0).fit(x, y)
+    var = gp._nop.shape[0]
+    cons = var + x.shape[1]
+    ind = np.array([0, var, 0, 2, var+1, cons, cons], dtype=np.int)
+    cons = np.array([12.10])
+    gp.population[0] = ind
+    gp._p_constants[0] = cons
+    gp1 = 0
+    gp2 = 0
     for i in range(gp.popsize):
-        pr = gp._eval.eval(gp.population[i], gp._p_constants[i], 0)
-        pr2 = gp._eval.eval2(gp.population[i], gp._p_constants[i], 0)
-        print gp.print_infix(i), pr.tonparray(), pr2.tonparray()
-        assert_almost_equals(pr.SAE(pr2), 0)
-    
+        pr, t = pred(gp._eval.eval)
+        gp1 += t
+        pr2, t = pred(gp._eval.eval2)
+        gp2 += t
+        m = np.isfinite(pr)
+        assert np.all(pr[m] == pr2[m])
+    print gp1, gp2

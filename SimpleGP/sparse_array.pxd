@@ -77,6 +77,7 @@ cdef class SparseEval:
                npc.ndarray[double, ndim=1] constants,
                bint to_np_array=?)
     cdef SparseArray terminal(self, int node)
+    cdef SparseArray function_set(self, int node, list args)
     cpdef eval2(self, npc.ndarray[long, ndim=1] ind,
                 npc.ndarray[double, ndim=1] constants,
                 bint to_np_array=?)

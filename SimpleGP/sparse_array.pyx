@@ -618,6 +618,20 @@ cdef class SparseEval:
             v = self._constants[node - self._nfunc - self._nvar]
             res = self._x1.constant(v)
         return res
+
+    cdef SparseArray function_set(self, int node, list args):
+        cdef int nargs = self._nop[node]    
+        if node == 15:
+            self._output = args
+            return self._output[0]
+        elif nargs == 1:
+            return self.one_arg(node, args[0])
+        elif nargs == 2:
+            return self.two_args(node, args[0], args[1])
+        elif nargs == 3:
+            if node == 10:
+                return args[0].if_func(args[1], args[2])
+        raise NotImplementedError("%s" % node)
             
     cpdef eval2(self, npc.ndarray[long, ndim=1] ind,
                 npc.ndarray[double, ndim=1] constants, bint to_np_array=1):
@@ -629,37 +643,29 @@ cdef class SparseEval:
         if not self.isfunc(self._ind[0]):
             args.append(self.terminal(self._ind[0]))
         else:
-            func.append(pos)
-            nargs = self._nop[self._ind[0]]
+            func.append((pos, self._nop[self._ind[pos]]))
             while len(func):
-                if len(args) >= nargs:
-                    node = self._ind[func.pop()]
-                    args2 = [args.pop() for _ in range(nargs)]
+                if func[-1][1] == 0:
+                    pf, _ = func.pop()
+                    # print "pf:", pf, _, len(args)
+                    node = self._ind[pf]
+                    args2 = [args.pop() for _ in range(self._nop[node])]
                     args2.reverse()
-                    if node == 15:
-                        self._output = args2
-                        res = self._output[0]
-                    elif nargs == 1:
-                        res = self.one_arg(node, args2[0])
-                    elif nargs == 2:
-                        res = self.two_args(node, args2[0], args2[1])
-                    elif nargs == 3:
-                        if node == 10:
-                            res = args2[0].if_func(args2[1], args2[2])
-                        else:
-                            raise NotImplementedError("%s" % node)
-                    else:
-                        raise NotImplementedError("%s" % node)
+                    # print [x.tonparray()[:3] for x in args2], node, pf
+                    res = self.function_set(node, args2)
                     args.append(res)
-                    nargs = self._nop[self._ind[func[-1]]] if len(func) else 0
+                    if len(func):
+                        pf, nargs = func.pop()
+                        func.append((pf, nargs-1))
                 else:
                     pos += 1
                     node = self._ind[pos]
                     if not self.isfunc(node):
                         args.append(self.terminal(node))
+                        pf, nargs = func.pop()
+                        func.append((pf, nargs-1))
                     else:
-                        func.append(pos)
-                        nargs = self._nop[node]
+                        func.append((pos, self._nop[node]))
         if to_np_array:
             return args[0].tonparray()
         else:
