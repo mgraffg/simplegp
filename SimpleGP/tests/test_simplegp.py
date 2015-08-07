@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from SimpleGP import GP
+from SimpleGP import GP, GPS, SparseArray
 from pymock import use_pymock, override, returns, replay, verify
 import numpy as np
 
@@ -48,6 +48,13 @@ class TestSimpleGP(object):
         gp.population[0] = gp.early_stopping[1]
         gp._p_constants[0] = gp.early_stopping[2]
         assert np.all(gp.predict(gp._x, 0) == gp.predict(gp._x))
+
+    def test_GPS(self):
+        gp = GPS(generations=3, popsize=100).fit(self._x, self._y,
+                                                 test=self._x[::-1],
+                                                 test_y=self._y[::-1])
+        pr = gp.predict_test_set(gp.best)
+        assert isinstance(pr, SparseArray)
 
     @use_pymock
     def test_tree_select_pm(self):

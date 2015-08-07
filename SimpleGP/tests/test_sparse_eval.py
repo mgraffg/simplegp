@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from SimpleGP import GP
+from SimpleGP import GP, GPS
 from SimpleGP import SparseArray, SparseEval
 from nose.tools import assert_almost_equals
 import numpy as np
@@ -363,3 +363,21 @@ def test_slice():
 def test_copy():
     uno = SparseArray.fromlist(create_numpy_array(10))
     assert uno.copy().SSE(uno) == 0
+
+
+def test_mul_vec_cons():
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno)
+    print (suno * 12.3).tonparray(), (uno * 12.3)
+    assert np.all((uno * 12.3) == (suno * 12.3).tonparray())
+
+
+def test_seval2():
+    x, y = create_problem()
+    gp = GPS(generations=3, seed=0, nrandom=0).fit(x, y)
+    for i in range(gp.popsize):
+        pr = gp._eval.eval(gp.population[i], gp._p_constants[i], 0)
+        pr2 = gp._eval.eval2(gp.population[i], gp._p_constants[i], 0)
+        print gp.print_infix(i), pr.tonparray(), pr2.tonparray()
+        assert_almost_equals(pr.SAE(pr2), 0)
+    

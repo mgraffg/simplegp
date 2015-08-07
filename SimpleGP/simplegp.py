@@ -997,7 +997,7 @@ class GPS(GP):
 
     def distance(self, y, yh):
         return y.SSE(yh) / y.size()
-        
+
     def eval_ind(self, ind, pos=0, constants=None):
         c = constants if constants is not None else self._constants
         self.nodes_evaluated += ind.shape[0]
@@ -1008,7 +1008,7 @@ class GPS(GP):
     def nvar(self):
         """Number of independent variables"""
         return self._nvar
-        
+
     def set_test(self, x, y=None):
         """
         x is the set test, this is used to test, during the evolution, that

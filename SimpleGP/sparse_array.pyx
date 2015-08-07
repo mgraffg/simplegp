@@ -193,10 +193,12 @@ cdef class SparseArray:
         return res
 
     def __mul__(self, other):
-        return self.mul(other)
+        if isinstance(other, SparseArray):
+            return self.mul(other)
+        return self.mul2(other)
 
     cpdef SparseArray mul(self, SparseArray other):
-        res = self.empty(self.nintersection(other), self.size())
+        cdef SparseArray res = self.empty(self.nintersection(other), self.size())
         cdef int a=0, b=0, index=0, c=0
         cdef int anele = self.nele(), bnele=other.nele(), rnele=res.nele()
         cdef double r
@@ -222,6 +224,14 @@ cdef class SparseArray:
                     b += 1
         return res
 
+    cpdef SparseArray mul2(self, double other):
+        cdef SparseArray res = self.empty(self.nele(), self.size())
+        cdef int i
+        for i in range(self.nele()):
+            res._indexC[i] = self._indexC[i]
+            res._dataC[i] = self._dataC[i] * other
+        return res
+                    
     def __div__(self, other):
         return self.div(other)
 
@@ -429,7 +439,7 @@ cdef class SparseArray:
         cdef int i, init=-1, cnt=0
         cdef SparseArray res
         if not isinstance(value, slice):
-            raise Exception("Not implemented yet")
+            raise NotImplementedError("Not implemented yet")
         start = value.start if value.start is not None else 0
         stop = value.stop if value.stop is not None else self.size()
         if stop > self.size():
@@ -600,6 +610,61 @@ cdef class SparseEval:
         else:
             return self._eval()
 
+    cdef SparseArray terminal(self, int node):
+        cdef SparseArray res
+        if self.isvar(node):
+            res = self._x[node - self._nfunc]
+        else:
+            v = self._constants[node - self._nfunc - self._nvar]
+            res = self._x1.constant(v)
+        return res
+            
+    cpdef eval2(self, npc.ndarray[long, ndim=1] ind,
+                npc.ndarray[double, ndim=1] constants, bint to_np_array=1):
+        cdef list func=[], args=[]
+        cdef int node, nargs, pos=0
+        cdef SparseArray res
+        self._ind = <long *> ind.data
+        self._constants = <double *> constants.data
+        if not self.isfunc(self._ind[0]):
+            args.append(self.terminal(self._ind[0]))
+        else:
+            func.append(pos)
+            nargs = self._nop[self._ind[0]]
+            while len(func):
+                if len(args) >= nargs:
+                    node = self._ind[func.pop()]
+                    args2 = [args.pop() for _ in range(nargs)]
+                    args2.reverse()
+                    if node == 15:
+                        self._output = args2
+                        res = self._output[0]
+                    elif nargs == 1:
+                        res = self.one_arg(node, args2[0])
+                    elif nargs == 2:
+                        res = self.two_args(node, args2[0], args2[1])
+                    elif nargs == 3:
+                        if node == 10:
+                            res = args2[0].if_func(args2[1], args2[2])
+                        else:
+                            raise NotImplementedError("%s" % node)
+                    else:
+                        raise NotImplementedError("%s" % node)
+                    args.append(res)
+                    nargs = self._nop[self._ind[func[-1]]] if len(func) else 0
+                else:
+                    pos += 1
+                    node = self._ind[pos]
+                    if not self.isfunc(node):
+                        args.append(self.terminal(node))
+                    else:
+                        func.append(pos)
+                        nargs = self._nop[node]
+        if to_np_array:
+            return args[0].tonparray()
+        else:
+            return args[0]
+            
     cdef SparseArray two_args(self, int func, SparseArray first,
                               SparseArray second):
         if func == 0:  # add

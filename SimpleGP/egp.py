@@ -11,16 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from .forest import GPForest, GPForestPDE
+from SimpleGP.simplegp import GPS
+from SimpleGP.forest import GPForest
 import numpy as np
 
 
-class ELM(GPForest):
-    def __init__(self, ntrees=2, nrandom=0, **kwargs):
-        super(ELM, self).__init__(ntrees=ntrees, nrandom=nrandom,
-                                  **kwargs)
+class EGPS(GPS, GPForest):
+    def __init__(self, ntrees=5, nrandom=0, **kwargs):
+        super(EGPS, self).__init__(ntrees=ntrees, nrandom=nrandom,
+                                   **kwargs)
         self._elm_constants = None
+
+    def train(self, *args, **kwargs):
+        super(EGPS, self).train(*args, **kwargs)
+        self._nop[self._output_pos] = self._ntrees
+        return self
 
     def early_stopping_save(self, k, fit_k=None):
         """
@@ -39,39 +44,32 @@ class ELM(GPForest):
            self._elm_constants.shape[0] != self._popsize:
             self._elm_constants = np.empty(self._popsize,
                                            dtype=np.object)
-        return super(ELM, self).create_population()
+        return super(EGPS, self).create_population()
 
     def eval_ind(self, *args, **kwargs):
-        r = super(ELM, self).eval_ind(*args, **kwargs)
         if self._computing_fitness is None:
             cdn = "Use eval with the number of individual, instead"
             NotImplementedError(cdn)
+        super(EGPS, self).eval_ind(*args, **kwargs)
+        r = filter(lambda x: x.isfinite(), self._eval.get_output())
         k = self._computing_fitness
+        if len(r) == 0:
+            return self._eval.get_output()[0]
         if self._fitness[k] > -np.inf:
             coef = self._elm_constants[k]
         else:
-            if np.all(np.isfinite(r)):
-                coef = np.linalg.lstsq(r, self._f)[0]
-            else:
-                coef = np.ones(r.shape[1], dtype=self._dtype)
+            A = np.empty((len(r), len(r)))
+            b = np.array(map(lambda f: (f * self._f).sum(), r))
+            for i in range(len(r)):
+                for j in range(i, len(r)):
+                    A[i, j] = (r[i] * r[j]).sum()
+                    A[j, i] = A[i, j]
+            try:
+                coef = np.linalg.solve(A, b)
+            except np.linalg.LinAlgError:
+                coef = np.ones(len(r))
+        res = r[0] * coef[0]
+        for i in range(1, len(r)):
+            res = res + (r[i] * coef[i])
         self._elm_constants[k] = coef
-        return np.dot(r, coef)
-
-
-class ELMPDE(GPForestPDE, ELM):
-    def compute_error_pr(self, ind, pos=0, constants=None, epoch=0):
-        if epoch == 0:
-            g = self._p_st[self._computing_fitness][self._output].T
-            coef = self._elm_constants[self._computing_fitness]
-            g = np.dot(g, coef)
-        else:
-            if ind is None:
-                g = self.eval(self._computing_fitness)
-                k = self._computing_fitness
-                coef = self._elm_constants[k]
-            else:
-                g = self.eval_ind(ind, pos=pos, constants=constants)
-        # e = - 2 * ( self._f - g)
-        e = 2 * (g - self._f)
-        e = np.repeat(coef[:, np.newaxis], e.shape[0], axis=1) * e
-        return e.T, g
+        return res

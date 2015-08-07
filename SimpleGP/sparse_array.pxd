@@ -35,6 +35,7 @@ cdef class SparseArray:
     cpdef SparseArray add(self, SparseArray other)
     cpdef SparseArray sub(self, SparseArray other)
     cpdef SparseArray mul(self, SparseArray other)
+    cpdef SparseArray mul2(self, double other)
     cpdef SparseArray div(self, SparseArray other)
     cpdef double sum(self)
     cpdef SparseArray fabs(self)
@@ -75,6 +76,10 @@ cdef class SparseEval:
     cpdef eval(self, npc.ndarray[long, ndim=1] ind,
                npc.ndarray[double, ndim=1] constants,
                bint to_np_array=?)
+    cdef SparseArray terminal(self, int node)
+    cpdef eval2(self, npc.ndarray[long, ndim=1] ind,
+                npc.ndarray[double, ndim=1] constants,
+                bint to_np_array=?)
     cdef SparseArray _eval(self)
     cdef SparseArray two_args(self, int func, SparseArray first, SparseArray second)
     cdef SparseArray one_arg(self, int func, SparseArray first)
