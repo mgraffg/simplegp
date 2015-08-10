@@ -50,7 +50,7 @@ class EGPS(GPS, GPForest):
     def kill_ind(self, kill, son):
         super(EGPS, self).kill_ind(kill, son)
         self._eval_A_st[kill] = self._ind_eval_A_st
-        
+
     def crossover(self, father1, father2, **kwargs):
         res = super(EGPS, self).crossover(father1, father2, **kwargs)
         if not self._use_st:
