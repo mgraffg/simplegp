@@ -66,8 +66,8 @@ class TestELM(object):
 
     def test_difference(self):
         x, y = self.create_problem()
-        elmpde = ELMPDE.run_cl(x, y, ntrees=3, generations=2)
-        elm = ELM.run_cl(x, y, ntrees=3, generations=2)
+        elmpde = ELMPDE.run_cl(x, y, nrandom=100, ntrees=3, generations=2)
+        elm = ELM.run_cl(x, y, nrandom=100, ntrees=3, generations=2)
         assert elm.fitness(elm.best) != elmpde.fitness(elmpde.best)
 
     def test_load_elm(self):
