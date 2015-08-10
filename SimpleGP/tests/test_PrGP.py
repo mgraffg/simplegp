@@ -44,7 +44,7 @@ def test_create_population():
 
 def test_crossover_mutation():
     x, y = create_problem()
-    gp = PrGP(seed=0).train(x, y)
+    gp = PrGP(seed=0, nrandom=100, func=['+', '-', '*', '/']).train(x, y)
     gp.create_population()
     while not gp.pre_crossover():
         gp.pre_crossover()
