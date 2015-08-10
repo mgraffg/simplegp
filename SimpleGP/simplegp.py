@@ -687,7 +687,8 @@ population size is smaller or larger than the current one
             bf = self._best_fit
             if bf is None:
                 bf = -1.
-            print "Gen: " + str(i) + "/" + str(self._generations * self._popsize)\
+            print "Gen: " + str(i) + "/" +\
+                str(self._generations * self._popsize)\
                 + " " + "%0.4f" % bf
         return True
 
@@ -992,17 +993,68 @@ class GPwRestart(GP):
 class GPS(GP):
     def __init__(self, func=['+', '-', '*', '/', 'abs', 'exp', 'sqrt',
                              'sin', 'cos', 'sigmoid', 'ln', 'sq',
-                             'if'], **kwargs):
+                             'if'], use_st=0, **kwargs):
         super(GPS, self).__init__(func=func, **kwargs)
+        self._eval_st = []
+        self._use_st = use_st
+        self._ind_eval_st = None
+        self._parent = np.zeros(self._max_length, dtype=self._ind_dtype)
+        self._path = np.zeros(self._max_length, dtype=self._ind_dtype)
+
+    def kill_ind(self, kill, son):
+        super(GPS, self).kill_ind(kill, son)
+        self._eval_st[kill] = self._ind_eval_st
 
     def distance(self, y, yh):
         return y.SSE(yh) / y.size()
 
+    def predict(self, X, ind=None):
+        if ind is None:
+            ind = self.best
+        st = self._eval_st[ind]
+        self._eval_st[ind] = None
+        res = super(GPS, self).predict(X, ind=ind)
+        self._eval_st[ind] = st
+        return res
+
     def eval_ind(self, ind, pos=0, constants=None):
+        if self._computing_fitness is None:
+            cdn = "Use eval with the number of individual, instead"
+            NotImplementedError(cdn)
         c = constants if constants is not None else self._constants
         self.nodes_evaluated += ind.shape[0]
-        yh = self._eval.eval(ind, c, to_np_array=False)
+        k = self._computing_fitness
+        if self._use_st and self._eval_st[k] is None:
+            self._eval_st[k] = map(lambda x: None, ind)
+        st = self._eval_st[k]
+        yh = self._eval.eval(ind, c, to_np_array=False, st=st)
         return yh
+
+    def crossover(self, father1, father2, **kwargs):
+        res = super(GPS, self).crossover(father1, father2, **kwargs)
+        if not self._use_st:
+            return res
+        f1 = self._xo_father1
+        f2 = self._xo_father2
+        p1 = self._tree.p1
+        p2 = self._tree.p2
+        p1_end = self._tree.p1_end
+        p2_end = self._tree.p2_end
+        if res.shape[0] != p1 + (p2_end - p2) + (father1.shape[0] - p1_end):
+            self._ind_eval_st = None
+            return res
+        part_1 = self._eval_st[f1][:p1]
+        if f2 is None:
+            part_2 = map(lambda x: None, range(p2, p2_end))
+        else:
+            part_2 = self._eval_st[f2][p2:p2_end]
+        part_3 = self._eval_st[f1][p1_end:]
+        self._ind_eval_st = part_1 + part_2 + part_3
+        self._tree.compute_parents(father1, self._parent)
+        c = self._tree.path_to_root(self._parent, self._path, p1)
+        for i in range(c):
+            self._ind_eval_st[self._path[i]] = None
+        return res
 
     @property
     def nvar(self):
@@ -1039,6 +1091,7 @@ class GPS(GP):
         self._simplify = Simplify(self.nvar, self._nop)
         self._simplify.set_constants(self._constants2)
         self._tree.set_nvar(self.nvar)
+        self._eval_st = map(lambda x: None, range(self.popsize))
         return self
 
     def predict(self, X, ind=None):

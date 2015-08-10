@@ -56,6 +56,55 @@ class TestSimpleGP(object):
         pr = gp.predict_test_set(gp.best)
         assert isinstance(pr, SparseArray)
 
+    def test_GPS2(self):
+        gp = GPS(generations=3,
+                 popsize=100, use_st=1).train(self._x, self._y)
+        gp.create_population()
+        pr = gp.eval(0)
+        pr2 = gp.eval(0)
+        assert np.all(pr.tonparray() == pr2.tonparray())
+        assert np.all(gp._eval_st[0][0] == pr)
+        ind = gp.create_random_ind()
+        gp.kill_ind(0, ind)
+        assert gp._eval_st[0] == None
+
+    def test_GPS2_crossover(self):
+        gp = GPS(generations=3, seed=0,
+                 nrandom=0,
+                 func=['+', '-', '*', '/'],
+                 popsize=100, use_st=1).train(self._x, self._y)
+        gp.create_population()
+        gp._xo_father1 = 0
+        gp._xo_father2 = 1
+        print gp.fitness(0), gp.fitness(1)
+        ind = gp.crossover(gp.population[gp._xo_father1],
+                           gp.population[gp._xo_father2], p1=10)
+        assert gp._tree.p1 == 10
+        # print gp.population[0]
+        # print gp._path[:ind.shape[0]]
+        gp.kill_ind(2, ind)
+        # print gp._eval_st[2]
+        assert len(gp._eval_st[2]) == ind.shape[0]
+        assert gp._eval_st[2][0] is None
+        # print gp._eval_st[2]
+        pr = gp.eval(2).tonparray()
+        st = gp._eval_st[2]
+        assert np.all(pr == gp._eval_st[2][0].tonparray())
+        gp._eval_st[2] = None
+        print gp.fitness(2)
+        pr2 = gp.eval(2).tonparray()
+        print map(lambda (x, y): x.SSE(y), zip(st, gp._eval_st[2]))
+        assert np.all(pr == pr2)
+
+    def test_GPS2_time(self):
+        import time
+        t = time.time()
+        GPS(generations=3,
+            popsize=100, use_st=2).fit(self._x, self._y)
+        t = time.time() - t
+        print t
+        assert t < 0.032
+        
     @use_pymock
     def test_tree_select_pm(self):
         x, y = self.problem_three_variables()

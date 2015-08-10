@@ -24,6 +24,10 @@ from .eval import Eval
 from .eval cimport Eval
 
 cdef class Tree:
+    cdef readonly int p1
+    cdef readonly int p2
+    cdef readonly int p1_end
+    cdef readonly int p2_end
     cdef INT *_father1
     cdef INT *_father2
     cdef INT *_length

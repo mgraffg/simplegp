@@ -347,6 +347,10 @@ cdef class Tree:
             l_p2 = self.traverse(father2, pos=p2) - p2
         son = np.empty(l_p1 + l_p2, dtype=father1.dtype)
         sonC = <INT *> son.data
+        self.p1 = p1
+        self.p1_end = f1_end
+        self.p2 = p2
+        self.p2_end = p2 + l_p2
         for i in range(p1):
             sonC[c] = f1[i]
             c += 1

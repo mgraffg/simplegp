@@ -84,8 +84,8 @@ cdef class SparseArray:
     cpdef int nunion(self, SparseArray other):
         cdef int a=0, b=0, c=0
         cdef int anele = self.nele(), bnele=other.nele()
-        if self.size() == anele and anele == bnele:
-            return anele
+        if self.size() == anele or self.size() == bnele:
+            return self.size()
         while (a < anele) and (b < bnele):
             if self._indexC[a] == other._indexC[b]:
                 a += 1
@@ -101,16 +101,18 @@ cdef class SparseArray:
             return c + anele - a
 
     cpdef int nintersection(self, SparseArray other):
-        cdef int a=0, b=0, c=0
+        cdef int a=0, b=0, c=0, *indexC = self._indexC, *oindexC = other._indexC
         cdef int anele = self.nele(), bnele=other.nele()
-        if self.size() == anele and anele == bnele:
-            return anele
+        if self.size() == anele or self.size() == bnele:
+            if anele < bnele:
+                return anele
+            return bnele
         while (a < anele) and (b < bnele):
-            if self._indexC[a] == other._indexC[b]:
+            if indexC[a] == oindexC[b]:
                 a += 1
                 b += 1
                 c += 1
-            elif self._indexC[a] < other._indexC[b]:
+            elif indexC[a] < oindexC[b]:
                 a += 1
             else:
                 b += 1                
@@ -568,7 +570,7 @@ cdef class SparseEval:
         self._nop = <long *> nop.data
         self._nfunc = nop.shape[0]
         self._pos = 0
-        # self._st = []
+        self._st = None
         
     cdef int isfunc(self, int a):
         return a < self._nfunc
@@ -600,11 +602,16 @@ cdef class SparseEval:
         self._x1 = self._x[0]
 
     cpdef eval(self, npc.ndarray[long, ndim=1] ind,
-               npc.ndarray[double, ndim=1] constants, bint to_np_array=1):
+               npc.ndarray[double, ndim=1] constants, bint to_np_array=1,
+               list st=None):
         self._pos = 0
         self._st_pos = 0
         self._ind = <long *> ind.data
+        # self._st = 
         self._constants = <double *> constants.data
+        self._st = st
+        if st is not None:
+            self._use_st = 1
         if to_np_array:
             return self._eval().tonparray()
         else:
@@ -647,11 +654,9 @@ cdef class SparseEval:
             while len(func):
                 if func[-1][1] == 0:
                     pf, _ = func.pop()
-                    # print "pf:", pf, _, len(args)
                     node = self._ind[pf]
                     args2 = [args.pop() for _ in range(self._nop[node])]
                     args2.reverse()
-                    # print [x.tonparray()[:3] for x in args2], node, pf
                     res = self.function_set(node, args2)
                     args.append(res)
                     if len(func):
@@ -713,166 +718,40 @@ cdef class SparseEval:
         cdef double v
         self._pos += 1
         cdef int node = self._ind[pos], nop
+        if self._use_st and self._st[pos] is not None:
+            self._pos = self.traverse(pos)
+            return self._st[pos]
         if self.isfunc(node):
             nop = self._nop[node]
-            if node == 15:
-                self._output = map(lambda x: self._eval(), range(nop))
-                res = self._output[0]
-            else:
-                if nop == 1:
-                    res = self.one_arg(node, self._eval())
-                elif nop == 2:
-                    first = self._eval()
-                    second = self._eval()
-                    res = self.two_args(node, first, second)
-                elif nop == 3:
-                    if node == 10:
-                        first = self._eval()
-                        second = self._eval()
-                        third = self._eval()
-                        res = first.if_func(second, third)
-                    else:
-                        raise NotImplementedError("%s" % node)
-                else:
-                    raise NotImplementedError("%s" % node)
+            res = self.function_set(node,
+                                    [self._eval() for x in range(nop)])
         elif self.isvar(node):
             res = self._x[node - self._nfunc]
         else:
             v = self._constants[node - self._nfunc - self._nvar]
             res = self._x1.constant(v)
+        if self._use_st:
+            self._st[pos] = res
         return res
             
-        
-# class SparseEval(object):
-#     def __init__(self, nop):
-#         self._nop = nop
-#         self._pos = 0
-#         self._x = None
-#         self._nvar = None
-#         self._nfunc = nop.shape[0]
-#         self._output = None
-#         self._size = None
-
-#     @property
-#     def nfunc(self):
-#         return self._nfunc
-
-#     @property
-#     def nvar(self):
-#         return self._nvar
-
-#     @property
-#     def X(self):
-#         return self._x
-
-#     @X.setter
-#     def X(self, x):
-#         self._x = map(lambda i: SparseArray.fromlist(x[:, i]),
-#                       range(x.shape[1]))
-#         self._nvar = x.shape[1]
-#         self._size = self._x[0].size()
-
-#     @property
-#     def size(self):
-#         return self._size
-
-#     def isfunc(self, a):
-#         return a < self.nfunc
-
-#     def isvar(self, a):
-#         nfunc = self.nfunc
-#         nvar = self.nvar
-#         return (a >= nfunc) and (a < nfunc+nvar)
-
-#     def isconstant(self, a):
-#         nfunc = self.nfunc
-#         nvar = self.nvar
-#         return a >= nfunc+nvar
-
-#     def eval(self, ind, constants):
-#         self._pos = 0
-#         self._ind = ind
-#         self._constants = constants
-#         hy = self._eval().tonparray()
-#         return hy
-
-#     @staticmethod
-#     def one_arg_func(_x, func):
-#         return func(_x)
-
-#     @staticmethod
-#     def sigmoid(_x):
-#         return 1. / (1. + np.exp(-_x))
-
-#     @staticmethod
-#     def ln(_x):
-#         return np.log(np.fabs(_x))
-
-#     @staticmethod
-#     def max_func(x, y):
-#         s = -100 * (x - y)
-#         s = np.exp(s)
-#         one = 1.
-#         s = one / (one + s)
-#         return s * (x - y) + y
-
-#     @staticmethod
-#     def min_func(x, y):
-#         s = -100 * (x - y)
-#         s = np.exp(s)
-#         one = 1.
-#         s = one / (one + s)
-#         return s * (y - x) + x
-
-#     @staticmethod
-#     def if_func(x, y, z):
-#         s = -100 * x
-#         s = np.exp(s)
-#         one = 1.
-#         s = one / (one + s)
-#         return s * (y - z) + z
-
-#     @staticmethod
-#     def argmax(*a):
-#         nargs = len(a)
-#         beta = 2.
-#         args = map(lambda x: None, range(nargs))
-#         for j, x in enumerate(a):
-#             x = beta * x
-#             x = np.exp(x)
-#             args[j] = x
-#         sum = args[0]
-#         for i in range(1, nargs):
-#             sum = sum + args[i]
-#         res = 0
-#         for i in range(1, nargs):
-#             res = res + (args[i] * i) / sum
-#         return res
-
-#     def output(self, *args):
-#         self._output = args
-#         return args[0]
-
-#     def _eval(self):
-#         pos = self._pos
-#         self._pos += 1
-#         node = self._ind[pos]
-#         if self.isfunc(node):
-#             args = map(lambda x: self._eval(), range(self._nop[node]))
-#             F = self.one_arg_func
-#             func = [lambda x, y: x + y,  # np.add,
-#                     lambda x, y: x - y,  # np.subtract,
-#                     lambda x, y: x * y,  # np.multiply,
-#                     lambda x, y: x / y,  # np.divide,
-#                     lambda x: F(x, np.fabs), lambda x: F(x, np.exp),
-#                     lambda x: F(x, np.sqrt), lambda x: F(x, np.sin),
-#                     lambda x: F(x, np.cos), self.sigmoid,
-#                     self.if_func, self.max_func, self.min_func,
-#                     self.ln, np.square, self.output, self.argmax]
-#             return func[node](*args)
-#         elif self.isvar(node):
-#             return self.X[node - self.nfunc]
-#         else:
-#             v = self._constants[node - self.nfunc - self.nvar]
-#             return self._x[0].constant(v, self.size)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef int traverse(self, int pos):
+        cdef int nargs = 1
+        cdef int cnt = 0
+        cdef int pos_ini = pos
+        cdef int ele
+        cdef long *_funcC = self._nop
+        cdef long *indC = self._ind
+        while True:
+            ele = indC[pos]
+            pos += 1
+            cnt += 1
+            if self.isfunc(ele):
+                nargs -= 1
+                nargs += _funcC[ele]
+            else:
+                nargs -= 1
+            if nargs == 0 :
+                return cnt + pos_ini
         

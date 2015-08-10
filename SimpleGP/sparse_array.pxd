@@ -57,6 +57,7 @@ cdef class SparseArray:
 
 cdef class SparseEval:
     cdef list _st
+    cdef bint _use_st
     cdef list _x
     cdef list _output
     cdef SparseArray _x1
@@ -75,7 +76,8 @@ cdef class SparseEval:
     cdef int isconstant(self, int a)
     cpdef eval(self, npc.ndarray[long, ndim=1] ind,
                npc.ndarray[double, ndim=1] constants,
-               bint to_np_array=?)
+               bint to_np_array=?,
+               list st=?)
     cdef SparseArray terminal(self, int node)
     cdef SparseArray function_set(self, int node, list args)
     cpdef eval2(self, npc.ndarray[long, ndim=1] ind,
@@ -84,3 +86,4 @@ cdef class SparseEval:
     cdef SparseArray _eval(self)
     cdef SparseArray two_args(self, int func, SparseArray first, SparseArray second)
     cdef SparseArray one_arg(self, int func, SparseArray first)
+    cdef int traverse(self, int pos)

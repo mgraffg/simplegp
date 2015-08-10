@@ -400,3 +400,47 @@ def test_seval2():
         m = np.isfinite(pr)
         assert np.all(pr[m] == pr2[m])
     print gp1, gp2
+
+
+def test_seval_time():
+    import time
+
+    def pred(ins):
+        t1 = time.time()
+        pr = ins(gp.population[i],
+                 gp._p_constants[i], 0, st=st)
+        t1 = time.time() - t1
+        return pr.tonparray(), t1
+
+    def pred2(ins):
+        p1 = np.random.randint(gp.population[i].shape[0])
+        parent = np.zeros_like(gp.population[i])
+        path = np.zeros_like(gp.population[i])
+        t1 = time.time()
+        gp._tree.compute_parents(gp.population[i],
+                                 parent)
+        c = gp._tree.path_to_root(parent, path, p1)
+        for j in range(c):
+            st[path[j]] = None
+        pr = ins(gp.population[i],
+                 gp._p_constants[i], 0, st=st)
+        t1 = time.time() - t1
+        return pr.tonparray(), t1
+
+    x, y = create_problem(1000)
+    gp = GPS(generations=3, popsize=10000,
+             seed=0, nrandom=0).train(x, y)
+    gp.create_population()
+    gp1 = 0
+    gp2 = 0
+    for i in range(gp.popsize):
+        st = map(lambda x: None, gp.population[i])
+        # st = None
+        pr, t = pred(gp._eval.eval)
+        gp1 += t
+        _, t = pred2(gp._eval.eval)
+        gp2 += t
+    print gp1, gp2
+    print st
+    assert gp1 < 0.50
+    # assert False
