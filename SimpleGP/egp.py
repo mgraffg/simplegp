@@ -25,6 +25,7 @@ class EGPS(GPS, GPForest):
     def train(self, *args, **kwargs):
         super(EGPS, self).train(*args, **kwargs)
         self._nop[self._output_pos] = self._ntrees
+        self._eval_A_st = map(lambda x: None, range(self.popsize))
         return self
 
     def early_stopping_save(self, k, fit_k=None):
@@ -46,26 +47,54 @@ class EGPS(GPS, GPForest):
                                            dtype=np.object)
         return super(EGPS, self).create_population()
 
-    def eval_ind(self, *args, **kwargs):
+    def kill_ind(self, kill, son):
+        super(EGPS, self).kill_ind(kill, son)
+        self._eval_A_st[kill] = self._ind_eval_A_st
+        
+    def crossover(self, father1, father2, **kwargs):
+        res = super(EGPS, self).crossover(father1, father2, **kwargs)
+        if not self._use_st:
+            return res
+        if self._ind_eval_st is not None:
+            A = self._eval_A_st[self._xo_father1]
+            self._ind_eval_A_st = A
+        return res
+
+    def eval_ind(self, ind, **kwargs):
         if self._computing_fitness is None:
             cdn = "Use eval with the number of individual, instead"
             NotImplementedError(cdn)
-        super(EGPS, self).eval_ind(*args, **kwargs)
-        r = filter(lambda x: x.isfinite(), self._eval.get_output())
         k = self._computing_fitness
+        if self._eval_st[k] is not None and self._eval_A_st[k] is not None:
+            st = self._eval_st[k]
+            index = map(lambda x: self._tree.get_pos_arg(ind, 0, x),
+                        range(self._ntrees))
+            trees = map(lambda x: st[x], index)
+        else:
+            trees = map(lambda x: None, range(self._ntrees))
+        super(EGPS, self).eval_ind(ind, **kwargs)
+        r = filter(lambda x: x.isfinite(), self._eval.get_output())
         if len(r) == 0:
             return self._eval.get_output()[0]
         if self._fitness[k] > -np.inf:
             coef = self._elm_constants[k]
         else:
             A = np.empty((len(r), len(r)))
+            Ap = self._eval_A_st[k]
+            if Ap is not None and A.shape[0] != Ap.shape[0]:
+                Ap = None
             b = np.array(map(lambda f: (f * self._f).sum(), r))
             for i in range(len(r)):
                 for j in range(i, len(r)):
-                    A[i, j] = (r[i] * r[j]).sum()
+                    if trees[i] is None or trees[j] is None\
+                       or Ap is None:
+                        A[i, j] = (r[i] * r[j]).sum()
+                    else:
+                        A[i, j] = Ap[i, j]
                     A[j, i] = A[i, j]
             try:
                 coef = np.linalg.solve(A, b)
+                self._eval_A_st[k] = A
             except np.linalg.LinAlgError:
                 coef = np.ones(len(r))
         res = r[0] * coef[0]

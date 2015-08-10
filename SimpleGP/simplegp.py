@@ -993,7 +993,7 @@ class GPwRestart(GP):
 class GPS(GP):
     def __init__(self, func=['+', '-', '*', '/', 'abs', 'exp', 'sqrt',
                              'sin', 'cos', 'sigmoid', 'ln', 'sq',
-                             'if'], use_st=0, **kwargs):
+                             'if'], use_st=1, **kwargs):
         super(GPS, self).__init__(func=func, **kwargs)
         self._eval_st = []
         self._use_st = use_st
@@ -1043,6 +1043,7 @@ class GPS(GP):
         if res.shape[0] != p1 + (p2_end - p2) + (father1.shape[0] - p1_end):
             self._ind_eval_st = None
             return res
+        # print res.shape[0], p1 + (p2_end - p2) + (father1.shape[0] - p1_end)
         part_1 = self._eval_st[f1][:p1]
         if f2 is None:
             part_2 = map(lambda x: None, range(p2, p2_end))
@@ -1051,9 +1052,10 @@ class GPS(GP):
         part_3 = self._eval_st[f1][p1_end:]
         self._ind_eval_st = part_1 + part_2 + part_3
         self._tree.compute_parents(father1, self._parent)
-        c = self._tree.path_to_root(self._parent, self._path, p1)
-        for i in range(c):
-            self._ind_eval_st[self._path[i]] = None
+        while p1 > -1:
+            self._ind_eval_st[p1] = None
+            p1 = self._parent[p1]
+        self._ind_eval_st[0] = None
         return res
 
     @property

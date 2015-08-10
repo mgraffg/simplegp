@@ -383,7 +383,7 @@ def test_seval2():
         return pr.tonparray(), t1
 
     x, y = create_problem(10)
-    gp = GPS(generations=3, seed=0, nrandom=0).fit(x, y)
+    gp = GPS(generations=3, use_st=0, seed=0, nrandom=0).fit(x, y)
     var = gp._nop.shape[0]
     cons = var + x.shape[1]
     ind = np.array([0, var, 0, 2, var+1, cons, cons], dtype=np.int)
@@ -441,6 +441,6 @@ def test_seval_time():
         _, t = pred2(gp._eval.eval)
         gp2 += t
     print gp1, gp2
-    print st
-    assert gp1 < 0.50
+    print st, 0.50
+    assert gp1 < 0.55
     # assert False
