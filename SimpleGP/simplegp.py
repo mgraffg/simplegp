@@ -1013,7 +1013,9 @@ class GPS(GP):
             ind = self.best
         st = self._eval_st[ind]
         self._eval_st[ind] = None
-        res = super(GPS, self).predict(X, ind=ind)
+        self._eval.X(X)
+        res = self.eval(ind)
+        self._eval.X(self._x)
         self._eval_st[ind] = st
         return res
 
@@ -1095,14 +1097,6 @@ class GPS(GP):
         self._tree.set_nvar(self.nvar)
         self._eval_st = map(lambda x: None, range(self.popsize))
         return self
-
-    def predict(self, X, ind=None):
-        if ind is None:
-            ind = self.best
-        self._eval.X(X)
-        yh = self.eval(ind)
-        self._eval.X(self._x)
-        return yh
 
     def test_f(self, x):
         return x.isfinite()
