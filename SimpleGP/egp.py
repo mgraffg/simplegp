@@ -17,8 +17,9 @@ import numpy as np
 
 
 class EGPS(GPS, GPForest):
-    def __init__(self, ntrees=5, nrandom=0, **kwargs):
+    def __init__(self, ntrees=5, nrandom=0, max_length=512, seed=0, **kwargs):
         super(EGPS, self).__init__(ntrees=ntrees, nrandom=nrandom,
+                                   max_length=max_length, seed=seed,
                                    **kwargs)
         self._elm_constants = None
 
@@ -37,7 +38,7 @@ class EGPS(GPS, GPForest):
         self._early_stopping = [fit_k,
                                 self.population[k].copy(),
                                 self._p_constants[k].copy(),
-                                self._elm_constants[k].copy(),
+                                self._elm_constants[k],
                                 self._pr_test_set.copy()]
 
     def create_population(self):
@@ -60,6 +61,27 @@ class EGPS(GPS, GPForest):
             self._ind_eval_A_st = A
         return res
 
+    def compute_coef(self, k, trees, r):
+        A = np.empty((len(r), len(r)))
+        Ap = self._eval_A_st[k]
+        if Ap is not None and A.shape[0] != Ap.shape[0]:
+            Ap = None
+        b = np.array(map(lambda f: (f * self._f).sum(), r))
+        for i in range(len(r)):
+            for j in range(i, len(r)):
+                if trees[i] is None or trees[j] is None\
+                   or Ap is None:
+                    A[i, j] = (r[i] * r[j]).sum()
+                else:
+                    A[i, j] = Ap[i, j]
+                A[j, i] = A[i, j]
+        try:
+            coef = np.linalg.solve(A, b)
+            self._eval_A_st[k] = A
+        except np.linalg.LinAlgError:
+            coef = np.ones(len(r))
+        return coef
+
     def eval_ind(self, ind, **kwargs):
         if self._computing_fitness is None:
             cdn = "Use eval with the number of individual, instead"
@@ -73,32 +95,20 @@ class EGPS(GPS, GPForest):
         else:
             trees = map(lambda x: None, range(self._ntrees))
         super(EGPS, self).eval_ind(ind, **kwargs)
-        r = filter(lambda x: x.isfinite(), self._eval.get_output())
-        if len(r) == 0:
-            return self._eval.get_output()[0]
+        r = self._eval.get_output()
         if self._fitness[k] > -np.inf:
-            coef = self._elm_constants[k]
+            coef, index = self._elm_constants[k]
+            r = map(lambda x: r[x], index)
         else:
-            A = np.empty((len(r), len(r)))
-            Ap = self._eval_A_st[k]
-            if Ap is not None and A.shape[0] != Ap.shape[0]:
-                Ap = None
-            b = np.array(map(lambda f: (f * self._f).sum(), r))
-            for i in range(len(r)):
-                for j in range(i, len(r)):
-                    if trees[i] is None or trees[j] is None\
-                       or Ap is None:
-                        A[i, j] = (r[i] * r[j]).sum()
-                    else:
-                        A[i, j] = Ap[i, j]
-                    A[j, i] = A[i, j]
-            try:
-                coef = np.linalg.solve(A, b)
-                self._eval_A_st[k] = A
-            except np.linalg.LinAlgError:
-                coef = np.ones(len(r))
+            index = filter(lambda x: r[x].isfinite(), range(len(r)))
+            if len(index) == 0:
+                self._elm_constants[k] = ([1.0], [0])
+                return r[0]
+            else:
+                r = map(lambda x: r[x], index)
+                coef = self.compute_coef(k, trees, r)
         res = r[0] * coef[0]
         for i in range(1, len(r)):
             res = res + (r[i] * coef[i])
-        self._elm_constants[k] = coef
+        self._elm_constants[k] = (coef, index)
         return res

@@ -1,4 +1,5 @@
 Version 0.10.*
+	+ Bugs in EGP
 	+ Working in a cache system in GPS and related systems
 	+ Implementing EGP using sparse arrays (EGPS)
 	+ Using sparse_array to create a GP system called GPS

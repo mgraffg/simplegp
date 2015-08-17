@@ -1045,7 +1045,6 @@ class GPS(GP):
         if res.shape[0] != p1 + (p2_end - p2) + (father1.shape[0] - p1_end):
             self._ind_eval_st = None
             return res
-        # print res.shape[0], p1 + (p2_end - p2) + (father1.shape[0] - p1_end)
         part_1 = self._eval_st[f1][:p1]
         if f2 is None:
             part_2 = map(lambda x: None, range(p2, p2_end))
@@ -1082,13 +1081,15 @@ class GPS(GP):
 
     def train(self, x, f):
         self._eval = SparseEval(self._nop)
-        if isinstance(f, np.ndarray):
+        if isinstance(x, np.ndarray):
             x = map(lambda x: SparseArray.fromlist(x), x.T)
         self._eval.X(x)
         self._nvar = len(x)
         self._x = x
         if isinstance(f, np.ndarray):
             self._f = SparseArray.fromlist(f)
+        else:
+            self._f = f
         self._st = None
         self._p_der_st = None
         self._error_st = None
