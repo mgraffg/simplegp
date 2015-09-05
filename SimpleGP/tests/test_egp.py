@@ -31,6 +31,12 @@ class TestSGPS(object):
                                      test_y=self._y)
         assert isinstance(gp.early_stopping[-1], SparseArray)
 
+    def test_EGPS_wo_st(self):
+        gp = EGPS(generations=3, use_st=0).fit(self._x,
+                                               self._y, test=self._x,
+                                               test_y=self._y)
+        assert isinstance(gp.early_stopping[-1], SparseArray)
+
     def test_cache(self):
         gp = EGPS(seed=0, nrandom=0,
                   use_st=1, generations=3).fit(self._x,

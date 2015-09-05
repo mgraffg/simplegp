@@ -22,6 +22,7 @@ class EGPS(GPS, GPForest):
                                    max_length=max_length, seed=seed,
                                    **kwargs)
         self._elm_constants = None
+        self._ind_eval_A_st = None
 
     def train(self, *args, **kwargs):
         super(EGPS, self).train(*args, **kwargs)
