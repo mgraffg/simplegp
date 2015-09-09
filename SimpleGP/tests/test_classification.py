@@ -209,4 +209,13 @@ def test_success():
     a[-1] = 1
     b = np.zeros(10)
     assert Classification.success(a, b) == 0.9
-    
+
+
+def test_balance():
+    cl2 = cl[:-3]
+    index = Classification.balance(cl2)
+    l = np.array(map(lambda x: (cl2[index] == x).sum(), np.unique(cl2)))
+    assert np.all(l == l.min())
+    index = Classification.balance(cl2, nele=20)
+    l = np.array(map(lambda x: (cl2[index] == x).sum(), np.unique(cl2)))
+    assert np.all(l == 20)

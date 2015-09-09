@@ -38,6 +38,7 @@ cdef class SparseArray:
     cpdef SparseArray mul2(self, double other)
     cpdef SparseArray div(self, SparseArray other)
     cpdef double sum(self)
+    cpdef double mean(self)
     cpdef SparseArray fabs(self)
     cpdef SparseArray exp(self)
     cpdef SparseArray sqrt(self)

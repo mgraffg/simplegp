@@ -272,6 +272,12 @@ cdef class SparseArray:
             res += data[i]
         return res
 
+    cpdef double mean(self):
+        cdef double res=0
+        res = self.sum()    
+        return res / self.size()
+        
+            
     cpdef SparseArray fabs(self):
         cdef SparseArray res = self.empty(self.nele(), self._size)
         cdef int i

@@ -48,6 +48,19 @@ class Classification(SubTreeXO):
     def success(y, yh):
         return (y == yh).sum() / float(y.shape[0])
 
+    @staticmethod
+    def balance(y, seed=0, nele=np.inf):
+        cnt = min(map(lambda x: (y == x).sum(), np.unique(y)))
+        cnt = min([cnt, nele])
+        index = np.arange(y.shape[0])
+        np.random.seed(seed)
+        np.random.shuffle(index)
+        mask = np.zeros_like(index, dtype=np.bool)
+        for cl in np.unique(y):
+            m = y[index] == cl
+            mask[index[m][:cnt]] = True
+        return np.where(mask)[0]
+
 
 class ClassificationPDE(SubTreeXOPDE, Classification):
     pass

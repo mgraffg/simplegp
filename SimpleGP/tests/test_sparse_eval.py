@@ -52,6 +52,7 @@ def test_get_data_index():
     n.set_data_index(array.get_data(), array.get_index())
     assert (array - n).fabs().sum() == 0
 
+
 def test_nunion():
     size = 1000
     uno = create_numpy_array(size)
@@ -152,6 +153,13 @@ def test_sparse_array_sum2():
     uno = create_numpy_array()
     suno = SparseArray.fromlist(uno)
     assert suno.sum() == uno.sum()
+
+
+def test_sparse_array_mean():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno)
+    assert suno.mean() == uno.mean()
 
 
 def test_sparse_array_fabs():
@@ -363,6 +371,16 @@ def test_slice():
 def test_copy():
     uno = SparseArray.fromlist(create_numpy_array(10))
     assert uno.copy().SSE(uno) == 0
+
+
+def test_pickle():
+    import StringIO
+    import pickle
+    uno = SparseArray.fromlist(create_numpy_array(10))
+    fpt = StringIO.StringIO()
+    pickle.dump(uno, fpt)
+    dos = pickle.load(fpt)
+    assert uno.SSE(dos) == 0
 
 
 def test_mul_vec_cons():
