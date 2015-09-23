@@ -14,6 +14,7 @@
 
 import numpy as np
 from SimpleGP.forest import SubTreeXO
+from SimpleGP.classification import Classification
 from SimpleGP.sparse_array import SparseEval, SparseArray
 from SimpleGP.Simplify import Simplify
 import tempfile
@@ -208,17 +209,17 @@ class SparseGPPG(SubTreeXO):
         return cl[s]
 
     def distance(self, _y, _yh):
-        return -self.recall(_y, _yh).mean()
+        return -Classification.recall(_y, _yh).mean()
 
     def verbose(self, i):
         if self._verbose:
-            p = self.precision(self._f, self.eval())
-            r = self.recall(self._f, self.eval())
+            p = Classification.precision(self._f, self.eval())
+            r = Classification.recall(self._f, self.eval())
             print "Iter:", i, "R:", map(lambda x: "%0.4f" % x, r),\
                 "P:", map(lambda x: "%0.4f" % x, p)
 
     def func_select(self, y, yh):
-        return self.recall(y, yh)
+        return Classification.recall(y, yh)
 
     def recall_distance(self, y, yh):
         W = self._dist_matrix
@@ -269,32 +270,6 @@ class SparseGPPG(SubTreeXO):
                 r = fs(gp._f, gp.eval())
                 tree_cl = np.where((r - r.min()) <= tol)[0].tolist()
         return gp
-
-    @classmethod
-    def f1(cls, y, yh):
-        p = cls.precision(y, yh)
-        r = cls.recall(y, yh)
-        f1 = 2 * p * r / (p + r)
-        f1[~np.isfinite(f1)] = -np.inf
-        return f1
-
-    @staticmethod
-    def recall(y, yh):
-        l = []
-        for cl in np.unique(y):
-            m = y == cl
-            r = (yh[m] == cl).sum() / float(m.sum())
-            l.append(r)
-        return np.array(l)
-
-    @staticmethod
-    def precision(y, yh):
-        l = []
-        for cl in np.unique(y):
-            m = yh == cl
-            p = (y[m] == cl).sum() / float(m.sum())
-            l.append(p)
-        return np.array(l)
 
 
 class PGCl(SparseGPPG):

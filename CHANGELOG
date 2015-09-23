@@ -1,4 +1,8 @@
 Version 0.10.*
+	+ Moving methods from SparseGPPG to Classification
+	+ Modifying a default parameter, use_st
+	+ Bug in early_stopping_save fitness could be zero and this
+	raises an exception
 	+ Method to balance classes is implemented on Classification
 	+ Mean is implemented on SparseArray
 	+ Bugs in EGP

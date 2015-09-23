@@ -993,7 +993,7 @@ class GPwRestart(GP):
 class GPS(GP):
     def __init__(self, func=['+', '-', '*', '/', 'abs', 'exp', 'sqrt',
                              'sin', 'cos', 'sigmoid', 'ln', 'sq',
-                             'if'], use_st=1, **kwargs):
+                             'if'], use_st=0, **kwargs):
         super(GPS, self).__init__(func=func, **kwargs)
         self._eval_st = []
         self._use_st = use_st

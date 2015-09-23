@@ -61,6 +61,32 @@ class Classification(SubTreeXO):
             mask[index[m][:cnt]] = True
         return np.where(mask)[0]
 
+    @classmethod
+    def f1(cls, y, yh):
+        p = cls.precision(y, yh)
+        r = cls.recall(y, yh)
+        f1 = 2 * p * r / (p + r)
+        f1[~np.isfinite(f1)] = -np.inf
+        return f1
+
+    @staticmethod
+    def recall(y, yh):
+        l = []
+        for cl in np.unique(y):
+            m = y == cl
+            r = (yh[m] == cl).sum() / float(m.sum())
+            l.append(r)
+        return np.array(l)
+
+    @staticmethod
+    def precision(y, yh):
+        l = []
+        for cl in np.unique(y):
+            m = yh == cl
+            p = (y[m] == cl).sum() / float(m.sum())
+            l.append(p)
+        return np.array(l)
+
 
 class ClassificationPDE(SubTreeXOPDE, Classification):
     pass
