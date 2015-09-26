@@ -383,6 +383,8 @@ def test_slice2():
     index.sort()
     print suno[index].tonparray(), uno[index]
     assert np.all(suno[index].tonparray() == uno[index])
+    index = np.where(uno == 0)[0]
+    assert suno[index].nele() == 0
 
 
 def test_copy():
