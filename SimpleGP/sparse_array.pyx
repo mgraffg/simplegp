@@ -443,11 +443,35 @@ cdef class SparseArray:
                 return 0
         return 1
 
+    cdef SparseArray select(self, npc.ndarray[long, ndim=1] index):
+        cdef long *indexC = <long *>index.data
+        cdef list res = []
+        cdef int anele=self.nele(), bnele=index.shape[0]
+        cdef int a=0, b=0, c=0
+        for i in range(index.shape[0]-1):
+            if index[i] > index[i+1]:
+                raise NotImplementedError("The index must be in order")
+        while (a < anele) and (b < bnele):
+            if self._indexC[a] == indexC[b]:
+                res.append(self._dataC[a])
+                a += 1
+                b += 1
+                c += 1
+            elif self._indexC[a] < indexC[b]:
+                a += 1
+            else:
+                res.append(0)
+                b += 1
+        return self.fromlist(res)
+        
+                
     def __getitem__(self, value):
         cdef int i, init=-1, cnt=0
         cdef SparseArray res
+        if isinstance(value, np.ndarray):
+            return self.select(value)
         if not isinstance(value, slice):
-            raise NotImplementedError("Not implemented yet")
+            raise NotImplementedError("Not implemented yet %s" %(type(value)))
         start = value.start if value.start is not None else 0
         stop = value.stop if value.stop is not None else self.size()
         if stop > self.size():

@@ -1,4 +1,5 @@
 Version 0.10.*
+	+ SparseArray.__getitem__ support index
 	+ Moving methods from SparseGPPG to Classification
 	+ Modifying a default parameter, use_st
 	+ Bug in early_stopping_save fitness could be zero and this

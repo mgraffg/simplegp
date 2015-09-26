@@ -368,6 +368,23 @@ def test_slice():
     assert np.all(suno[:50].tonparray() == uno[:50])
 
 
+def test_slice2():
+    uno = create_numpy_array(100, 50)
+    suno = SparseArray.fromlist(uno)
+    index = np.arange(100)
+    np.random.seed(0)
+    np.random.shuffle(index)
+    index = index[:10]
+    try:
+        suno[index]
+        assert False
+    except NotImplementedError:
+        pass
+    index.sort()
+    print suno[index].tonparray(), uno[index]
+    assert np.all(suno[index].tonparray() == uno[index])
+
+
 def test_copy():
     uno = SparseArray.fromlist(create_numpy_array(10))
     assert uno.copy().SSE(uno) == 0
