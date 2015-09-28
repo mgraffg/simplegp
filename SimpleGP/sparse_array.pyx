@@ -538,7 +538,7 @@ cdef class SparseArray:
         self = cls()
         data = []
         index = []
-        k = 0
+        k = -1
         for k, v in enumerate(iter):
             if v == 0:
                 continue
