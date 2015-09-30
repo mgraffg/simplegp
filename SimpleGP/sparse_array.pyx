@@ -462,6 +462,9 @@ cdef class SparseArray:
             else:
                 res.append(0)
                 b += 1
+        while (b < bnele):
+            res.append(0)
+            b += 1
         return self.fromlist(res)
         
                 

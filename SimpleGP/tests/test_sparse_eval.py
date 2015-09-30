@@ -369,10 +369,10 @@ def test_slice():
 
 
 def test_slice2():
+    np.random.seed(3)
     uno = create_numpy_array(100, 50)
     suno = SparseArray.fromlist(uno)
     index = np.arange(100)
-    np.random.seed(0)
     np.random.shuffle(index)
     index = index[:10]
     try:
@@ -381,10 +381,15 @@ def test_slice2():
     except NotImplementedError:
         pass
     index.sort()
-    print suno[index].tonparray(), uno[index]
+    # print suno[index].tonparray(), uno[index]
     assert np.all(suno[index].tonparray() == uno[index])
+    # print suno[index].size(), index.shape
+    assert suno[index].size() == index.shape[0]
     index = np.where(uno == 0)[0]
     assert suno[index].nele() == 0
+    print index, suno.get_index()
+    print suno[index].size(), index.shape[0]
+    assert suno[index].size() == index.shape[0]
 
 
 def test_copy():
