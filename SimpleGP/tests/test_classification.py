@@ -219,3 +219,17 @@ def test_balance():
     index = Classification.balance(cl2, nele=20)
     l = np.array(map(lambda x: (cl2[index] == x).sum(), np.unique(cl2)))
     assert np.all(l == 20)
+
+
+def test_egps_logistic():
+    from SimpleGP import EGPS, EGPSL
+    y = cl.copy()
+    y[y == 2] = 1
+    gp = EGPSL(verbose=True, generations=5).fit(X, y)
+    gp2 = EGPS().train(X, y)
+    gp2.create_population()
+    gp2.population[0] = gp.population[gp.best]
+    gp2._p_constants[0] = gp._p_constants[gp.best]
+    print gp2.fitness(0), gp.fitness(gp.best)
+    print gp2._elm_constants[0], gp._elm_constants[gp.best]
+    assert gp2.fitness(0) != gp.fitness(gp.best)

@@ -157,7 +157,9 @@ cdef class SparseArray:
         return res
 
     def __sub__(self, other):
-        return self.sub(other)
+        if isinstance(other, SparseArray):
+            return self.sub(other)
+        return self.sub2(other)
         
     cpdef SparseArray sub(self, SparseArray other):
         cdef SparseArray res = self.empty(self.nunion(other), self.size())
@@ -194,6 +196,16 @@ cdef class SparseArray:
             res._indexC[c] = index
         return res
 
+    cpdef SparseArray sub2(self, double other):
+        cdef SparseArray res = self.empty(self.size(), self.size())
+        cdef int i
+        for i in range(self.size()):
+            res._indexC[i] = i
+            res._dataC[i] = - other
+        for i in range(self.nele()):
+            res._dataC[self._indexC[i]] = self._dataC[i] - other
+        return res
+        
     def __mul__(self, other):
         if isinstance(other, SparseArray):
             return self.mul(other)
@@ -235,7 +247,9 @@ cdef class SparseArray:
         return res
                     
     def __div__(self, other):
-        return self.div(other)
+        if isinstance(other, SparseArray):
+            return self.div(other)
+        return self.div2(other)
 
     @cython.cdivision(True)
     cpdef SparseArray div(self, SparseArray other):
@@ -265,6 +279,15 @@ cdef class SparseArray:
                     b += 1
         return res
 
+    @cython.cdivision(True)    
+    cpdef SparseArray div2(self, double other):
+        cdef SparseArray res = self.empty(self.nele(), self.size())
+        cdef int i
+        for i in range(self.nele()):
+            res._indexC[i] = self._indexC[i]
+            res._dataC[i] = self._dataC[i] / other
+        return res
+        
     cpdef double sum(self):
         cdef double res=0, *data = self._dataC
         cdef int i
@@ -277,7 +300,11 @@ cdef class SparseArray:
         res = self.sum()    
         return res / self.size()
         
-            
+    cpdef double std(self):
+        cdef SparseArray res = self.sub2(self.mean())
+        res = res.sq()
+        return math.sqrt(res.sum() / res.size())
+
     cpdef SparseArray fabs(self):
         cdef SparseArray res = self.empty(self.nele(), self._size)
         cdef int i

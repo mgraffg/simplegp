@@ -1,4 +1,6 @@
 Version 0.10.*
+	+ SparseArray.std
+	+ SparseArray substract a double
 	+ SparseArray.__getitem__ support index
 	+ Moving methods from SparseGPPG to Classification
 	+ Modifying a default parameter, use_st

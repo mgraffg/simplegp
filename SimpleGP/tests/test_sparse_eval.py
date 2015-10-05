@@ -118,6 +118,15 @@ def test_sparse_array_sub():
     assert np.all(((tmp).tonparray() == -dos))
 
 
+def test_sparse_array_sub2():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno)
+    a = (uno - uno.mean())
+    b = (suno - suno.mean()).tonparray()
+    assert np.all(a == b)
+
+
 def test_sparse_array_mul():
     np.random.seed(0)
     uno = create_numpy_array(10, 5)
@@ -160,6 +169,14 @@ def test_sparse_array_mean():
     uno = create_numpy_array()
     suno = SparseArray.fromlist(uno)
     assert suno.mean() == uno.mean()
+
+
+def test_sparse_array_std():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno)
+    print suno.std(), uno.std()
+    assert_almost_equals(suno.std(), uno.std())
 
 
 def test_sparse_array_fabs():
@@ -414,6 +431,12 @@ def test_mul_vec_cons():
     assert np.all((uno * 12.3) == (suno * 12.3).tonparray())
 
 
+def test_div_vec_cons():
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno)
+    print (suno / 12.3).tonparray(), (uno / 12.3)
+    assert np.all((uno / 12.3) == (suno / 12.3).tonparray())
+    
 def test_seval2():
     import time
 
