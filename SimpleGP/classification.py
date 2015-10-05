@@ -110,7 +110,9 @@ class EGPSL(EGPS):
         self._f = self._f.tonparray()
 
     def distance(self, y,  yh):
-        return -Classification.f1(y, yh).mean()
+        if np.isfinite(yh):
+            return -Classification.f1(y, yh).mean()
+        return -np.inf
 
     def test_f(self, x):
         return np.all(np.isfinite(x))
@@ -149,7 +151,9 @@ class EGPSL(EGPS):
             index = filter(lambda x: r[x].isfinite(), range(len(r)))
             if len(index) == 0:
                 self._elm_constants[k] = ([1.0], norm, [0])
-                return r[0]
+                r = np.empty(r[0].size())
+                r.fill(-np.inf)
+                return r
             else:
                 r = map(lambda x: r[x], index)
                 coef = self.compute_coef(k, r)
