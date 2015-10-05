@@ -110,7 +110,7 @@ class EGPSL(EGPS):
         self._f = self._f.tonparray()
 
     def distance(self, y,  yh):
-        if np.isfinite(yh):
+        if np.all(np.isfinite(yh)):
             return -Classification.f1(y, yh).mean()
         return -np.inf
 
