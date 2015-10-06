@@ -717,10 +717,9 @@ cdef class SparseArray:
                     i += 1
             else:
                 c1 = 0
-            if yh._indexC[j] == k:
+            if j < yhnele and yh._indexC[j] == k:
                 c2 = int(yh._dataC[j])
-                if j < yhnele - 1:
-                    j += 1
+                j += 1
             else:
                 c2 = 0
             if c1 != c2:
