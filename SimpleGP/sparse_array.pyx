@@ -743,6 +743,33 @@ cdef class SparseArray:
                 data[c] = x.SAE(y)
                 c += 1
 
+    @cython.boundscheck(False)
+    @cython.nonecheck(False)
+    @cython.cdivision(True)    
+    cdef SparseArray joint_log_likelihood_sum(self, list Xs, list mu, list var, double n_ij, int cl):
+        cdef double muj, varj, xj, tmp
+        cdef int i, size=Xs[0].size(), nvar=len(Xs), j, k, xnele
+        cdef SparseArray res = self.empty(size, size), x
+        for i in range(size):
+            res._dataC[i] = 0
+            res._indexC[i] = i
+        for j in range(nvar):
+            k = 0
+            x = Xs[j]
+            muj = mu[j][cl]
+            varj = var[j][cl]
+            xnele = x.nele()
+            for i in range(size):
+                xj = 0
+                if k < xnele and x._indexC[k] == i:
+                    xj = x._dataC[k]
+                    k += 1
+                tmp = (xj - muj)
+                res._dataC[i] = res._dataC[i] + (tmp * tmp) / varj
+        for i in range(size):
+            res._dataC[i] = -0.5 * res._dataC[i] - n_ij
+        return res
+                
     @staticmethod
     @cython.boundscheck(False)
     @cython.nonecheck(False)
@@ -751,18 +778,20 @@ cdef class SparseArray:
         cdef int i
         cdef list llh = []
         cdef double n_ij
-        cdef SparseArray sn_ij, x
-        cdef array.array[double] s, m
+        cdef SparseArray sn_ij, x=Xs[0]
+        # cdef array.array[double] s, m
+        cdef array.array[double] s
         for i in range(len(log_cl_prior)):
             n_ij = 0
             for s in var:
                 n_ij += math.log(2. * s[i] * PI)
             n_ij = 0.5 * n_ij - log_cl_prior[i]
-            sn_ij = (Xs[0] - mu[0][i]).sq() / var[0][i]
-            for x, m, s in zip(Xs[1:], mu[1:], var[1:]):
-                sn_ij = sn_ij + (x - m[i]).sq() / s[i]
-            sn_ij = (sn_ij * (-0.5)) - n_ij
-            llh.append((sn_ij).tonparray())
+            # sn_ij = (Xs[0] - mu[0][i]).sq() / var[0][i]
+            # for x, m, s in zip(Xs[1:], mu[1:], var[1:]):
+            #     sn_ij = sn_ij + (x - m[i]).sq() / s[i]
+            # sn_ij = (sn_ij * (-0.5)) - n_ij
+            sn_ij = x.joint_log_likelihood_sum(Xs, mu, var, n_ij, i)
+            llh.append(sn_ij.tonparray())
         return np.array(llh).T
         
 cdef class SparseEval:

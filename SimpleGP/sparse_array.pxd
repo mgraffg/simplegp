@@ -60,6 +60,7 @@ cdef class SparseArray:
     cpdef SparseArray empty(self, int nele, int size=?)
     cpdef SparseArray copy(self)    
     cpdef SparseArray constant(self, double v, int size=?)
+    cdef SparseArray joint_log_likelihood_sum(self, list Xs, list mu, list var, double n_ij, int cl)
 
 cdef class SparseEval:
     cdef list _st
