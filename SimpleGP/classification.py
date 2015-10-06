@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
+import array
+import math
 from SimpleGP.forest import SubTreeXOPDE, SubTreeXO
-from SimpleGP.egp import EGPS
-from sklearn.linear_model import LogisticRegression
+from SimpleGP.simplegp import GPS
+from SimpleGP.sparse_array import SparseArray
 
 
 class Classification(SubTreeXO):
@@ -94,75 +96,158 @@ class ClassificationPDE(SubTreeXOPDE, Classification):
     pass
 
 
-class EGPSL(EGPS):
-    def fitness_validation(self, k):
-        """
-        Fitness function used in the validation set.
-        In this case it is the one used on the evolution
-        """
-        cnt = self._test_set_y.shape[0]
-        fit_k = -self.distance(self._test_set_y,
-                               self._pr_test_set[:cnt])
-        return fit_k
+class Bayes(GPS, SubTreeXO):
+    def __init__(self, ntrees=5, nrandom=0, max_length=1024, ncl=None,
+                 class_freq=None,
+                 seed=0, **kwargs):
+        super(Bayes, self).__init__(ntrees=ntrees, nrandom=nrandom,
+                                    max_length=max_length, seed=seed,
+                                    **kwargs)
+        self._elm_constants = None
+        self._ncl = ncl
+        self._class_freq = class_freq
+        if self._class_freq is not None:
+            assert len(self._class_freq) == self._ncl
 
     def train(self, *args, **kwargs):
-        super(EGPSL, self).train(*args, **kwargs)
-        self._f = self._f.tonparray()
+        super(Bayes, self).train(*args, **kwargs)
+        self._nop[self._output_pos] = self._ntrees
+        if self._ncl is None:
+            self._ncl = np.unique(self._f.tonparray()).shape[0]
+        if self._class_freq is None:
+            self._class_freq = self._f.class_freq(self._ncl)
+        tot = sum(self._class_freq)
+        self._log_class_prior = array.array('d', map(lambda x:
+                                                     math.log(x / tot),
+                                                     self._class_freq))
+        self._class_prior = array.array('d', map(lambda x:
+                                                 x / tot,
+                                                 self._class_freq))
+        return self
 
-    def distance(self, y,  yh):
-        if np.all(np.isfinite(yh)):
-            return -Classification.f1(y, yh).mean()
-        return -np.inf
+    def create_population(self):
+        if self._elm_constants is None or\
+           self._elm_constants.shape[0] != self._popsize:
+            self._elm_constants = np.empty(self._popsize,
+                                           dtype=np.object)
+        return super(Bayes, self).create_population()
 
-    def test_f(self, x):
-        return np.all(np.isfinite(x))
-
-    def set_test(self, x, y=None):
+    def early_stopping_save(self, k, fit_k=None):
         """
-        x is the set test, this is used to test, during the evolution, that
-        the best individual does not produce nan or inf
+        Storing the best so far on the validation set.
+        This funtion is called from early_stopping
         """
-        super(EGPSL, self).set_test(x, y=y)
-        if y is not None:
-            self._test_set_y = self._test_set_y.tonparray()
+        assert fit_k is not None
+        self._early_stopping = [fit_k,
+                                self.population[k].copy(),
+                                self._p_constants[k].copy(),
+                                self._elm_constants[k],
+                                self._class_freq,
+                                self._pr_test_set.copy()]
 
-    def compute_coef(self, k, r):
-        m = LogisticRegression(fit_intercept=False)
-        A = np.array(map(lambda x: x.tonparray(),
-                         r)).T
-        m.fit(A,
-              self._f)
-        return m.coef_
+    def set_early_stopping_ind(self, ind, k=0):
+        if self._best == k:
+            raise "Losing the best so far"
+        self.population[k] = ind[1]
+        self._p_constants[k] = ind[2]
+        self._elm_constants[k] = ind[3]
+        self._class_freq = ind[4]
+        tot = sum(self._class_freq)
+        self._log_class_prior = array.array('d', map(lambda x:
+                                                     math.log(x / tot),
+                                                     self._class_freq))
+        self._class_prior = array.array('d', map(lambda x:
+                                                 x / tot,
+                                                 self._class_freq))
+
+    def joint_log_likelihood(self, k):
+        self._computing_fitness = k
+        super(Bayes, self).eval_ind(self.population[k], pos=0,
+                                    constants=self._p_constants[k])
+        Xs = self._eval.get_output()
+        y = self._f
+        if self._fitness[k] > -np.inf:
+            [mu, var] = self._elm_constants[k]
+        else:
+            mu = y.mean_per_cl(Xs, self._class_freq)
+            var = y.var_per_cl(Xs, mu, self._class_freq)
+            self._elm_constants[k] = [mu, var]
+        llh = y.joint_log_likelihood(Xs, mu, var, self._log_class_prior)
+        return llh
 
     def eval_ind(self, ind, **kwargs):
         if self._computing_fitness is None:
             cdn = "Use eval with the number of individual, instead"
             NotImplementedError(cdn)
         k = self._computing_fitness
-        super(EGPS, self).eval_ind(ind, **kwargs)
-        r = self._eval.get_output()
-        if self._fitness[k] > -np.inf:
-            coef, norm, index = self._elm_constants[k]
-            r = map(lambda (y, x): (x - y[0]) / y[1], zip(norm, r))
-            r = map(lambda x: r[x], index)
-        else:
-            norm = map(lambda x: (x.mean(), x.std()), r)
-            r = map(lambda (y, x): (x - y[0]) / y[1], zip(norm, r))
-            index = filter(lambda x: r[x].isfinite(), range(len(r)))
-            if len(index) == 0:
-                self._elm_constants[k] = ([1.0], norm, [0])
-                r = np.empty(r[0].size())
-                r.fill(-np.inf)
-                return r
-            else:
-                r = map(lambda x: r[x], index)
-                coef = self.compute_coef(k, r)
-        yh = []
-        for c in coef:
-            res = r[0] * c[0]
-            for i in range(1, len(r)):
-                res = res + (r[i] * c[i])
-            yh.append(res.tonparray())
-        yh = np.vstack(yh).argmax(axis=0)
-        self._elm_constants[k] = (coef, norm, index)
-        return yh
+        llh = self.joint_log_likelihood(k)
+        if np.all(np.isfinite(llh)):
+            return SparseArray.fromlist(llh.argmax(axis=1))
+        return SparseArray.fromlist(map(lambda x: np.inf,
+                                        range(self._x[0].size())))
+
+    def distance(self, y, yh):
+        return y.BER(yh, self._class_freq)
+
+
+    # def fitness_validation(self, k):
+    #     """
+    #     Fitness function used in the validation set.
+    #     In this case it is the one used on the evolution
+    #     """
+    #     cnt = self._test_set_y.shape[0]
+    #     fit_k = -self.distance(self._test_set_y,
+    #                            self._pr_test_set[:cnt])
+    #     return fit_k
+
+
+    # def distance(self, y,  yh):
+    #     if np.all(np.isfinite(yh)):
+    #         return -Classification.f1(y, yh).mean()
+    #     return np.inf
+
+    # def test_f(self, x):
+    #     return np.all(np.isfinite(x))
+
+    # def set_test(self, x, y=None):
+    #     """
+    #     x is the set test, this is used to test, during the evolution, that
+    #     the best individual does not produce nan or inf
+    #     """
+    #     super(EGPSL, self).set_test(x, y=y)
+    #     if y is not None:
+    #         self._test_set_y = self._test_set_y.tonparray()
+
+    # def compute_coef(self, k, r):
+    #     m = LogisticRegression(fit_intercept=False)
+    #     A = np.array(map(lambda x: x.tonparray(),
+    #                      r)).T
+    #     m.fit(A,
+    #           self._f)
+    #     return m.coef_
+
+    #     # if self._fitness[k] > -np.inf:
+    #     #     coef, norm, index = self._elm_constants[k]
+    #     #     r = map(lambda (y, x): (x - y[0]) / y[1], zip(norm, r))
+    #     #     r = map(lambda x: r[x], index)
+    #     # else:
+    #     #     norm = map(lambda x: (x.mean(), x.std()), r)
+    #     #     r = map(lambda (y, x): (x - y[0]) / y[1], zip(norm, r))
+    #     #     index = filter(lambda x: r[x].isfinite(), range(len(r)))
+    #     #     if len(index) == 0:
+    #     #         self._elm_constants[k] = ([1.0], norm, [0])
+    #     #         r = np.empty(r[0].size())
+    #     #         r.fill(-np.inf)
+    #     #         return r
+    #     #     else:
+    #     #         r = map(lambda x: r[x], index)
+    #     #         coef = self.compute_coef(k, r)
+    #     # yh = []
+    #     # for c in coef:
+    #     #     res = r[0] * c[0]
+    #     #     for i in range(1, len(r)):
+    #     #         res = res + (r[i] * c[i])
+    #     #     yh.append(res.tonparray())
+    #     # yh = np.vstack(yh).argmax(axis=0)
+    #     # self._elm_constants[k] = (coef, norm, index)
+    #     # return yh

@@ -35,7 +35,7 @@ class EGPS(GPS, GPForest):
         Storing the best so far on the validation set.
         This funtion is called from early_stopping
         """
-        assert fit_k
+        assert fit_k is not None
         self._early_stopping = [fit_k,
                                 self.population[k].copy(),
                                 self._p_constants[k].copy(),

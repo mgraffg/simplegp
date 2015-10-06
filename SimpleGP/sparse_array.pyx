@@ -25,6 +25,7 @@ cdef extern from "numpy/npy_math.h":
     bint npy_isinf(double)
     bint npy_isnan(double)
     long double INFINITY "NPY_INFINITY"
+    long double PI "NPY_PI"
 
 
 @cython.freelist(512)
@@ -119,7 +120,9 @@ cdef class SparseArray:
         return c
 
     def __add__(self, other):
-        return self.add(other)
+        if isinstance(other, SparseArray):
+            return self.add(other)
+        return self.add2(other)
 
     cpdef SparseArray add(self, SparseArray other):
         cdef SparseArray res = self.empty(self.nunion(other), self.size())
@@ -154,6 +157,16 @@ cdef class SparseArray:
                     b += 1
             res._dataC[c] = r
             res._indexC[c] = index
+        return res
+
+    cpdef SparseArray add2(self, double other):
+        cdef SparseArray res = self.empty(self.size(), self.size())
+        cdef int i
+        for i in range(self.size()):
+            res._indexC[i] = i
+            res._dataC[i] = other
+        for i in range(self.nele()):
+            res._dataC[self._indexC[i]] = self._dataC[i] + other
         return res
 
     def __sub__(self, other):
@@ -299,6 +312,82 @@ cdef class SparseArray:
         cdef double res=0
         res = self.sum()    
         return res / self.size()
+
+    @cython.boundscheck(False)
+    @cython.nonecheck(False)    
+    def var_per_cl(self, list X, list mu,
+                   array.array[double] kfreq):
+        cdef int i, k=0, ncl = len(kfreq), j, xnele, ynele=self.nele()
+        cdef SparseArray x
+        cdef list m=[]
+        cdef array.array[double] var, mu_x
+        for x, mu_x in zip(X, mu):
+            var = array.array('d', map(lambda x: 0, range(ncl)))
+            k = 0
+            i = 0
+            xnele = x.nele()
+            while i < xnele:
+                if x._indexC[i] == self._indexC[k]:
+                    j = int(self._dataC[k])
+                    var[j] += math.pow(x._dataC[i] - mu_x[j], 2)
+                    k += 1
+                    i += 1
+                elif self._indexC[k] < x._indexC[i]:
+                    if k < ynele:
+                        k += 1
+                    else:
+                        var[0] += math.pow(x._dataC[i] - mu_x[0], 2)
+                        i += 1
+                else:
+                    var[0] += math.pow(x._dataC[i] - mu_x[0], 2)
+                    i += 1
+            for i in range(ncl):
+                var[i] = var[i] / kfreq[i]
+            m.append(var)
+        return m
+
+    @cython.boundscheck(False)
+    @cython.nonecheck(False)    
+    def mean_per_cl(self, list X, array.array[double] kfreq):
+        cdef int i, k=0, ncl = len(kfreq), j, xnele, ynele=self.nele()
+        cdef SparseArray x
+        cdef list m=[]
+        cdef array.array[double] mu
+        for x in X:
+            mu = array.array('d', map(lambda x: 0, range(ncl)))
+            k = 0
+            i = 0
+            xnele = x.nele()
+            while i < xnele:
+                if x._indexC[i] == self._indexC[k]:
+                    j = int(self._dataC[k])
+                    mu[j] += x._dataC[i]
+                    k += 1
+                    i += 1
+                elif self._indexC[k] < x._indexC[i]:
+                    if k < ynele:
+                        k += 1
+                    else:
+                        mu[0] += x._dataC[i]
+                        i += 1
+                else:
+                    mu[0] += x._dataC[i]
+                    i += 1
+            for i in range(ncl):
+                mu[i] = mu[i] / kfreq[i]
+            m.append(mu)
+        return m
+
+    @cython.boundscheck(False)
+    @cython.nonecheck(False)        
+    def class_freq(self, int ncl):
+        cdef int i
+        cdef list f
+        cdef array.array[double] mu = array.array('d', map(lambda x: 0, range(ncl)))
+        for i in range(self.nele()):
+            mu[int(self._dataC[i])] += 1.0
+        mu[0] = self.size() - sum(mu[1:])
+        return mu    
         
     cpdef double std(self):
         cdef SparseArray res = self.sub2(self.mean())
@@ -611,6 +700,34 @@ cdef class SparseArray:
             res._indexC[i] = i
         return res
 
+    @cython.boundscheck(False)
+    @cython.nonecheck(False)        
+    def BER(self, SparseArray yh, array.array[double] class_freq):
+        cdef array.array[double] err = array.array('d',
+                                                   map(lambda x: 0,
+                                                       range(len(class_freq))))
+        cdef int i=0, j=0, k=0, ynele=self.nele(), yhnele=yh.nele()
+        cdef int c1=0, c2=0
+        cdef double res=0
+        for k in range(self.size()):
+            if self._indexC[i] == k:
+                c1 = int(self._dataC[i])
+                if i < ynele - 1:
+                    i += 1
+            else:
+                c1 = 0
+            if yh._indexC[j] == k:
+                c2 = int(yh._dataC[j])
+                if j < yhnele - 1:
+                    j += 1
+            else:
+                c2 = 0
+            if c1 != c2:
+                err[c1] += 1
+        for i in range(len(class_freq)):
+            res += err[i] / class_freq[i]
+        return res / len(class_freq) * 100.
+        
     @staticmethod
     @cython.boundscheck(False)
     @cython.nonecheck(False)
@@ -625,6 +742,28 @@ cdef class SparseArray:
                 y = X[j]
                 data[c] = x.SAE(y)
                 c += 1
+
+    @staticmethod
+    @cython.boundscheck(False)
+    @cython.nonecheck(False)
+    def joint_log_likelihood(list Xs, list mu, list var,
+                             array.array[double] log_cl_prior):
+        cdef int i
+        cdef list llh = []
+        cdef double n_ij
+        cdef SparseArray sn_ij, x
+        cdef array.array[double] s, m
+        for i in range(len(log_cl_prior)):
+            n_ij = 0
+            for s in var:
+                n_ij += math.log(2. * s[i] * PI)
+            n_ij = 0.5 * n_ij - log_cl_prior[i]
+            sn_ij = (Xs[0] - mu[0][i]).sq() / var[0][i]
+            for x, m, s in zip(Xs[1:], mu[1:], var[1:]):
+                sn_ij = sn_ij + (x - m[i]).sq() / s[i]
+            sn_ij = (sn_ij * (-0.5)) - n_ij
+            llh.append((sn_ij).tonparray())
+        return np.array(llh).T
         
 cdef class SparseEval:
     def __cinit__(self, npc.ndarray[long, ndim=1] nop):

@@ -33,6 +33,7 @@ cdef class SparseArray:
     cpdef int nunion(self, SparseArray b)
     cpdef int nintersection(self, SparseArray other)
     cpdef SparseArray add(self, SparseArray other)
+    cpdef SparseArray add2(self, double other)    
     cpdef SparseArray sub(self, SparseArray other)
     cpdef SparseArray sub2(self, double other)
     cpdef SparseArray mul(self, SparseArray other)

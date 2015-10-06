@@ -1,4 +1,7 @@
 Version 0.10.*
+	+ Bayes is based on GPS and naive bayes to classify
+	+ SparseArray.joint_log_likelihood
+	+ SparseArray.BER
 	+ SparseArray.std
 	+ SparseArray substract a double
 	+ SparseArray.__getitem__ support index

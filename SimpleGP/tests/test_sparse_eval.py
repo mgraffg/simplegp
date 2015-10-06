@@ -99,6 +99,15 @@ def test_sparse_array_sum():
     assert np.all(r == sr)
 
 
+def test_sparse_array_sum3():
+    np.random.seed(0)
+    uno = create_numpy_array()
+    suno = SparseArray.fromlist(uno)
+    a = (uno + uno.mean())
+    b = (suno + suno.mean()).tonparray()
+    assert np.all(a == b)
+
+
 def test_sparse_array_sub():
     np.random.seed(0)
     uno = create_numpy_array()
