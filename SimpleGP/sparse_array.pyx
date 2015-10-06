@@ -320,6 +320,7 @@ cdef class SparseArray:
         cdef int i, k=0, ncl = len(kfreq), j, xnele, ynele=self.nele()
         cdef SparseArray x
         cdef list m=[]
+        cdef double epsilon = 1e-9
         cdef array.array[double] var, mu_x
         for x, mu_x in zip(X, mu):
             var = array.array('d', map(lambda x: 0, range(ncl)))
@@ -342,7 +343,7 @@ cdef class SparseArray:
                     var[0] += math.pow(x._dataC[i] - mu_x[0], 2)
                     i += 1
             for i in range(ncl):
-                var[i] = var[i] / kfreq[i]
+                var[i] = var[i] / kfreq[i] + epsilon
             m.append(var)
         return m
 

@@ -222,7 +222,7 @@ def test_sparse_joint_log_likelihood():
     llh2 = SparseArray.joint_log_likelihood(Xs, mu, var, cl_prior)
     map(lambda (x, y):
         map(lambda (x1, y1):
-            assert_almost_equals(x1, y1, places=4),
+            assert_almost_equals(x1, y1),
             zip(x, y)),
         zip(llh, llh2))
 
