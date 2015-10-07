@@ -294,6 +294,13 @@ def test_bayes_llh():
     bayes.create_population()
     a = bayes.joint_log_likelihood(1)
     assert np.all(a)
+    a = bayes.joint_log_likelihood(0)
+    print bayes._elm_constants[0]
+    b = bayes.joint_log_likelihood(0)
+    map(lambda (x, y):
+        map(lambda (x1, y1): assert_almost_equals(x1, y1),
+            zip(x, y)),
+        zip(a, b))
 
 
 def test_bayes_eval_ind():
