@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-__version__ = '0.10.23'
+__version__ = '0.10.24'
 
 from .simplega import SimpleGA, BestNotFound
 from .simplegp import GP, GPwRestart, GPMAE, GPS
 from .generational import Generational, GenerationalPDE
 from .gppde import GPPDE
 from .forest import GPForest, GPForestPDE, SubTreeXO, SubTreeXOPDE
-from .classification import Classification, ClassificationPDE, Bayes
+from .classification import Classification, ClassificationPDE
 from .time_series import TimeSeries
 from .recursiveGP import RecursiveGP, RGP
 from .eval import Eval
@@ -29,6 +29,7 @@ from .sparse_array import SparseArray, SparseEval
 from .gppg import SparseGPPG
 from .utils import Pool, VerifyOutput
 from .egp import EGPS
+from .bayes import Bayes
 
 
 __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
