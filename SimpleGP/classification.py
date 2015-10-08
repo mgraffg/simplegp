@@ -190,7 +190,7 @@ class Bayes(GPS, SubTreeXO):
             NotImplementedError(cdn)
         k = self._computing_fitness
         llh = self.joint_log_likelihood(k)
-        if np.all(np.isfinite(llh)):
+        if llh is not None and np.all(np.isfinite(llh)):
             return SparseArray.fromlist(llh.argmax(axis=1))
         return SparseArray.fromlist(map(lambda x: np.inf,
                                         range(self._x[0].size())))
