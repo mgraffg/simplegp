@@ -1,4 +1,5 @@
 Version 0.10.*
+	+ Preliminary work on iterative Bayes (IBayes)
 	+ Predicting probabilities
 	+ Bayes is based on GPS and naive bayes to classify
 	+ SparseArray.joint_log_likelihood

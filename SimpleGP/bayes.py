@@ -33,7 +33,19 @@ class Bayes(GPS, SubTreeXO):
         self._class_freq = class_freq
         if self._class_freq is not None:
             assert len(self._class_freq) == self._ncl
+        self._class_freq_test = None
 
+    def fitness_validation(self, k):
+        """
+        Fitness function used in the validation set.
+        In this case it is the one used on the evolution
+        """
+        if self._class_freq_test is None:
+            self._class_freq_test = self._test_set_y.class_freq(self._ncl)
+        cnt = self._test_set_y.size()
+        y = self._test_set_y
+        return - y.BER(self._pr_test_set[:cnt], self._class_freq_test)
+        
     def train(self, *args, **kwargs):
         super(Bayes, self).train(*args, **kwargs)
         self._nop[self._output_pos] = self._ntrees
@@ -149,3 +161,110 @@ class Bayes(GPS, SubTreeXO):
 
     def distance(self, y, yh):
         return y.BER(yh, self._class_freq)
+
+
+class IBayes(Bayes):
+    def __init__(self, ntimes=2, **kwargs):
+        super(IBayes, self).__init__(**kwargs)
+        self._inds = []
+        self._save_ind = []
+        self._prev_f = None
+        self._prev_index = None
+        self._ntimes = ntimes
+
+    def prev_llh(self, llh):
+        self._prev_index = llh.argmax(axis=1)
+        self._prev_f = llh.max(axis=1)
+
+    def save_ind(self, k):
+        self._save_ind = [self.population[k],
+                          self._p_constants[k],
+                          self._elm_constants[k],
+                          self._fitness[k],
+                          self._class_freq]
+
+    def restore_ind(self, k):
+        ind = self._save_ind
+        self.population[k] = ind[0]
+        self._p_constants[k] = ind[1]
+        self._elm_constants[k] = ind[2]
+        self._fitness[k] = ind[3]
+        self._class_freq = ind[4]
+
+    def predict_llh(self, X=None, ind=None):
+        k = ind
+        res = [self.joint_log_likelihood(k, X=X)]
+        k = 0
+        if self._best is not None and self._best == k:
+            k += 1
+        for ind in self._inds:
+            self.save_ind(k)
+            self.set_early_stopping_ind(ind, k=k)
+            res.append(self.joint_log_likelihood(k, X=X))
+            self.restore_ind(k)
+        return np.concatenate(res, axis=1)
+
+    def predict_proba(self, X=None, ind=None):
+        res = [super(IBayes, self).predict_proba(X=X, ind=ind)]
+        k = 0
+        if self._best is not None and self._best == k:
+            k += 1
+        for ind in self._inds:
+            self.save_ind(k)
+            self.set_early_stopping_ind(ind, k=k)
+            res.append(super(IBayes, self).predict_proba(X=X, ind=k))
+            self.restore_ind(k)
+        return np.concatenate(res, axis=1)
+
+    def predict(self, X=None, ind=None):
+        a = self.predict_proba(X=X, ind=ind)
+        return SparseArray.fromlist(a.argmax(axis=1) % self._ncl)
+
+    def eval_ind(self, ind, **kwargs):
+        if self._computing_fitness is None:
+            cdn = "Use eval with the number of individual, instead"
+            NotImplementedError(cdn)
+        k = self._computing_fitness
+        llh = self.joint_log_likelihood(k)
+        if self._prev_f is None:
+            if llh is not None and np.all(np.isfinite(llh)):
+                return SparseArray.fromlist(llh.argmax(axis=1))
+            else:
+                return SparseArray.fromlist(map(lambda x: np.inf,
+                                                range(self._x[0].size())))
+        if llh is None or not np.all(np.isfinite(llh)):
+            yh = self._prev_index
+            return SparseArray.fromlist(yh)
+        a = np.vstack((self._prev_index, llh.argmax(axis=1)))
+        f = np.vstack((self._prev_f, llh[np.arange(llh.shape[0]), a[1]]))
+        yh = a[f.argmax(axis=0), np.arange(f.shape[1])]
+        return SparseArray.fromlist(yh)
+
+    def fit(self, X, y, test=None, callback=None, callback_args=None,
+            test_y=None, **kwargs):
+        if test is not None:
+            self.set_test(test, y=test_y)
+        ntimes = self._ntimes
+        fit = -np.inf
+        for i in range(ntimes):
+            self._ntimes = i
+            self.train(X, y)
+            self.create_population()
+            self.init()
+            self.run()
+            if self.early_stopping[0] <= fit:
+                break
+            fit = self.early_stopping[0]
+            self.population[self.best] = self.early_stopping[1]
+            self._p_constants[self.best] = self.early_stopping[2]
+            self._elm_constants[self.best] = self.early_stopping[3]
+            llh = self.predict_llh(self._x, ind=self.best)
+            self.prev_llh(llh)
+            self._inds.append(map(lambda x: x, self.early_stopping))
+            if callback:
+                if callback_args is None:
+                    callback(self)
+                else:
+                    callback(self, *callback_args)
+        self._ntimes = ntimes
+        return self

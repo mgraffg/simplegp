@@ -178,3 +178,75 @@ def test_bayes_predict():
         zip(bayes._elm_constants[1][0], b2._elm_constants[0][0]))
     assert b2._fitness[0] == -np.inf
 
+
+def test_ibayes_predict():
+    from SimpleGP import IBayes
+    Xs = map(lambda x: SparseArray.fromlist(x), X.T)
+    y = SparseArray.fromlist(cl)
+    bayes = IBayes().train(Xs, y)
+    bayes.create_population()
+    print bayes.fitness(0)
+    print bayes.fitness(1)
+    a = bayes.predict_proba(bayes._x, ind=0)
+    b = bayes.predict_proba(bayes._x, ind=1)
+    r = np.concatenate((a, b), axis=1)
+    bayes._inds.append([None,
+                        bayes.population[1].copy(),
+                        bayes._p_constants[1].copy(),
+                        bayes._elm_constants[1],
+                        bayes._class_freq])
+    r2 = bayes.predict_proba(bayes._x, ind=0)
+    assert np.fabs(r - r2).mean() == 0
+    bayes._inds = []
+    b1 = bayes.predict_proba(bayes._x, ind=1)
+    assert np.fabs(b - b1).mean() == 0
+
+
+def test_ibayes():
+    from SimpleGP import IBayes
+    Xs = map(lambda x: SparseArray.fromlist(x), X.T)
+    y = SparseArray.fromlist(cl)
+    bayes = IBayes().train(Xs, y)
+    bayes.create_population()
+    bayes.fitness(0)
+    bayes.fitness(2)
+    a = bayes.predict_llh(bayes._x, ind=0)
+    b = bayes.predict_llh(bayes._x, ind=2)
+    c1 = np.concatenate((a, b), axis=1)
+    bayes.prev_llh(a)
+    c2 = bayes.eval(2)
+    assert np.all(c1.argmax(axis=1) % bayes._ncl == c2)
+    bayes._inds.append([None,
+                        bayes.population[0].copy(),
+                        bayes._p_constants[0].copy(),
+                        bayes._elm_constants[0],
+                        bayes._class_freq])
+    c3 = bayes.predict_llh(bayes._x, 2).argmax(axis=1) % bayes._ncl
+    assert np.all(c2 == c3)
+
+
+def test_ibayes_fit():
+    from SimpleGP import IBayes
+
+    def callback(self):
+        if hasattr(self, 'calls'):
+            self.calls += 1
+        else:
+            self.calls = 1
+        print "*"*10
+
+    np.random.seed(0)
+    index = np.arange(X.shape[0])
+    np.random.shuffle(index)
+    Xtr = map(SparseArray.fromlist, X[index[:120]].T)
+    ytr = SparseArray.fromlist(cl[index[:120]])
+    Xvs = map(SparseArray.fromlist, X[index[120:]].T)
+    yvs = SparseArray.fromlist(cl[index[120:]])
+    bayes = IBayes(generations=2, popsize=10,
+                   ntimes=2, verbose=True).fit(Xtr, ytr,
+                                               test=Xvs, test_y=yvs,
+                                               callback=callback)
+    print map(lambda x: x[0], bayes._inds)
+    print len(bayes._inds), bayes.calls
+    assert len(bayes._inds) == bayes.calls
+

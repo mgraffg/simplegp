@@ -29,7 +29,7 @@ from .sparse_array import SparseArray, SparseEval
 from .gppg import SparseGPPG
 from .utils import Pool, VerifyOutput
 from .egp import EGPS
-from .bayes import Bayes
+from .bayes import Bayes, IBayes
 
 
 __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
@@ -38,7 +38,7 @@ __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool, BestNotFound, Generational, GenerationalPDE,
            ELM, ELMPDE, GPForestPDE, PrGP, GSGP, SparseEval,
-           SparseArray, SparseGPPG, GPS, EGPS, Bayes]
+           SparseArray, SparseGPPG, GPS, EGPS, Bayes, IBayes]
 
 
 
