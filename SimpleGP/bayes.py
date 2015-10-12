@@ -180,7 +180,7 @@ class Bayes(GPS, SubTreeXO):
 
 
 class AdaBayes(Bayes):
-    def __init__(self, ntimes=2, frac_ts=0.5, **kwargs):
+    def __init__(self, ntimes=2, frac_ts=1.0, **kwargs):
         super(AdaBayes, self).__init__(**kwargs)
         self._inds = []
         self._ntimes = ntimes
@@ -278,14 +278,17 @@ class AdaBayes(Bayes):
         return SparseArray.fromlist(score.argmax(axis=1))
 
     def select_ts(self):
-        index = {}
-        cnt = self._frac_ts * self._X_all[0].size()
-        while len(index) < cnt:
+        index = None
+        cnt = int(self._frac_ts * self._X_all[0].size())
+        while index is None or index.shape[0] < cnt:
             a = np.random.uniform(size=self._prob.shape[0])
             a = np.where(a < self._prob)[0]
-            for i in a:
-                index[i] = 1
-        index = np.array(index.keys())[:cnt]
+            np.random.shuffle(a)
+            if index is None:
+                index = a[:cnt]
+            else:
+                index = np.concatenate((index, a))
+        index = index[:cnt]
         index.sort()
         return index
 

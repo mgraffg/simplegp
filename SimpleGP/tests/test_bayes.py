@@ -289,11 +289,14 @@ def test_adaBayes_multiple():
     ytr = SparseArray.fromlist(cl[index[:120]])
     Xvs = map(SparseArray.fromlist, X[index[120:]].T)
     yvs = SparseArray.fromlist(cl[index[120:]])
-    bayes = AdaBayes(ntimes=1, generations=3, popsize=3).train(Xtr, ytr)
+    bayes = AdaBayes(ntimes=1, generations=3, popsize=10,
+                     ntrees=2).train(Xtr, ytr)
     bayes.set_test(Xvs, y=yvs)
     bayes.create_population()
-    bayes.fitness(2)
-    bayes.fitness(0)
+    bayes.fitness(7)
+    print map(lambda x: x[0], bayes._inds), bayes._et
+    bayes.fitness(1)
+    print map(lambda x: x[0], bayes._inds), bayes._et
     assert len(bayes._inds) == 2
 
 

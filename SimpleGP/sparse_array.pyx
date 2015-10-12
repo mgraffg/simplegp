@@ -572,10 +572,11 @@ cdef class SparseArray:
         while (a < anele) and (b < bnele):
             if self._indexC[a] == indexC[b]:
                 data.append(self._dataC[a])
-                index2.append(c)                
-                a += 1
+                index2.append(c)
                 b += 1
                 c += 1
+                if (b >= bnele) or self._indexC[a] != indexC[b]:
+                    a += 1
             elif self._indexC[a] < indexC[b]:
                 a += 1
             else:
