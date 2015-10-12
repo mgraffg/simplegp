@@ -311,14 +311,16 @@ class AdaBayes(Bayes):
             self.set_test(test, y=test_y)
         ntimes = self._ntimes
         fit = -np.inf
+        prob = None
         for i in range(ntimes):
             self._ntimes = i
-            self.train(X, y)
+            self.train(X, y, prob=prob)
             self.create_population()
             self.init()
             self.run()
             if self.early_stopping[0] <= fit:
                 break
+            prob = self._prob
             fit = self.early_stopping[0]
             if callback:
                 if callback_args is None:
