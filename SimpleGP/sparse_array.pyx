@@ -779,17 +779,12 @@ cdef class SparseArray:
         cdef list llh = []
         cdef double n_ij
         cdef SparseArray sn_ij, x=Xs[0]
-        # cdef array.array[double] s, m
         cdef array.array[double] s
         for i in range(len(log_cl_prior)):
             n_ij = 0
             for s in var:
                 n_ij += math.log(2. * s[i] * PI)
             n_ij = 0.5 * n_ij - log_cl_prior[i]
-            # sn_ij = (Xs[0] - mu[0][i]).sq() / var[0][i]
-            # for x, m, s in zip(Xs[1:], mu[1:], var[1:]):
-            #     sn_ij = sn_ij + (x - m[i]).sq() / s[i]
-            # sn_ij = (sn_ij * (-0.5)) - n_ij
             sn_ij = x.joint_log_likelihood_sum(Xs, mu, var, n_ij, i)
             llh.append(sn_ij.tonparray())
         return np.array(llh).T
@@ -819,7 +814,10 @@ cdef class SparseEval:
         
     cpdef set_nvar(self, int nvar):
         self._nvar = nvar
-    
+
+    def get_X(self):
+        return self._x
+
     def X(self, x):
         if isinstance(x, types.ListType):
             self._x = x

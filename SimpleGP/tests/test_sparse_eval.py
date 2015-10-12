@@ -418,6 +418,17 @@ def test_slice2():
     assert suno[index].size() == index.shape[0]
 
 
+def test_slice3():
+    np.random.seed(3)
+    uno = create_numpy_array(100, 50)
+    suno = SparseArray.fromlist(uno)
+    index = np.array([np.where(uno > 0)[0][0]] * 5)
+    index = np.concatenate((index, np.where(uno > 0)[0][1:]), axis=0)
+    print suno[index].tonparray()
+    print uno[index]
+    assert np.all(suno[index].tonparray() == uno[index])
+
+
 def test_copy():
     uno = SparseArray.fromlist(create_numpy_array(10))
     assert uno.copy().SSE(uno) == 0

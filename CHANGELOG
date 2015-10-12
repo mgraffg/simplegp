@@ -1,4 +1,5 @@
 Version 0.10.*
+	+ Working on AdaBoost using Bayes as base learners
 	+ Preliminary work on iterative Bayes (IBayes)
 	+ Predicting probabilities
 	+ Bayes is based on GPS and naive bayes to classify

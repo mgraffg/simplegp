@@ -29,6 +29,7 @@ class Bayes(GPS, SubTreeXO):
         if use_st == 1:
             raise NotImplementedError('Cache is not implemented')
         self._elm_constants = None
+        self._save_ind = []
         self._ncl = ncl
         self._class_freq = class_freq
         if self._class_freq is not None:
@@ -45,7 +46,22 @@ class Bayes(GPS, SubTreeXO):
         cnt = self._test_set_y.size()
         y = self._test_set_y
         return - y.BER(self._pr_test_set[:cnt], self._class_freq_test)
-        
+
+    def save_ind(self, k):
+        self._save_ind = [self.population[k],
+                          self._p_constants[k],
+                          self._elm_constants[k],
+                          self._fitness[k],
+                          self._class_freq]
+
+    def restore_ind(self, k):
+        ind = self._save_ind
+        self.population[k] = ind[0]
+        self._p_constants[k] = ind[1]
+        self._elm_constants[k] = ind[2]
+        self._fitness[k] = ind[3]
+        self._class_freq = ind[4]
+    
     def train(self, *args, **kwargs):
         super(Bayes, self).train(*args, **kwargs)
         self._nop[self._output_pos] = self._ntrees
@@ -157,17 +173,163 @@ class Bayes(GPS, SubTreeXO):
         if llh is not None and np.all(np.isfinite(llh)):
             return SparseArray.fromlist(llh.argmax(axis=1))
         return SparseArray.fromlist(map(lambda x: np.inf,
-                                        range(self._x[0].size())))
+                                        range(self._eval.get_X()[0].size())))
 
     def distance(self, y, yh):
         return y.BER(yh, self._class_freq)
+
+
+class AdaBayes(Bayes):
+    def __init__(self, ntimes=2, frac_ts=0.5, **kwargs):
+        super(AdaBayes, self).__init__(**kwargs)
+        self._inds = []
+        self._ntimes = ntimes
+        self._prob = None
+        self._X_all = None
+        self._y_all = None
+        self._beta_constants = None
+        self._frac_ts = frac_ts
+
+    def create_population(self):
+        if self._beta_constants is None or\
+           self._beta_constants.shape[0] != self._popsize:
+            self._beta_constants = np.empty(self._popsize,
+                                            dtype=np.object)
+        return super(AdaBayes, self).create_population()
+
+    def compute_beta(self, ind):
+        y = self._y_all.tonparray()
+        yh = super(AdaBayes, self).predict(self._X_all, ind=ind).tonparray()
+        self._beta_update = y == yh
+        et = (~ self._beta_update).mean()
+        self._et = et
+        if et > 0.95:
+            return False
+        self._beta_constants[ind] = et / (1 - et)
+        return True
+
+    def save_ind(self, k):
+        super(AdaBayes, self).save_ind(k)
+        self._save_ind.append(self._beta_constants[k])
+
+    def restore_ind(self, k):
+        super(AdaBayes, self).restore_ind(k)
+        self._beta_constants[k] = self._save_ind[5]
+
+    def set_early_stopping_ind(self, ind, k=0):
+        super(AdaBayes, self).set_early_stopping_ind(ind, k=k)
+        self._beta_constants[k] = ind[5]
+
+    def early_stopping_save(self, k, fit_k=None):
+        super(AdaBayes, self).early_stopping_save(k, fit_k=fit_k)
+        self._early_stopping.append(self._beta_constants[k])
+        if self._et > 0.5:
+            return
+        if self._verbose:
+            print "Best so far", self.gens_ind,\
+                "%0.4f" % self.early_stopping[0]
+        self._inds.append(self.early_stopping)
+        # updating the distribution
+        beta = self._beta_constants[k]
+        mask = self._beta_update
+        self._prob[mask] *= beta
+        mu = self._prob.sum()
+        self._prob = self._prob / mu
+        # updating the training size
+        self.train(self._X_all, self._y_all, prob=self._prob)
+        self._fitness.fill(-np.inf)
+        self._best = None
+        self._best_fit = None
+
+    def predict_test_set(self, ind):
+        """Predicting the test set"""
+        if not self.compute_beta(ind):
+            return self._test_set[0].constant(np.inf,
+                                              size=self._test_set[0].size())
+        return self.predict(self._test_set, ind)
+
+    def predict(self, X, ind=None):
+        assert ind is not None
+        assert self._beta_constants[ind] is not None
+        score = np.zeros((X[0].size(), self._ncl))
+        index = np.arange(X[0].size())
+        k = 0
+        if self._best is not None and self._best == k:
+            k += 1
+        hist = None
+        for inds in self._inds:
+            self.save_ind(k)
+            self.set_early_stopping_ind(inds, k=k)
+            pr = super(AdaBayes, self).predict(X,
+                                               ind=k).tonparray()
+            beta = math.log(1 / self._beta_constants[k])
+            score[index, pr.astype(np.int)] += beta
+            self.restore_ind(k)
+            hist = [inds[1], inds[5]]
+        if hist is None or (np.any(hist[0] != self.population[ind]) or
+                            hist[1] != self._beta_constants[ind]):
+            pr = super(AdaBayes, self).predict(X, ind=ind).tonparray()
+            if not np.all(np.isfinite(pr)):
+                return X[0].constant(np.inf,
+                                     size=X[0].size())
+            beta = math.log(1 / self._beta_constants[ind])
+            score[index, pr.astype(np.int)] += beta
+        self._score_yh = score
+        return SparseArray.fromlist(score.argmax(axis=1))
+
+    def select_ts(self):
+        index = {}
+        cnt = self._frac_ts * self._X_all[0].size()
+        while len(index) < cnt:
+            a = np.random.uniform(size=self._prob.shape[0])
+            a = np.where(a < self._prob)[0]
+            for i in a:
+                index[i] = 1
+        index = np.array(index.keys())[:cnt]
+        index.sort()
+        return index
+
+    def train(self, X, y, prob=None, **kwargs):
+        self._X_all = X
+        self._y_all = y
+        if prob is None:
+            prob = np.empty(y.size())
+            prob.fill(1. / y.size())
+            self._prob = prob
+        else:
+            self._prob = prob
+        index = self.select_ts()
+        return super(AdaBayes, self).train(map(lambda x: x[index], X),
+                                           y[index], **kwargs)
+
+    def fit(self, X, y, test=None, callback=None, callback_args=None,
+            test_y=None, **kwargs):
+        if test is not None:
+            self.set_test(test, y=test_y)
+        ntimes = self._ntimes
+        fit = -np.inf
+        for i in range(ntimes):
+            self._ntimes = i
+            self.train(X, y)
+            self.create_population()
+            self.init()
+            self.run()
+            if self.early_stopping[0] <= fit:
+                break
+            fit = self.early_stopping[0]
+            if callback:
+                if callback_args is None:
+                    callback(self)
+                else:
+                    callback(self, *callback_args)
+        self._ntimes = ntimes
+        return self
 
 
 class IBayes(Bayes):
     def __init__(self, ntimes=2, **kwargs):
         super(IBayes, self).__init__(**kwargs)
         self._inds = []
-        self._save_ind = []
         self._prev_f = None
         self._prev_index = None
         self._ntimes = ntimes
@@ -175,21 +337,6 @@ class IBayes(Bayes):
     def prev_llh(self, llh):
         self._prev_index = llh.argmax(axis=1)
         self._prev_f = llh.max(axis=1)
-
-    def save_ind(self, k):
-        self._save_ind = [self.population[k],
-                          self._p_constants[k],
-                          self._elm_constants[k],
-                          self._fitness[k],
-                          self._class_freq]
-
-    def restore_ind(self, k):
-        ind = self._save_ind
-        self.population[k] = ind[0]
-        self._p_constants[k] = ind[1]
-        self._elm_constants[k] = ind[2]
-        self._fitness[k] = ind[3]
-        self._class_freq = ind[4]
 
     def predict_llh(self, X=None, ind=None):
         k = ind
