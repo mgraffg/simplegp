@@ -302,15 +302,11 @@ def test_adaBayes():
 
     class A:
         def __init__(self):
-            self.gens_ind = 0
-
+            self._times = 0
+            
         def callback(self, a):
-            if not hasattr(self, '_inds'):
-                self._inds = map(lambda x: x[0], a._inds)
-            a._best = None
-            a._best_fit = None
-            self.gens_ind += a.gens_ind
             assert a._p is None
+            self._times += 1
     np.random.seed(0)
     index = np.arange(X.shape[0])
     np.random.shuffle(index)
@@ -324,8 +320,9 @@ def test_adaBayes():
                                                    test=Xvs,
                                                    test_y=yvs,
                                                    callback=a.callback)
-    assert len(a._inds) >= len(bayes._inds)
-    
+    assert len(bayes._inds) >= a._times
+    print a._times
+
 # def test_ibayes_predict():
 #     from SimpleGP import IBayes
 #     Xs = map(lambda x: SparseArray.fromlist(x), X.T)

@@ -320,7 +320,8 @@ class AdaBayes(Bayes):
             self.init()
             self.run()
             if self.early_stopping[0] <= fit:
-                break
+                self._p = None
+                continue
             prob = self._prob
             fit = self.early_stopping[0]
             self._p = None
