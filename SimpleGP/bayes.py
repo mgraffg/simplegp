@@ -235,11 +235,12 @@ class AdaBayes(Bayes):
         self._prob[mask] *= beta
         mu = self._prob.sum()
         self._prob = self._prob / mu
+        self._run = False
         # updating the training size
-        self.train(self._X_all, self._y_all, prob=self._prob)
-        self._fitness.fill(-np.inf)
-        self._best = None
-        self._best_fit = None
+        # self.train(self._X_all, self._y_all, prob=self._prob)
+        # self._fitness.fill(-np.inf)
+        # self._best = None
+        # self._best_fit = None
 
     def predict_test_set(self, ind):
         """Predicting the test set"""
@@ -322,6 +323,7 @@ class AdaBayes(Bayes):
                 break
             prob = self._prob
             fit = self.early_stopping[0]
+            self._p = None
             if callback:
                 if callback_args is None:
                     callback(self)

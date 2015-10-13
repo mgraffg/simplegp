@@ -249,15 +249,12 @@ def test_adaBayes_inds():
     bayes.set_test(Xvs, y=yvs)
     bayes.create_population()
     fit = bayes.fitness(0)
-    score = bayes._score_yh.copy()
     beta = bayes._beta_constants[0]
     assert len(bayes._inds) == 1
     fit2 = bayes.fitness(0)
-    assert fit != fit2
+    assert fit == fit2
     beta2 = bayes._beta_constants[0]
-    assert beta != beta2
-    bayes.predict(bayes._test_set, ind=0)
-    assert np.all(np.any((score - bayes._score_yh) != 0, axis=1))
+    assert beta == beta2
 
 
 def test_adaBayes_save_restore_early_stopping():
@@ -304,11 +301,16 @@ def test_adaBayes():
     from SimpleGP import AdaBayes
 
     class A:
+        def __init__(self):
+            self.gens_ind = 0
+
         def callback(self, a):
             if not hasattr(self, '_inds'):
                 self._inds = map(lambda x: x[0], a._inds)
             a._best = None
             a._best_fit = None
+            self.gens_ind += a.gens_ind
+            assert a._p is None
     np.random.seed(0)
     index = np.arange(X.shape[0])
     np.random.shuffle(index)
