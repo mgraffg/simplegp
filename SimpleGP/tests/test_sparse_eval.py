@@ -388,6 +388,15 @@ def test_finite():
     assert a.isfinite()
 
 
+def test_fromlist_force():
+    a = SparseArray.fromlist([1, np.inf], force_finite=True)
+    assert a.isfinite() and a.nele() == 1
+    a = SparseArray.fromlist([1, np.nan], force_finite=True)
+    assert a.isfinite() and a.nele() == 1
+    a = SparseArray.fromlist([1, np.nan, np.inf, 1])
+    assert a.nele() == 4 and not a.isfinite()
+
+
 def test_slice():
     uno = create_numpy_array(10)
     suno = SparseArray.fromlist(uno)

@@ -655,12 +655,14 @@ cdef class SparseArray:
             print self._dataC[i]
 
     @classmethod
-    def fromlist(cls, iter):
+    def fromlist(cls, iter, bint force_finite=False):
         self = cls()
         data = []
         index = []
         k = -1
         for k, v in enumerate(iter):
+            if force_finite and (npy_isnan(v) or npy_isinf(v)):
+                continue
             if v == 0:
                 continue
             data.append(v)
