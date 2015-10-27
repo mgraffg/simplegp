@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-__version__ = '0.10.27'
+__version__ = '0.11.0'
 
 from .simplega import SimpleGA, BestNotFound
 from .simplegp import GP, GPwRestart, GPMAE, GPS
@@ -30,6 +30,7 @@ from .gppg import SparseGPPG
 from .utils import Pool, VerifyOutput
 from .egp import EGPS
 from .bayes import Bayes, IBayes, AdaBayes
+from .root import RootGP
 
 
 __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
@@ -38,7 +39,7 @@ __all__ = [SimpleGA, TimeSeries, GP, GPPDE,
            Eval, RPROP, VerifyOutput, ClassificationPDE,
            Pool, BestNotFound, Generational, GenerationalPDE,
            ELM, ELMPDE, GPForestPDE, PrGP, GSGP, SparseEval,
-           SparseArray, SparseGPPG, GPS, EGPS, Bayes, IBayes, AdaBayes]
+           SparseArray, SparseGPPG, GPS, EGPS, Bayes, IBayes, AdaBayes, RootGP]
 
 
 

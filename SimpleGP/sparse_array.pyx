@@ -609,7 +609,20 @@ cdef class SparseArray:
             res._indexC[i - init] = self._indexC[i]
             res._dataC[i - init] = self._dataC[i]
         return res
-        
+
+    def concatenate(self, SparseArray dos):
+        cdef SparseArray res = self.empty(self.nele() + dos.nele(),
+                                          self.size() + dos.size())
+        cdef int i, j=0, size=self.size()
+        for i in range(self.nele()):
+            res._indexC[i] = self._indexC[i]
+            res._dataC[i] = self._dataC[i]
+        for i in range(self.nele(), res.nele()):
+            res._indexC[i] = dos._indexC[j] + size
+            res._dataC[i] = dos._dataC[j] 
+            j += 1
+        return res
+
     def tonparray(self):
         import numpy as np
         cdef npc.ndarray[double, ndim=1] res = np.zeros(self.size())

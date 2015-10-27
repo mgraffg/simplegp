@@ -438,6 +438,19 @@ def test_slice3():
     assert np.all(suno[index].tonparray() == uno[index])
 
 
+def test_concatenate():
+    np.random.seed(3)
+    uno = create_numpy_array(100, 50)
+    dos = create_numpy_array(100, 50)
+    suno = SparseArray.fromlist(uno)
+    sdos = SparseArray.fromlist(dos)
+    res = np.concatenate((uno, dos), axis=0)
+    sres = suno.concatenate(sdos).tonparray()
+    print res[:10]
+    print sres[:10]
+    assert np.all(res == sres)
+
+
 def test_copy():
     uno = SparseArray.fromlist(create_numpy_array(10))
     assert uno.copy().SSE(uno) == 0
