@@ -27,6 +27,7 @@ class RootGP(GPS):
         self._ind_generated_f = None
         self._pop_eval = None
         self._test_set_eval = None
+        self._hist = []
         if ntrees > 0:
             self._nop[self._output_pos] = ntrees
             self._func_allow = np.concatenate((self._func_allow,
@@ -62,12 +63,13 @@ class RootGP(GPS):
             while f == -np.inf:
                 a, c, e, t = self.random_leaf()
                 f = - self.distance(self._f, e)
-            self._p[i] = np.array([a])
+            self._p[i] = np.array([i])
             self._p_constants[i] = c
             self._fitness[i] = f
             self._pop_eval[i] = e
             self._test_set_eval[i] = t
             self.new_best(i)
+            self._hist.append([a, c])
 
     def select_parents(self, nparents):
         lst = []
@@ -146,7 +148,9 @@ class RootGP(GPS):
                 continue
             self._ind_generated_f = yh, yht
             self._ind_generated_c = np.array([0.0])
-            return np.array([self.gens_ind])
+            self._hist.append([map(lambda x: self._p[x][0],
+                                   args), func, coef])
+            return np.array([len(self._hist) - 1])
             # c = map(lambda x: self._p_constants[x], args)
             # c.append(coef)
             # self._ind_generated_c = np.concatenate(c)

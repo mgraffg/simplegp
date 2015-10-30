@@ -47,6 +47,8 @@ def test_rgp_population():
     gp = RootGP().train(X, y)
     gp.set_test(X, y)
     gp.create_population()
+    for i in range(gp.popsize):
+        assert gp.population[i][0] == i
     assert gp._fitness[gp.best] == gp._fitness.max()
     assert np.all(np.isfinite(gp._fitness))
     for k, v in enumerate(gp._pop_eval):
@@ -144,4 +146,23 @@ def test_genetic_operators():
     gp.create_population()
     son = gp.genetic_operators()
     assert son[0] == 1000
-        
+
+
+@use_pymock
+def test_hist():
+    X, y = problem()
+    gp = RootGP(seed=0).train(X, y)
+    gp.set_test(X, y)
+    gp.create_population()
+    override(gp, 'random_func')
+    for i in range(1):
+        gp.random_func()
+        returns(5)
+    override(gp, 'select_parents')
+    gp.select_parents(1)
+    returns([10])
+    replay()
+    assert len(gp._hist) == gp.popsize
+    son = gp.genetic_operators()
+    assert gp._hist[son][1] == 5
+    assert gp._hist[son][0][0] == 10
