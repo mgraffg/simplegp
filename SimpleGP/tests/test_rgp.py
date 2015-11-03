@@ -166,3 +166,64 @@ def test_hist():
     son = gp.genetic_operators()
     assert gp._hist[son][1] == 5
     assert gp._hist[son][0][0] == 10
+
+
+@use_pymock
+def test_use_hist():
+    X, y = problem()
+    gp = RootGP(seed=0).train(X, y)
+    gp.set_test(X, y)
+    gp.create_population()
+    override(gp, 'random_func')
+    for i in range(1):
+        gp.random_func()
+        returns(5)
+    override(gp, 'select_parents')
+    gp.select_parents(1)
+    returns([10])
+    replay()
+    assert len(gp._hist) == gp.popsize
+    son = gp.genetic_operators()
+    gp.kill_ind(0, son)
+    l = gp.use_hist(gp.population[0][0])
+    assert l[10] and l[1000]
+
+
+@use_pymock
+def test_count_no_improvements():
+    X, y = problem()
+    gp = RootGP(seed=0, count_no_improvements=True,
+                generations=1).train(X, y)
+    gp.set_test(X, y)
+    gp.create_population()
+    override(gp, 'random_func')
+    for i in range(1):
+        gp.random_func()
+        returns(5)
+    override(gp, 'select_parents')
+    gp.select_parents(1)
+    returns([10])
+    replay()
+    gp._fitness[10] = -0.001
+    gp.genetic_operators()
+    assert gp.gens_ind > gp.popsize * gp.generations
+
+
+@use_pymock
+def test_no_greedy():
+    X, y = problem()
+    gp = RootGP(seed=0, greedy=False,
+                generations=1).train(X, y)
+    gp.set_test(X, y)
+    gp.create_population()
+    override(gp, 'random_func')
+    for i in range(1):
+        gp.random_func()
+        returns(5)
+    override(gp, 'select_parents')
+    gp.select_parents(1)
+    returns([10])
+    replay()
+    gp._fitness[10] = -0.001
+    gp.genetic_operators()
+    assert gp.gens_ind == gp.popsize * gp.generations

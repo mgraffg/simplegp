@@ -19,6 +19,8 @@ import numpy as np
 
 class RootGP(GPS):
     def __init__(self, nrandom=0, ntrees=-1,
+                 count_no_improvements=False,
+                 greedy=True,
                  func=['+', '*', '/', 'abs',
                        'exp', 'sqrt', 'sin', 'cos',
                        'sigmoid', 'ln', 'sq', 'if'],
@@ -27,6 +29,8 @@ class RootGP(GPS):
         self._ind_generated_f = None
         self._pop_eval = None
         self._test_set_eval = None
+        self._count_no_improvements = count_no_improvements
+        self._greedy = greedy
         self._hist = []
         if ntrees > 0:
             self._nop[self._output_pos] = ntrees
@@ -70,6 +74,7 @@ class RootGP(GPS):
             self._test_set_eval[i] = t
             self.new_best(i)
             self._hist.append([a, c])
+        return True
 
     def select_parents(self, nparents):
         lst = []
@@ -144,19 +149,19 @@ class RootGP(GPS):
                 continue
             func, args, coef, yh, yht = r
             f = - self.distance(self._f, yh)
-            if f <= max(map(lambda x: self._fitness[x], args)):
-                continue
+            if self._greedy and f <= max(map(lambda x:
+                                             self._fitness[x], args)):
+                if self._count_no_improvements:
+                    self.gens_ind += 1
+                    if self.gens_ind < self.popsize * self.generations:
+                        continue
+                else:
+                    continue
             self._ind_generated_f = yh, yht
             self._ind_generated_c = np.array([0.0])
             self._hist.append([map(lambda x: self._p[x][0],
                                    args), func, coef])
             return np.array([len(self._hist) - 1])
-            # c = map(lambda x: self._p_constants[x], args)
-            # c.append(coef)
-            # self._ind_generated_c = np.concatenate(c)
-            # c = map(lambda x: self._p[x], args)
-            # c.append(np.array([func]))
-            # return np.concatenate(c)
 
     def compute_coef(self, r):
         A = np.empty((len(r), len(r)))
@@ -170,3 +175,17 @@ class RootGP(GPS):
         except np.linalg.LinAlgError:
             return None
         return coef
+
+    def use_hist(self, i, lst=None):
+        if lst is None:
+            lst = map(lambda x: False, self._hist)
+        self._use_hist(i, lst)
+        return lst
+
+    def _use_hist(self, i, lst):
+        if lst[i]:
+            return
+        lst[i] = True
+        a = self._hist[i]
+        if len(a) > 2:
+            map(lambda x: self._use_hist(x, lst), a[0])
