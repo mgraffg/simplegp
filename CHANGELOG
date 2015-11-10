@@ -1,5 +1,6 @@
 Version 0.11.*
 	+ Novel Genetic Programming Paradigm
+	+ Testing that output is finite
 Version 0.10.*
 	+ SparseArray.fromlist has a new parameter
 	+ SparseArray.__getitem__ support index with repetitions

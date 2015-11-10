@@ -97,6 +97,9 @@ class RootGP(GPS):
         if coef is None:
             return None
         r = map(lambda (x, c): x * c, zip(X, coef))
+        r = self.cumsum(r)
+        if not r.isfinite():
+            return None
         if self._test_set is not None:
             Xt = map(lambda x: self._test_set_eval[x], args)
             rt = map(lambda (x, c): x * c, zip(Xt, coef))
@@ -105,7 +108,6 @@ class RootGP(GPS):
                 return None
         else:
             rt = None
-        r = self.cumsum(r)
         return coef, r, rt
 
     def genetic_operators_inner(self):
@@ -124,6 +126,8 @@ class RootGP(GPS):
             if coef is None:
                 return None
             e = e * coef[0]
+            if not e.isfinite():
+                return None
             et = None
             if self._test_set is not None:
                 self._eval.X(map(lambda x: self._test_set_eval[x], args))
