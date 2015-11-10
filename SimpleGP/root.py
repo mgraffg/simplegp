@@ -14,12 +14,14 @@
 
 
 from SimpleGP import GPS
+from SimpleGP.individual import Individual, Infeasible
 import numpy as np
 
 
 class RootGP(GPS):
     def __init__(self, nrandom=0, ntrees=-1,
                  count_no_improvements=False,
+                 init_population=False,
                  greedy=True,
                  func=['+', '*', '/', 'abs',
                        'exp', 'sqrt', 'sin', 'cos',
@@ -31,6 +33,7 @@ class RootGP(GPS):
         self._test_set_eval = None
         self._count_no_improvements = count_no_improvements
         self._greedy = greedy
+        self._init_population = init_population
         self._hist = []
         if ntrees > 0:
             self._nop[self._output_pos] = ntrees
@@ -42,7 +45,35 @@ class RootGP(GPS):
             return self._test_set_eval[ind]
         raise NotImplementedError("This function is not implemented yet")
 
+    def init_population(self):
+        ind = None
+        for i in range(100):
+            try:
+                ind, f = self._individual.random_ind()
+                break
+            except Infeasible:
+                continue
+        if ind is None:
+            raise Infeasible('Population could not be created')
+        k = filter(lambda x: self._p[x] is None, range(self.popsize))[0]
+        c = self.compute_coef([f])
+        if c is None:
+            return self.init_population()
+        f = f * c[0]
+        if self._test_set is not None:
+            self._individual._eval.X(self._test_set)
+            t = self._individual._eval.eval(ind, self._constants2, 0)
+            t = t * c[0]
+            if not t.isfinite():
+                return self.init_population()
+        else:
+            t = None
+        self._init_p[k] = ind
+        return k, c, f, t
+
     def random_leaf(self):
+        if self._init_population:
+            return self.init_population()
         c = None
         while c is None:
             a = super(RootGP, self).random_leaf()
@@ -56,6 +87,9 @@ class RootGP(GPS):
     def create_population(self):
         if self._p is not None:
             return False
+        if self._init_population:
+            self._init_p = np.empty(self._popsize, dtype=np.object)
+            self._individual = Individual(self._x, self._nop)
         self._p_constants = np.empty(self._popsize, dtype=np.object)
         self._p = np.empty(self._popsize, dtype=np.object)
         self._pop_eval = np.empty(self._popsize, dtype=np.object)

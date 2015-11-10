@@ -15,7 +15,7 @@
 import numpy as np
 from SimpleGP import RootGP
 from nose.tools import assert_almost_equals
-from pymock import use_pymock, override, returns, replay, verify
+from pymock import use_pymock, override, returns, replay
 
 
 def problem():
@@ -227,3 +227,18 @@ def test_no_greedy():
     gp._fitness[10] = -0.001
     gp.genetic_operators()
     assert gp.gens_ind == gp.popsize * gp.generations
+
+
+def test_rgp_init_population():
+    X, y = problem()
+    gp = RootGP(seed=0, popsize=1000, init_population=True).train(X, y)
+    gp.set_test(X, y)
+    gp.create_population()
+    gp._individual._eval.X(X)
+    for i in range(gp.popsize):
+        assert gp._init_p[i] is not None
+        f = gp._individual._eval.eval(gp._init_p[i],
+                                      gp._individual._constants2, 0)
+        f = f * gp._p_constants[i][0]
+        assert gp._pop_eval[i].SSE(f) == 0
+        assert gp._test_set_eval[i].SSE(f) == 0
