@@ -22,6 +22,7 @@ class RootGP(GPS):
     def __init__(self, nrandom=0, ntrees=-1,
                  count_no_improvements=False,
                  init_population=False,
+                 p_init_p=1,
                  greedy=True,
                  func=['+', '*', '/', 'abs',
                        'exp', 'sqrt', 'sin', 'cos',
@@ -34,6 +35,7 @@ class RootGP(GPS):
         self._count_no_improvements = count_no_improvements
         self._greedy = greedy
         self._init_population = init_population
+        self._p_init_p = p_init_p
         self._hist = []
         if ntrees > 0:
             self._nop[self._output_pos] = ntrees
@@ -72,7 +74,7 @@ class RootGP(GPS):
         return k, c, f, t
 
     def random_leaf(self):
-        if self._init_population:
+        if self._init_population and np.random.rand() < self._p_init_p:
             return self.init_population()
         c = None
         while c is None:
