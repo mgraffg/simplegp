@@ -4,6 +4,7 @@ Version 0.11.*
 	+ Random individual
 	+ The initial population can be a full individual or inputs, this
 	depends on a new parameter.
+	+ The number of trees can be random choosen from an interval
 Version 0.10.*
 	+ SparseArray.fromlist has a new parameter
 	+ SparseArray.__getitem__ support index with repetitions

@@ -23,6 +23,7 @@ class RootGP(GPS):
                  count_no_improvements=False,
                  init_population=False,
                  p_init_p=1,
+                 random_ntrees=0,
                  greedy=True,
                  func=['+', '*', '/', 'abs',
                        'exp', 'sqrt', 'sin', 'cos',
@@ -30,6 +31,7 @@ class RootGP(GPS):
                  **kwargs):
         super(RootGP, self).__init__(nrandom=nrandom, func=func, **kwargs)
         self._ind_generated_f = None
+        self._random_ntrees = random_ntrees
         self._pop_eval = None
         self._test_set_eval = None
         self._count_no_improvements = count_no_improvements
@@ -146,9 +148,20 @@ class RootGP(GPS):
             rt = None
         return coef, r, rt
 
+    def nop(self, func):
+        if func == 15 and self._random_ntrees > 0:
+            low = self._nop[func] - self._random_ntrees
+            if low < 0:
+                low = 0
+            n = np.random.randint(low, self._nop[func] +
+                                  self._random_ntrees + 1)
+        else:
+            n = self._nop[func]
+        return n
+
     def genetic_operators_inner(self):
         func = self.random_func()
-        args = self.select_parents(self._nop[func])
+        args = self.select_parents(self.nop(func))
         if func == 15 or func == 0:  # output o sum
             res = self.genetic_operators_linear_comb(args)
             if res is None:
