@@ -151,8 +151,8 @@ class RootGP(GPS):
     def nop(self, func):
         if func == 15 and self._random_ntrees > 0:
             low = self._nop[func] - self._random_ntrees
-            if low < 0:
-                low = 0
+            if low < 1:
+                low = 1
             n = np.random.randint(low, self._nop[func] +
                                   self._random_ntrees + 1)
         else:

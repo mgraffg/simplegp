@@ -243,7 +243,8 @@ def test_rgp_init_population():
         assert gp._pop_eval[i].SSE(f) == 0
         assert gp._test_set_eval[i].SSE(f) == 0
 
-@use_pymock        
+
+@use_pymock
 def test_random_ntrees1():
     X, y = problem()
     gp = RootGP(seed=0, popsize=1000,
@@ -264,4 +265,18 @@ def test_random_ntrees():
            ntrees=8,
            generations=2,
            random_ntrees=4).fit(X, y)
-    
+
+
+@use_pymock
+def test_random_ntrees0():
+    X, y = problem()
+    gp = RootGP(seed=0, popsize=1000,
+                ntrees=1,
+                random_ntrees=4).train(X, y)
+    gp.set_test(X, y)
+    gp.create_population()
+    override(np.random, 'randint')
+    np.random.randint(1, 6)
+    returns(0)
+    replay()
+    gp.nop(15)
