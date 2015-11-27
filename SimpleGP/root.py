@@ -179,7 +179,7 @@ class RootGP(GPS):
                     best_fit = comp_fit
                     best = comp
             lst.append((best, self._pop_eval[best]))
-        return lst
+        return map(lambda x: x[0], lst)
 
     def random_func_parents(self):
         func = self.random_func()
