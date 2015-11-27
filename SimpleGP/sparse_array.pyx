@@ -558,6 +558,8 @@ cdef class SparseArray:
         up = ((self - mx) * (other - my)).sum()
         mx = math.sqrt((self - mx).sq().sum())
         my = math.sqrt((other - my).sq().sum())
+        if mx == 0 or my == 0:
+            return 1
         return up / (mx * my)
             
     cpdef bint isfinite(self):
