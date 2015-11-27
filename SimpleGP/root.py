@@ -23,6 +23,7 @@ class RootGP(GPS):
                  count_no_improvements=False,
                  init_population=False,
                  p_init_p=1,
+                 pearson_selection=False,
                  random_ntrees=0,
                  greedy=True,
                  func=['+', '*', '/', 'abs',
@@ -33,6 +34,7 @@ class RootGP(GPS):
         self._ind_generated_f = None
         self._random_ntrees = random_ntrees
         self._pop_eval = None
+        self._pearson_selection = pearson_selection
         self._test_set_eval = None
         self._count_no_improvements = count_no_improvements
         self._greedy = greedy
@@ -159,9 +161,36 @@ class RootGP(GPS):
             n = self._nop[func]
         return n
 
-    def genetic_operators_inner(self):
+    def pearson_selection(self, nparents):
+        p = self.tournament()
+        lst = []
+        lst.append((p, self._pop_eval[p]))
+        index = np.arange(self.popsize)
+        np.random.shuffle(index)
+        index = filter(lambda x: x != p, index)
+        while len(lst) < nparents:
+            best_fit = np.inf
+            for i in range(self._tournament_size):
+                comp = index.pop()
+                v = self._pop_eval[comp]
+                comp_fit = np.mean(map(lambda x:
+                                       np.fabs(v.pearsonr(x[1])), lst))
+                if comp_fit < best_fit:
+                    best_fit = comp_fit
+                    best = comp
+            lst.append((best, self._pop_eval[best]))
+        return lst
+
+    def random_func_parents(self):
         func = self.random_func()
-        args = self.select_parents(self.nop(func))
+        if self._pearson_selection and (func == 15 or func == 0):
+            args = self.pearson_selection(self.nop(func))
+        else:
+            args = self.select_parents(self.nop(func))
+        return func, args
+
+    def genetic_operators_inner(self):
+        func, args = self.random_func_parents()
         if func == 15 or func == 0:  # output o sum
             res = self.genetic_operators_linear_comb(args)
             if res is None:

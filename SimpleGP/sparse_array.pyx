@@ -551,6 +551,15 @@ cdef class SparseArray:
             return INFINITY
         return res
 
+    cpdef double pearsonr(self, SparseArray other):
+        cdef double mx, my, up
+        mx = self.sum() / self.size()
+        my = other.sum() / other.size()
+        up = ((self - mx) * (other - my)).sum()
+        mx = math.sqrt((self - mx).sq().sum())
+        my = math.sqrt((other - my).sq().sum())
+        return up / (mx * my)
+            
     cpdef bint isfinite(self):
         cdef int i
         cdef double r    

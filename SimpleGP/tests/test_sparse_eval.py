@@ -478,7 +478,8 @@ def test_div_vec_cons():
     suno = SparseArray.fromlist(uno)
     print (suno / 12.3).tonparray(), (uno / 12.3)
     assert np.all((uno / 12.3) == (suno / 12.3).tonparray())
-    
+
+
 def test_seval2():
     import time
 
@@ -551,3 +552,13 @@ def test_seval_time():
     print st, 0.50
     assert gp1 < 0.55
     # assert False
+
+
+def test_pearson():
+    from scipy import stats
+    uno = create_numpy_array(100, 50)
+    dos = create_numpy_array(100, 50)
+    r = stats.pearsonr(uno, dos)[0]
+    r2 = SparseArray.fromlist(uno).pearsonr(SparseArray.fromlist(dos))
+    print r, r2
+    assert_almost_equals(r, r2)

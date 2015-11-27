@@ -54,6 +54,7 @@ cdef class SparseArray:
     cpdef SparseArray if_func(self, SparseArray y, SparseArray z)
     cpdef double SAE(self, SparseArray other)
     cpdef double SSE(self, SparseArray other)
+    cpdef double pearsonr(self, SparseArray other)
     cpdef bint isfinite(self)
     cdef SparseArray select(self, npc.ndarray[long, ndim=1] index)
     cpdef init(self, int nele)

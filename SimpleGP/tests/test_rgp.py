@@ -280,3 +280,20 @@ def test_random_ntrees0():
     returns(0)
     replay()
     gp.nop(15)
+
+
+@use_pymock
+def test_pearson_selection():
+    X, y = problem()
+    gp = RootGP(seed=0, popsize=1000,
+                ntrees=3,
+                pearson_selection=True,
+                random_ntrees=4).train(X, y)
+    gp.create_population()
+    override(gp, 'random_func')
+    gp.random_func()
+    returns(15)
+    replay()
+    func, args = gp.random_func_parents()
+    assert len(args) == 3
+    
